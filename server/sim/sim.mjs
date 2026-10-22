@@ -152,7 +152,10 @@ class Agent {
       const dur = pick([20, 20, 20, 30, 30, 60]) // minuti di serata («live 20», +30, +1h)
       const expiresAt = now + (dur * 60_000) / SCALE
       if (expiresAt < Date.parse(st.session.endsAt)) {
-        const yes = Math.round((1.15 + rnd() * 3.5) * 100), no = Math.round((1.15 + rnd() * 3.0) * 100)
+        // quote valide per il controllo sul margine 100·(A+B) ≥ A·B: il lato opposto non può superare 100·A/(A−100)
+        const yes = Math.round((1.15 + rnd() * 3.5) * 100)
+        const noMax = Math.min(1000, Math.floor((100 * yes) / (yes - 100)))
+        const no = Math.round(110 + rnd() * (noMax - 110))
         const r = await this.call('create', '/markets', { body: { question: pick(QUESTIONS), yesOdds: yes, noOdds: no, expiresAt: new Date(expiresAt).toISOString(), key: crypto.randomUUID() } })
         if (r.status === 200) {
           stats.creates++

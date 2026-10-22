@@ -76,3 +76,29 @@ Legenda stato: ✅ già fatto · 🟡 fatto in parte · ❌ da fare · ⚠️ in
 6. Aggiornare PRD (v0.9), TASKS.md e consegnare riassunto, passi di prova a mano e istruzioni di messa online.
 
 Dopo ogni area ti dico in italiano semplice cosa è cambiato e come verificarlo a mano nell'app.
+
+---
+
+## E. Esito dell'implementazione (23 ottobre 2026, ramo `regole-v06`)
+
+**Decisioni prese da te:** bancarotta solo senza puntate in corso (A) · precedenza del creatore di 2 minuti · «Carletti» senza simbolo · compenso di chi esita.
+**Applicate con la scelta consigliata, da confermare:** controllo sul margine delle quote (applicato) · sponsor secondo il PRD v0.7, non secondo il prompt (tenuto).
+
+| Area | Esito |
+| --- | --- |
+| «Scommessa» / numero progressivo | ✅ già presente |
+| Valuta «Carletti» senza simbolo, «1 Carletto», tasto «TUTTI I CARLETTI» | ✅ fatto (interfaccia, errori del server, notizie). Nelle classifiche e nei movimenti solo il numero, con «Carletti» nel titolo |
+| Controllo sul margine `100·(A+B) ≥ A·B` | ✅ fatto (database e controllo immediato nel foglio di creazione) |
+| Riga sul compenso nel pannello di creazione | ✅ fatto |
+| ESITA ORA in un passo | ✅ fatto (si sceglie SÌ o NO e si chiude subito) |
+| Precedenza del creatore (T+2′) e annullamento a T+17′ | ✅ fatto; «Da esitare» visibile agli altri da T+2′ |
+| Scommessa senza puntate | ✅ fatto: si chiude da sola, nessun esito, nessun annullamento |
+| Compenso di chi esita (10%, max 250, altro esitatore 50%, a fine contestazione, non se ribaltato) | ✅ fatto, con «Esita per X Carletti» nelle schede e il compenso in «Create da me» |
+| Bancarotta con puntate in corso (7.A) | ✅ fatto: si fallisce quando l'ultima puntata si risolve con saldo sotto 10 |
+| Banco: importi in multipli di 10, testi non ripetuti, registro con saldi risultanti | ✅ fatto |
+| Comunicati «cassa in rosso / in attivo» e «grande vincita» (soglia 500) | ✅ fatto |
+| Parametri in configurazione | ✅ tabella `mazzobet.config` letta dalle funzioni; il client riceve i valori che gli servono |
+| Sponsor a soglia di cassa del prompt | ➖ non fatto di proposito: resta lo sponsor a timer del PRD v0.7 |
+| Test automatici | ✅ 4 file in `server/db/tests/` (scenari 1–12 e timer ripetuti) + `server/tests/concorrenza.mjs` (12 controlli sull'API). Il riavvio vero del server (scenario 13) non è provato: i timer dipendono solo dagli orari nel database e ripetere il timer non duplica nulla |
+| Git | ✅ repository creato, `main` = stato di prima, lavoro sul ramo `regole-v06` |
+| Messa online | 🟡 Dockerfile, compose, blocco Caddy e guida in `deploy/`; da eseguire sul VPS |
