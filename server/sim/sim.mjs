@@ -114,6 +114,7 @@ class Agent {
     for (const m of st.markets.filter((x) => x.status === 'closed' && !x.outcome)) {
       const mine = m.byTeamId === myId
       if (!mine && m.my) continue
+      if (!mine && m.creatorOnlyUntil && Date.parse(m.creatorOnlyUntil) > now) continue   // precedenza del creatore
       if (!this.respondedAt.has(m.id)) this.respondedAt.set(m.id, Date.now())
       if (rnd() < (mine ? 0.9 : 0.12)) {
         const truth = truths.get(m.id) ?? pick(['yes', 'no'])
@@ -123,7 +124,7 @@ class Agent {
         if (r.status === 200) {
           stats.resolves++
           if (wrong) stats.resolvesWrong++
-          resolveDelays.push(Date.now() - this.respondedAt.get(m.id))
+          resolveDelays.push(Math.max(0, now - Date.parse(m.expiresAt)) / SCALE)  // secondi di serata dopo la scadenza, in ms «reali»
         }
       }
     }
