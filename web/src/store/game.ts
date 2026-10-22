@@ -1,0 +1,384 @@
+/**
+ * Store collegato al server. Il server è autoritativo (saldo, quote, puntate, esiti, orari):
+ * qui si tiene solo una copia dello stato, aggiornata a polling e dopo ogni azione.
+ * Notizie RadioCorsa e Banco sono ancora di esempio (fase successiva).
+ */
+import { useSyncExternalStore } from 'react'
+import { ApiError, api, getToken, setToken } from '../lib/api'
+
+export type Side = 'yes' | 'no'
+export type MarketStatus = 'open' | 'closed' | 'done' | 'void'
+
+export interface Bet {
+  side: Side
+  amount: number
+  result?: 'win' | 'loss' | 'void'
+  payout?: number
+  appealed?: boolean
+}
+
+export interface Market {
+  id: number // id interno, usato dall'API
+  num: number // numero mostrato («Scommessa n. 44»)
+  text: string
+  by: string
+  yes: number // quota SÌ in centesimi
+  no: number // quota NO in centesimi
+  createdAt: number
+  expiresAt: number
+  yesPool: number
+  noPool: number
+  status: MarketStatus
+  resolveBy?: number
+  outcome?: Side
+  flipped: boolean
+  appealUntil?: number
+  my: Bet | null
+}
+
+export type NewsKind = 'bonus' | 'malus' | 'giuria' | 'bank' | 'sponsor'
+export interface News {
+  id: number
+  at: number
+  kind: NewsKind
+  title: string
+  text: string
+}
+
+export type LedgerKind = 'start' | 'create' | 'bet' | 'win' | 'refund' | 'bonus' | 'malus' | 'colletta' | 'sponsor' | 'adjust' | 'reamm' | 'other'
+export interface LedgerEntry {
+  id: number
+  at: number
+  kind: LedgerKind
+  label: string
+  amount: number
+}
+
+export interface LeaderRow {
+  teamId: number
+  name: string
+  balance: number
+  correct: number
+  bankruptcies: number
+  readmissions: number
+}
+
+export interface TeamInfo {
+  id: number
+  name: string
+  entered: boolean
+}
+
+export interface GameState {
+  /** Orologio allineato al server (countdown corretti anche con l'ora del telefono sbagliata). */
+  now: number
+  ready: boolean
+  team: string | null
+  tab: 'home' | 'rank' | 'bets' | 'radio'
+  balance: number
+  bankruptUntil: number | null
+  readmissions: number
+  correct: number
+  endsAt: number | null
+  /** 'closing' = niente nuove puntate/creazioni; 'closed' = sola lettura, classifica congelata. */
+  sessionStatus: 'active' | 'paused' | 'closing' | 'closed'
+  markets: Market[]
+  news: News[]
+  ledger: LedgerEntry[]
+  leaderboard: LeaderRow[]
+  bankCash: number
+  bankInPlay: number
+  toast: string | null
+}
+
+export type Result = { ok: true } | { ok: false; error: string }
+const ok: Result = { ok: true }
+const fail = (e: unknown): Result => ({
+  ok: false,
+  error: e instanceof ApiError ? e.message : 'Errore. Riprova.',
+})
+
+let state: GameState = {
+  now: Date.now(),
+  ready: false,
+  team: null,
+  tab: 'home',
+  balance: 0,
+  bankruptUntil: null,
+  readmissions: 0,
+  correct: 0,
+  endsAt: null,
+  sessionStatus: 'active',
+  markets: [],
+  news: [],
+  ledger: [],
+  leaderboard: [],
+  bankCash: 0,
+  bankInPlay: 0,
+  toast: null,
+}
+
+const listeners = new Set<() => void>()
+function set(patch: Partial<GameState>) {
+  state = { ...state, ...patch }
+  listeners.forEach((l) => l())
+}
+
+export const useGame = () =>
+  useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb)
+      return () => listeners.delete(cb)
+    },
+    () => state,
+  )
+
+/* ---------- derivati ---------- */
+
+export const isMine = (m: Market) => m.by === state.team
+export const committed = (s: GameState) =>
+  s.markets.filter((m) => m.my && (m.status === 'open' || m.status === 'closed')).reduce((a, m) => a + m.my!.amount, 0)
+/** Mercati da esitare in cui posso rispondere: non ho puntato io. */
+export const toResolve = (s: GameState) =>
+  s.markets.filter((m) => m.status === 'closed' && !m.outcome && !m.my && m.by !== s.team)
+/** Obbligo bloccante: miei mercati chiusi non ancora esitati. */
+export const mustResolve = (s: GameState) => s.markets.filter((m) => m.by === s.team && m.status === 'closed' && !m.outcome)
+
+/* ---------- server clock ---------- */
+
+let clockOffset = 0
+/** Ora del server (ms). */
+export const serverNow = () => Date.now() + clockOffset
+
+let toastTimer: ReturnType<typeof setTimeout> | undefined
+export function toast(text: string) {
+  set({ toast: text })
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => set({ toast: null }), 2600)
+}
+
+/* ---------- mapping dal server ---------- */
+
+interface ServerMarket {
+  id: number
+  no: number
+  question: string
+  by: string
+  yesOdds: number
+  noOdds: number
+  createdAt: string
+  expiresAt: string
+  status: 'open' | 'closed' | 'resolved' | 'void'
+  resolveBy: string | null
+  outcome: Side | null
+  flipped: boolean
+  appealUntil: string | null
+  yesPool: number
+  noPool: number
+  my: { side: Side; amount: number; result: Bet['result'] | null; payout: number | null; appealed: boolean } | null
+}
+interface ServerState {
+  now: string
+  session: { endsAt: string; status: GameState['sessionStatus'] }
+  me: { name: string; balance: number; status: string; bankruptUntil: string | null; readmissions: number; correct: number }
+  markets: ServerMarket[]
+  ledger: { id: number; at: string; kind: string; marketNo: number | null; amount: number }[]
+  news: { id: number; at: string; kind: NewsKind; title: string; text: string }[]
+  leaderboard: LeaderRow[]
+  bank: { cash: number; inPlay: number }
+}
+
+const ts = (v: string | null) => (v ? new Date(v).getTime() : undefined)
+
+const LEDGER_KIND: Record<string, LedgerKind> = {
+  start: 'start', create: 'create', bet: 'bet', win: 'win', refund: 'refund', readmit: 'reamm',
+  bonus: 'bonus', malus: 'malus', colletta: 'colletta', sponsor_rain: 'sponsor', appeal_adjust: 'adjust',
+}
+function ledgerLabel(kind: string, no: number | null) {
+  const n = no !== null ? ` n. ${no}` : ''
+  switch (kind) {
+    case 'start': return 'Ingresso in gara'
+    case 'create': return `Pubblicazione scommessa${n}`
+    case 'bet': return `Puntata su${n}`
+    case 'win': return `Vincita scommessa${n}`
+    case 'refund': return `Rimborso scommessa${n}`
+    case 'readmit': return 'Riammissione, debito azzerato'
+    case 'bonus': return 'Bonus del Banco'
+    case 'malus': return 'Malus del Banco'
+    case 'colletta': return 'Colletta per il gregario caduto'
+    case 'sponsor_rain': return 'Pioggia di Carletti dello sponsor'
+    case 'appeal_adjust': return `Rettifica per ricorso, scommessa${n}`
+    default: return kind
+  }
+}
+
+function mapMarket(m: ServerMarket): Market {
+  return {
+    id: m.id,
+    num: m.no,
+    text: m.question,
+    by: m.by,
+    yes: m.yesOdds,
+    no: m.noOdds,
+    createdAt: new Date(m.createdAt).getTime(),
+    expiresAt: new Date(m.expiresAt).getTime(),
+    yesPool: Number(m.yesPool),
+    noPool: Number(m.noPool),
+    status: m.status === 'resolved' ? 'done' : m.status,
+    resolveBy: ts(m.resolveBy),
+    outcome: m.outcome ?? undefined,
+    flipped: m.flipped,
+    appealUntil: ts(m.appealUntil),
+    my: m.my ? { side: m.my.side, amount: Number(m.my.amount), result: m.my.result ?? undefined, payout: m.my.payout === null ? undefined : Number(m.my.payout), appealed: m.my.appealed } : null,
+  }
+}
+
+/** Toast per ciò che cambia senza un'azione mia (rimborsi, esiti di altri). */
+function announceChanges(prev: Market[], next: Market[]) {
+  for (const m of next) {
+    const before = prev.find((p) => p.id === m.id)
+    if (!before || !m.my || before.status === m.status) continue
+    if (m.status === 'void') toast(`Scommessa n. ${m.num} annullata: puntata rimborsata`)
+    else if (m.status === 'done' && before.status !== 'done') toast(m.my.result === 'win' ? `Scommessa n. ${m.num} vinta: +₡ ${m.my.payout}` : `Scommessa n. ${m.num} persa`)
+  }
+}
+
+/** Notifica live non bloccante per le nuove notizie RadioCorsa (resta comunque nel feed). */
+function announceNews(prev: News[], next: News[]) {
+  const seen = new Set(prev.map((n) => n.id))
+  const fresh = next.filter((n) => !seen.has(n.id))
+  if (fresh.length) toast(fresh[0].title)
+}
+
+let refreshing = false
+export async function refresh() {
+  if (refreshing || !getToken()) return
+  refreshing = true
+  try {
+    const s = await api<ServerState>('/state')
+    clockOffset = new Date(s.now).getTime() - Date.now()
+    const markets = s.markets.map(mapMarket)
+    const news = s.news.map((n) => ({ id: n.id, at: new Date(n.at).getTime(), kind: n.kind, title: n.title, text: n.text }))
+    if (state.ready && state.team) {
+      announceChanges(state.markets, markets)
+      announceNews(state.news, news)
+    }
+    set({
+      news,
+      ready: true,
+      now: serverNow(),
+      team: s.me.name,
+      balance: Number(s.me.balance),
+      bankruptUntil: s.me.status === 'bankrupt' && s.me.bankruptUntil ? new Date(s.me.bankruptUntil).getTime() : null,
+      readmissions: s.me.readmissions,
+      correct: s.me.correct,
+      endsAt: new Date(s.session.endsAt).getTime(),
+      sessionStatus: s.session.status,
+      markets,
+      ledger: s.ledger.map((l) => ({ id: l.id, at: new Date(l.at).getTime(), kind: LEDGER_KIND[l.kind] ?? 'banco', label: ledgerLabel(l.kind, l.marketNo), amount: Number(l.amount) })),
+      leaderboard: s.leaderboard.map((r) => ({ ...r, balance: Number(r.balance) })),
+      bankCash: Number(s.bank.cash),
+      bankInPlay: Number(s.bank.inPlay),
+    })
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 401) {
+      setToken(null)
+      set({ ready: true, team: null })
+    } else if (!state.ready) set({ ready: true })
+  } finally {
+    refreshing = false
+  }
+}
+
+/** Esegue un'azione sul server e aggiorna lo stato; ritorna l'esito per la UI. */
+async function run(fn: () => Promise<unknown>, success?: string): Promise<Result> {
+  try {
+    await fn()
+    await refresh()
+    if (success) toast(success)
+    return ok
+  } catch (e) {
+    await refresh()
+    return fail(e)
+  }
+}
+
+/* ---------- azioni ---------- */
+
+export const actions = {
+  async listTeams() {
+    return api<TeamInfo[]>('/teams')
+  },
+
+  async enterTeam(teamId: number): Promise<Result> {
+    try {
+      const r = await api<{ token: string }>('/enter', { body: { teamId, token: getToken() } })
+      setToken(r.token)
+      set({ tab: 'home' })
+      await refresh()
+      return ok
+    } catch (e) {
+      return fail(e)
+    }
+  },
+
+  leaveTeam() {
+    setToken(null)
+    set({ team: null, markets: [], ledger: [], leaderboard: [], balance: 0, bankruptUntil: null })
+  },
+
+  setTab(tab: GameState['tab']) {
+    set({ tab })
+    window.scrollTo(0, 0)
+  },
+
+  placeBet(marketId: number, side: Side, amount: number): Promise<Result> {
+    return run(() => api(`/markets/${marketId}/bets`, { body: { side, amount } }), `Puntata confermata: ₡ ${amount} su ${side === 'yes' ? 'SÌ' : 'NO'}`)
+  },
+
+  /** `key` identifica il tentativo: un retry con la stessa chiave non crea due mercati né due addebiti. */
+  createMarket(input: { text: string; yes: number; no: number; expiresAt: number; key: string }): Promise<Result> {
+    return run(
+      async () => {
+        await api('/markets', { body: { question: input.text, yesOdds: input.yes, noOdds: input.no, expiresAt: new Date(input.expiresAt).toISOString(), key: input.key } })
+        set({ tab: 'home' })
+        window.scrollTo(0, 0)
+      },
+      'Scommessa pubblicata',
+    )
+  },
+
+  /** Esito da creatore o da squadra che non ha puntato. */
+  async resolve(marketId: number, outcome: Side) {
+    const r = await run(() => api(`/markets/${marketId}/resolve`, { body: { outcome } }))
+    toast(r.ok ? 'Esito registrato. Contestazione aperta per 3 minuti.' : r.error)
+  },
+
+  /** ESITA ORA: chiude subito le puntate e apre l'esito (solo creatore). */
+  async resolveNow(marketId: number) {
+    const r = await run(() => api(`/markets/${marketId}/close`, { body: {} }))
+    if (!r.ok) toast(r.error)
+  },
+
+  /** Contesta l'esito (solo chi ha puntato). Soglia e contatore non sono mai mostrati. */
+  async appeal(marketId: number) {
+    const r = await run(() => api(`/markets/${marketId}/appeal`, { body: {} }))
+    toast(r.ok ? 'Ricorso registrato.' : r.error)
+  },
+
+  async readmit() {
+    const r = await run(() => api('/readmit', { body: {} }), 'Sei di nuovo in gara con ₡ 500')
+    if (!r.ok) toast(r.error)
+  },
+}
+
+/* ---------- boot + tick ---------- */
+
+if (getToken()) void refresh()
+else set({ ready: true })
+
+setInterval(() => set({ now: serverNow() }), 1000)
+setInterval(() => void refresh(), 3000)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) void refresh()
+})

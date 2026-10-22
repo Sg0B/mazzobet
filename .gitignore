@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+
+# simulazioni e file locali
+server/sim/out/
+server/sim/out-run.log
+.claude/
+*.log

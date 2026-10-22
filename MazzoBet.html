@@ -1,0 +1,517 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>MazzoBet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: colonna mobile unica (max 480px), bottom nav fissa, bottom sheet per puntata e creazione.
+   Look dark-only come da PRD: antracite, superfici verdi scure, lime solo per CTA e quote. */
+:root{
+  --bg:#101714; --surface:#1D2922; --surface2:#26362C; --line:#34463B;
+  --fg:#F3F7F1; --muted:#93A79A; --lime:#D9FF82; --lime-ink:#101714;
+  --bad:#FF8F7E; --good:#8BE3A5; --warn:#FFD166;
+  --f-disp:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:500 15px/1.4 var(--f-body);-webkit-text-size-adjust:100%}
+body.lock{overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0;text-align:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+button[disabled]{cursor:not-allowed}
+h1,h2,h3,p{margin:0}
+#app{max-width:480px;margin:0 auto;padding-block:12px 120px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.num{font-variant-numeric:tabular-nums}
+
+/* header */
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.logo{font:800 28px/1 var(--f-disp);letter-spacing:.05em}
+.logo b{color:var(--lime);font-weight:800}
+.teamchip{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:5px 11px;max-width:58%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bal{margin-top:14px;background:var(--surface);border-radius:14px;padding:14px 16px}
+.bal .l{font-size:12px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.bal .v{font:700 48px/1.05 var(--f-disp);font-variant-numeric:tabular-nums}
+.bal .s{font-size:13px;color:var(--muted)}
+.bal .link{display:inline;font-size:13px;color:var(--muted);text-decoration:underline;margin-top:8px}
+
+/* radiocorsa banner */
+.radio{margin-top:12px;display:block;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.radio .k{font:700 12px/1 var(--f-disp);letter-spacing:.14em;color:var(--lime)}
+.radio .t{font-weight:600;margin-top:6px}
+.radio p{color:var(--muted);font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dots{display:flex;gap:5px;margin-top:8px}
+.dots i{width:16px;height:3px;border-radius:2px;background:var(--line)}
+.dots i.on{background:var(--lime)}
+
+.cta{display:block;width:100%;min-height:58px;border-radius:12px;background:var(--lime);color:var(--lime-ink);font:800 24px/1 var(--f-disp);letter-spacing:.07em;text-align:center;margin-top:12px}
+.cta[disabled]{opacity:.4}
+.cta.sm{min-height:48px;font-size:20px;margin-top:14px}
+.ghost{display:block;width:100%;min-height:48px;border-radius:12px;border:1px solid var(--line);text-align:center;font-weight:600;margin-top:10px}
+.sec{font:700 14px/1 var(--f-disp);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:24px 0 10px;display:flex;align-items:center;gap:8px}
+.sec .dot{width:8px;height:8px;border-radius:50%;background:var(--lime)}
+.empty{color:var(--muted);padding:14px 0;font-size:14px}
+
+/* market card */
+.card{background:var(--surface);border-radius:14px;padding:14px;margin-bottom:12px}
+.card-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tag{font:700 12px/1 var(--f-disp);letter-spacing:.12em;padding:4px 8px;border-radius:4px;border:1px solid var(--muted);color:var(--muted);white-space:nowrap}
+.tag.live{border-color:var(--lime);color:var(--lime)}
+.cd{font:700 18px/1 var(--f-disp);font-variant-numeric:tabular-nums;color:var(--fg)}
+.cd small{font:500 12px var(--f-body);color:var(--muted);margin-right:6px}
+.card h3{font:600 18px/1.25 var(--f-body);margin-top:10px;text-wrap:balance}
+.by{font-size:12px;color:var(--muted);margin-top:4px}
+.odds{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.odd{display:flex;justify-content:space-between;align-items:center;min-height:54px;padding:0 14px;border-radius:10px;background:var(--surface2);border:1px solid var(--line)}
+.odd .lbl{font:700 17px/1 var(--f-disp);letter-spacing:.1em}
+.odd .q{font:800 28px/1 var(--f-disp);color:var(--lime);font-variant-numeric:tabular-nums}
+.odd[disabled]{opacity:.4}
+.odd.picked{opacity:1;border-color:var(--lime);box-shadow:inset 0 0 0 1px var(--lime)}
+.bar{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden;margin-top:12px}
+.bar i{display:block;height:100%;background:var(--lime)}
+.barl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:5px}
+.note{font-size:13px;color:var(--muted);margin-top:10px}
+.note b{color:var(--fg)}
+
+.bk{background:#3A1F1B;border:1px solid var(--bad);border-radius:12px;padding:14px;margin-top:12px}
+.bk h3{font:800 22px/1 var(--f-disp);letter-spacing:.08em;color:var(--bad)}
+.bk p{margin-top:6px;font-size:14px}
+
+/* lists */
+.seg{display:flex;gap:6px;margin-top:6px}
+.seg button{flex:1;min-height:40px;border-radius:8px;border:1px solid var(--line);font:700 14px var(--f-disp);letter-spacing:.1em;text-transform:uppercase;text-align:center;color:var(--muted)}
+.seg button.on{color:var(--lime);border-color:var(--lime)}
+.tbl{background:var(--surface);border-radius:14px;margin-top:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row.me{background:var(--surface2)}
+.row .pos{font:700 18px var(--f-disp);color:var(--muted)}
+.row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .nm em{font-style:normal;font-size:11px;color:var(--lime);letter-spacing:.1em;margin-left:6px}
+.row .val{font:700 20px var(--f-disp);font-variant-numeric:tabular-nums}
+.row.top1 .pos{color:var(--lime)}
+.stat{display:flex;justify-content:space-between;align-items:baseline;background:var(--surface);border-radius:14px;padding:14px 16px;margin-top:12px}
+.stat span{color:var(--muted);font-size:13px}
+.stat b{font:700 30px/1 var(--f-disp);font-variant-numeric:tabular-nums}
+.stat b.neg{color:var(--bad)}
+
+.item{background:var(--surface);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.item .h{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.item .q{font-weight:600;margin-top:4px}
+.item .m{font-size:13px;color:var(--muted);margin-top:3px}
+.pill{font:700 12px/1 var(--f-disp);letter-spacing:.1em;padding:4px 8px;border-radius:4px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.ok{color:var(--good);border-color:var(--good)}
+.pill.ko{color:var(--bad);border-color:var(--bad)}
+.pill.bank{color:var(--lime);border-color:var(--lime)}
+.btns{display:flex;gap:8px;margin-top:10px}
+.btns button{flex:1;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);font:700 16px var(--f-disp);letter-spacing:.1em;text-align:center}
+.btns button.sm{font:600 13px var(--f-body);letter-spacing:0;color:var(--muted)}
+.led{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line)}
+.led:last-child{border-bottom:0}
+.led .t{font-size:14px}
+.led .a{font:700 18px var(--f-disp);font-variant-numeric:tabular-nums}
+.pos-a{color:var(--good)} .neg-a{color:var(--bad)}
+
+.news{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:10px}
+.news .h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.news .ti{font:700 17px/1.2 var(--f-disp);letter-spacing:.08em;text-transform:uppercase;margin-top:8px}
+.news p{margin-top:4px;color:#CBD8CF}
+.news .when{font-size:12px;color:var(--muted)}
+.foot{font-size:12px;color:var(--muted);margin-top:26px;text-align:center}
+
+/* team select */
+.hero{margin-top:20px}
+.hero h1{font:800 38px/1 var(--f-disp);letter-spacing:.03em;text-wrap:balance}
+.hero p{color:var(--muted);margin-top:8px}
+.team{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;min-height:54px;padding:0 14px;background:var(--surface);border-radius:10px;margin-bottom:8px}
+.team small{font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;white-space:nowrap}
+
+/* nav */
+#nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);z-index:40;padding-bottom:env(safe-area-inset-bottom,0px)}
+#nav div{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+#nav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;min-height:58px;color:var(--muted);font:600 11px/1 var(--f-body);position:relative}
+#nav button.on{color:var(--lime)}
+#nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#nav .badge{position:absolute;top:5px;left:calc(50% + 6px);background:var(--lime);color:var(--lime-ink);font:700 11px/1 var(--f-disp);border-radius:99px;min-width:18px;padding:3px 5px;text-align:center}
+
+/* sheet */
+#sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center}
+#sheet .bd{position:absolute;inset:0;background:rgba(0,0,0,.65)}
+.sh{position:relative;width:100%;max-width:480px;background:var(--surface);border-radius:18px 18px 0 0;max-height:94%;overflow:auto;padding-top:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sh .hd{display:flex;align-items:center;gap:10px;font:800 26px/1 var(--f-disp);letter-spacing:.06em}
+.sh .hd .qq{color:var(--lime)}
+.sh .sq{margin-top:8px;font-weight:600;text-wrap:balance}
+.sh label{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+input,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--fg);padding:12px;font:inherit;font-size:16px}
+textarea{resize:none;min-height:76px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip{min-height:40px;padding:0 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface2);font-weight:600;display:inline-flex;align-items:center}
+.chip.on{border-color:var(--lime);color:var(--lime)}
+.sum{margin:14px 0 0;display:grid;gap:6px}
+.sum div{display:flex;justify-content:space-between}
+.sum dt{color:var(--muted)} .sum dd{margin:0;font:700 20px var(--f-disp);font-variant-numeric:tabular-nums}
+.sum .big dd{color:var(--lime);font-size:26px}
+.err{color:var(--bad);font-size:13px;min-height:18px;margin-top:8px}
+#must{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;justify-content:center;gap:14px;padding:24px max(20px,env(safe-area-inset-right,0px)) 24px max(20px,env(safe-area-inset-left,0px))}
+#must .box{max-width:480px;width:100%;margin:0 auto}
+#must h2{font:800 40px/1 var(--f-disp);color:var(--lime);letter-spacing:.04em}
+#must p.q{font:600 22px/1.25 var(--f-body);margin-top:14px;text-wrap:balance}
+#must p.s{color:var(--muted);margin-top:8px}
+#must .btns button{min-height:72px;font-size:34px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:99px;font-weight:600;z-index:70;max-width:90%;text-align:center}
+@media (prefers-reduced-motion:no-preference){.sh{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
+</style>
+
+<div id="app"></div>
+<nav id="nav" aria-label="Navigazione principale" hidden><div>
+  <button data-act="tab:home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
+  <button data-act="tab:rank"><svg viewBox="0 0 24 24"><path d="M5 21V11M12 21V4M19 21v-7"/></svg>Classifiche</button>
+  <button data-act="tab:bets"><svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"/><path d="M14 6v12"/></svg>Scommesse<span class="badge" id="bdg" hidden></span></button>
+  <button data-act="tab:radio"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="11" rx="2"/><path d="M7 9l10-5"/><circle cx="9" cy="14.5" r="2.5"/><path d="M15 13h3M15 16h3"/></svg>RadioCorsa</button>
+</div></nav>
+<div id="sheet" hidden></div>
+<div id="must" hidden></div>
+<div id="toast" hidden role="status"></div>
+
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const MIN=60000, now=()=>Date.now();
+const fmt=n=>(n<0?'−':'')+String(Math.abs(Math.round(n))).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const cur=n=>'₡ '+fmt(n);
+const qs=c=>(c/100).toFixed(2).replace('.',',');
+const pad=n=>String(n).padStart(2,'0');
+const mmss=ms=>{ms=Math.max(0,Math.ceil(ms/1000));const h=Math.floor(ms/3600),m=Math.floor(ms%3600/60),s=ms%60;return h?h+':'+pad(m)+':'+pad(s):pad(m)+':'+pad(s)};
+const hhmm=t=>{const d=new Date(t);return pad(d.getHours())+':'+pad(d.getMinutes())};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pay=(amt,qc)=>Math.floor(amt*qc/100);
+const ago=t=>{const m=Math.max(0,Math.floor((now()-t)/MIN));return m<1?'adesso':m+' min fa'};
+const joinNames=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' e '+a[a.length-1];
+
+const TEAMS=["Parallelo24","Saunier Duval","Team Sbornia Cycling","VeloClub Mosciano","Team Pomanti","S.C. Colleranesco","Rabobank","Vini la vespa e l’uva","I Cosacchi","Nerito Team","Us Postal Service","Team Patxi","Annateresa","Team Sbronzi","Tubateam","Pennello Cinghiale","Della Rovere Pro Cycling","Sanfelice 2023","Gli Scalatori","Fave Marchisio","Mercatone Uno","Team Festina con la droga","Subaru B. Cycling Team","Pianograndecc"];
+const NOT_IN=new Set([2,9,13,18,21,23]);
+const SEED_BAL=[1180,640,1520,310,880,720,1060,455,2140,590,380,970,260,1330,150,810,670,1240,520,990,445,730,1610,205];
+
+const t0=now();
+const S={
+  team:null,tab:'home',rank:'wealth',balance:1000,cassa:3240,readm:0,correct:0,bk:null,bkReady:false,bi:0,
+  ledger:[],bets:[],nextNo:45,esitaFlag:null,ctx:null,busy:false,
+  markets:[
+    {id:41,text:'Paolo offre una birra a Sonia entro le 23:00?',by:'Team Patxi',yes:180,no:195,kind:'due',exp:t0+52*MIN,py:340,pn:180,status:'open',my:null},
+    {id:42,text:'Il Banco colpisce I Cosacchi al prossimo intervento?',by:'Annateresa',yes:450,no:120,kind:'live',exp:t0+14*MIN+20000,py:120,pn:90,status:'open',my:null},
+    {id:43,text:'Qualcuno ordina il tiramisù prima delle 22:30?',by:'Gli Scalatori',yes:145,no:260,kind:'due',exp:t0+85*MIN,py:0,pn:0,status:'open',my:null},
+    {id:44,text:'Bila si alza per un discorso entro 20 minuti?',by:'Mercatone Uno',yes:310,no:130,kind:'live',exp:t0+9*MIN+40000,py:60,pn:410,status:'open',my:null},
+    {id:40,text:'Il primo piatto arriva freddo al tavolo 3?',by:'Pianograndecc',yes:220,no:165,kind:'live',exp:t0-2*MIN,py:200,pn:260,status:'closed',deadline:t0+13*MIN,my:null}
+  ],
+  news:[
+    {t:t0-3*MIN,kind:'bonus',title:'RIFORNIMENTO VOLANTE',text:'I Cosacchi trova una borraccia piena di Carletti. Il Banco ne certifica il contenuto: 150.'},
+    {t:t0-11*MIN,kind:'malus',title:'LIQUIGAS CHIUDE IL RUBINETTO',text:'Liquigas ha letto la classifica e ha chiuso la bombola a Team Pomanti. Si resta a secco per 200 Carletti.'},
+    {t:t0-19*MIN,kind:'giuria',title:'LA GIURIA RIBALTA IL VERDETTO',text:'Sulla scommessa n. 37 il risultato è stato ribaltato. Il Banco prende atto della volontà del gruppo, con evidente disappunto.'},
+    {t:t0-27*MIN,kind:'bank',title:'CRISI DI FAME',text:'Annateresa ha finito i Carletti prima delle energie. Il Banco dispone il fermo amministrativo della squadra.'},
+    {t:t0-27*MIN+5000,kind:'bank',title:'COLLETTA PER IL GREGARIO CADUTO',text:'La crisi di Annateresa mobilita il gruppo. La direzione corsa dispone un contributo di 25 Carletti per ogni squadra non in bancarotta.'}
+  ]
+};
+const BADGE={bonus:['BONUS','ok'],malus:['MALUS','ko'],giuria:['GIURIA',''],bank:['ALMANACCO','bank']};
+
+/* ---------- state helpers ---------- */
+const find=id=>S.markets.find(m=>m.id==id);
+const store=(k,v)=>{try{v===undefined?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
+const load=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+function news(kind,title,text){S.news.unshift({t:now(),kind,title,text})}
+function led(kind,label,amt){S.balance+=amt;S.ledger.unshift({t:now(),kind,label,amt});if(kind!=='start')S.cassa-=amt;watch()}
+function watch(){
+  if(S.balance<10&&!S.bk){S.bk={until:now()+5*MIN};S.bkReady=false;news('bank','CRISI DI FAME',S.team+' ha finito i Carletti prima delle energie. Il Banco dispone il fermo amministrativo della squadra.')}
+  else if(S.balance>=10&&S.bk){S.bk=null}
+}
+const committed=()=>S.markets.filter(m=>m.my&&(m.status==='open'||m.status==='closed')).reduce((a,m)=>a+m.my.amt,0);
+const toDo=()=>S.markets.filter(m=>m.status==='closed'&&!m.out&&!m.my);
+function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>{e.hidden=true},2600)}
+
+/* ---------- views ---------- */
+function selectView(){
+  const rows=TEAMS.map((t,i)=>`<button class="team" data-act="pick:${i}"><span>${esc(t)}</span>${NOT_IN.has(i)?'':'<small>già in gara</small>'}</button>`).join('');
+  return `<div class="top"><div class="logo">MAZZO<b>BET</b></div></div>
+  <div class="hero"><h1>Con quale squadra giochi?</h1><p>Scegli la tua squadra ed entri in gara con ₡ 1.000. Nessuna registrazione.</p></div>
+  <div style="margin-top:18px">${rows}</div>`;
+}
+
+function card(m){
+  const mine=m.by===S.team, my=m.my, bk=!!S.bk;
+  const tot=m.py+m.pn, py=tot?Math.round(m.py/tot*100):0;
+  const lock=mine||!!my||bk;
+  const odd=(side,lbl,qc)=>`<button class="odd${my&&my.side===side?' picked':''}" ${lock?'disabled':''} data-act="bet:${m.id}:${side}" aria-label="${lbl} a quota ${qs(qc)}"><span class="lbl">${lbl}</span><span class="q">${qs(qc)}</span></button>`;
+  let note='';
+  if(mine)note='<p class="note">È la tua scommessa: non puoi puntare.</p>';
+  else if(my)note=`<p class="note">Hai puntato <b>${my.side==='yes'?'SÌ':'NO'} ${cur(my.amt)}</b>, incasso potenziale <b>${cur(pay(my.amt,my.side==='yes'?m.yes:m.no))}</b>.</p>`;
+  else if(bk)note='<p class="note">Puntate sospese finché sei in bancarotta.</p>';
+  const bar=tot?`<div class="bar" aria-hidden="true"><i style="width:${py}%"></i></div><div class="barl"><span>SÌ ${py}%</span><span>Carletti puntati</span><span>NO ${100-py}%</span></div>`:'<div class="barl" style="margin-top:12px"><span>Nessuna puntata</span></div>';
+  return `<article class="card"><div class="card-top"><span class="tag ${m.kind==='live'?'live':''}">${m.kind==='live'?'LIVE 20 MIN':'A SCADENZA'}</span><span class="cd"><small>${m.kind==='live'?'chiude tra':'alle '+hhmm(m.exp)+' · tra'}</small><span data-until="${m.exp}">${mmss(m.exp-now())}</span></span></div>
+  <h3>${esc(m.text)}</h3><div class="by">Scommessa n. ${m.id} · di ${esc(m.by)}</div>
+  <div class="odds">${odd('yes','SÌ',m.yes)}${odd('no','NO',m.no)}</div>${bar}${note}</article>`;
+}
+
+function bannerHtml(){
+  const n=S.news.slice(0,4),i=S.bi%n.length,x=n[i];
+  return `<span class="k">RADIOCORSA</span><div class="t">${esc(x.title)}</div><p>${esc(x.text)}</p><div class="dots">${n.map((_,j)=>`<i class="${j===i?'on':''}"></i>`).join('')}</div>`;
+}
+
+function home(){
+  const open=S.markets.filter(m=>m.status==='open').sort((a,b)=>a.exp-b.exp);
+  const n=S.markets.filter(m=>m.my&&(m.status==='open'||m.status==='closed')).length;
+  let bk='';
+  if(S.bk){
+    const ready=now()>=S.bk.until;
+    bk=`<div class="bk"><h3>SEI IN BANCAROTTA</h3><p>Nuove puntate sospese. ${ready?'Il blocco è finito: puoi chiedere la riammissione a ₡ 500.':'Puoi chiedere la riammissione tra <b class="num" data-until="'+S.bk.until+'">'+mmss(S.bk.until-now())+'</b>.'}</p>
+    <button class="cta sm" data-act="readmit" ${ready?'':'disabled'}>RICHIEDI RIAMMISSIONE</button></div>`;
+  }
+  const canCreate=S.balance>=100&&!S.bk;
+  return `<div class="top"><div class="logo">MAZZO<b>BET</b></div><span class="teamchip">${esc(S.team)}</span></div>
+  <div class="bal"><div class="l">Saldo disponibile</div><div class="v">${cur(S.balance)}</div><div class="s">${n?'Impegnati '+cur(committed())+' in '+n+(n===1?' puntata':' puntate'):'Nessuna puntata in corso'}</div><button class="link" data-act="reset">Cambia squadra</button></div>
+  <button class="radio" id="bn" data-act="tab:radio" aria-label="Apri RadioCorsa">${bannerHtml()}</button>
+  ${bk}
+  <button class="cta" data-act="create" ${canCreate?'':'disabled'}>CREA UNA SCOMMESSA</button>
+  ${canCreate?'':'<p class="note" style="text-align:center">Servono almeno ₡ 100 e nessuna bancarotta in corso.</p>'}
+  <h2 class="sec"><span class="dot"></span>Live betting</h2>
+  ${open.length?open.map(card).join(''):'<p class="empty">Nessuna scommessa aperta. Crea la prima.</p>'}
+  <p class="foot">Bozza visiva con dati di esempio. Nessun server collegato.</p>`;
+}
+
+function board(){
+  const me=S.team;
+  const t=TEAMS.map((n,i)=>({n,bal:n===me?S.balance:SEED_BAL[i],pr:n===me?S.correct:(i*5+3)%8,bk:(i%5===3?1:0)+(n===me&&S.bk?1:0),rd:n===me?S.readm:(i%7===3?1:0),in:!NOT_IN.has(i)||n===me})).filter(x=>x.in);
+  return t;
+}
+function rank(){
+  const t=board(),me=S.team;
+  let body='';
+  const rows=(arr,val)=>`<div class="tbl">${arr.map((x,i)=>`<div class="row${x.n===me?' me':''}${i===0?' top1':''}"><span class="pos">${i+1}</span><span class="nm">${esc(x.n)}${x.n===me?'<em>TU</em>':''}</span><span class="val">${val(x)}</span></div>`).join('')}</div>`;
+  if(S.rank==='wealth')body=rows(t.slice().sort((a,b)=>b.bal-a.bal),x=>cur(x.bal));
+  else if(S.rank==='picks')body=rows(t.slice().sort((a,b)=>b.pr-a.pr||b.bal-a.bal),x=>x.pr)+'<p class="note">Pronostici corretti. A parità conta il patrimonio.</p>';
+  else{
+    const inCorso=S.markets.filter(m=>m.status==='open'||m.status==='closed').reduce((a,m)=>a+m.py+m.pn,0)+(S.markets.filter(m=>m.my&&(m.status==='open'||m.status==='closed')).reduce((a,m)=>a+m.my.amt,0));
+    const bkl=t.filter(x=>x.bk||x.rd).sort((a,b)=>b.bk-a.bk);
+    body=`<div class="stat"><span>Cassa del Banco</span><b class="${S.cassa<0?'neg':''}">${S.cassa<0?'':'+'}${cur(S.cassa)}</b></div>
+    <div class="stat" style="margin-top:8px"><span>di cui puntate in corso</span><b>${cur(inCorso)}</b></div>
+    <h2 class="sec">Bancarotte e riammissioni</h2><div class="tbl">${bkl.length?bkl.map(x=>`<div class="row${x.n===me?' me':''}"><span class="pos"></span><span class="nm">${esc(x.n)}</span><span class="val">${x.bk} / ${x.rd}</span></div>`).join(''):'<div class="row"><span></span><span class="nm">Nessuna bancarotta</span><span></span></div>'}</div><p class="note">Colonna: bancarotte / riammissioni. Cassa solo informativa: il Banco resta illimitato.</p>`;
+  }
+  const sb=(k,l)=>`<button class="${S.rank===k?'on':''}" data-act="rk:${k}">${l}</button>`;
+  return `<div class="top"><div class="logo">CLASSIFICHE</div></div><div class="seg">${sb('wealth','Patrimonio')}${sb('picks','Pronostici')}${sb('bank','Banco')}</div>${body}<p class="foot">Dati di esempio.</p>`;
+}
+
+function bets(){
+  const mine=S.markets.filter(m=>m.my).sort((a,b)=>b.id-a.id);
+  const made=S.markets.filter(m=>m.by===S.team).sort((a,b)=>b.id-a.id);
+  const td=toDo();
+  const tdHtml=td.length?td.map(m=>`<div class="item"><div class="h"><span class="pill">ESITA</span><span class="cd num" style="font-size:16px">restano <span data-until="${m.deadline}">${mmss(m.deadline-now())}</span></span></div>
+    <p class="q">${esc(m.text)}</p><p class="m">Scommessa n. ${m.id} · di ${esc(m.by)}. Chi ha puntato non può esitare. La prima risposta vale.</p>
+    <div class="btns"><button data-act="esita:${m.id}:yes">SÌ</button><button data-act="esita:${m.id}:no">NO</button></div></div>`).join(''):'<p class="empty">Nessuna scommessa da esitare.</p>';
+  const stat=m=>{
+    const my=m.my;
+    if(m.status==='void')return ['ANNULLATA','','Rimborsata.'];
+    if(m.status==='done'){
+      const c=m.contest>now()?` <button class="sm" data-act="contest:${m.id}" style="text-decoration:underline">Contesta</button>`:'';
+      return my.res==='win'?['VINTA','ok','+'+cur(my.pay)+c]:['PERSA','ko','−'+cur(my.amt)+c];
+    }
+    if(m.status==='closed')return ['IN ATTESA DI ESITO','','Puntate chiuse.'];
+    return ['IN CORSO','','Incasso potenziale '+cur(pay(my.amt,my.side==='yes'?m.yes:m.no))+'.'];
+  };
+  const minHtml=mine.length?mine.map(m=>{const s=stat(m);return `<div class="item"><div class="h"><span class="pill ${s[1]}">${s[0]}</span><span class="cd num" style="font-size:16px">${m.my.side==='yes'?'SÌ':'NO'} · ${cur(m.my.amt)}</span></div><p class="q">${esc(m.text)}</p><p class="m">Scommessa n. ${m.id} · quota ${qs(m.my.side==='yes'?m.yes:m.no)}. ${s[2]}</p></div>`}).join(''):'<p class="empty">Non hai ancora puntato.</p>';
+  const madeHtml=made.length?made.map(m=>`<div class="item"><div class="h"><span class="pill">${m.status==='open'?'APERTA':m.status==='closed'?'DA ESITARE':m.status==='void'?'ANNULLATA':'ESITATA '+(m.out==='yes'?'SÌ':'NO')}</span><span class="cd num" style="font-size:16px">${m.status==='open'?'<span data-until="'+m.exp+'">'+mmss(m.exp-now())+'</span>':''}</span></div><p class="q">${esc(m.text)}</p><p class="m">Scommessa n. ${m.id} · SÌ ${qs(m.yes)} / NO ${qs(m.no)}</p>${m.status==='open'?`<div class="btns"><button class="sm" data-act="esitaora:${m.id}">ESITA ORA</button></div>`:''}</div>`).join(''):'<p class="empty">Non hai creato scommesse.</p>';
+  const K={start:'INGRESSO',create:'CREAZIONE',bet:'PUNTATA',win:'VINCITA',refund:'RIMBORSO',banco:'BANCO',reamm:'RIAMMISSIONE'};
+  const ledHtml=S.ledger.map(l=>`<div class="led"><span class="pill ${l.kind==='banco'||l.kind==='reamm'?'bank':''}">${K[l.kind]}</span><span class="t">${esc(l.label)}</span><span class="a ${l.amt>=0?'pos-a':'neg-a'}">${l.amt>=0?'+':''}${fmt(l.amt)}</span></div>`).join('');
+  return `<div class="top"><div class="logo">SCOMMESSE</div></div>
+  <h2 class="sec">Da esitare</h2>${tdHtml}
+  <h2 class="sec">Le mie puntate</h2>${minHtml}
+  <h2 class="sec">Create da me</h2>${madeHtml}
+  <h2 class="sec">Movimenti</h2><div class="tbl" style="margin-top:0">${ledHtml}</div>`;
+}
+
+function radio(){
+  const items=S.news.map(n=>{const b=BADGE[n.kind]||['',''];return `<article class="news"><div class="h"><span class="pill ${b[1]}">${b[0]}</span><span class="when">${ago(n.t)}</span></div><h3 class="ti">${esc(n.title)}</h3><p>${esc(n.text)}</p></article>`}).join('');
+  return `<div class="top"><div class="logo">RADIOCORSA</div></div><div style="margin-top:12px">${items}</div>
+  <button class="ghost" data-act="banco">Prova un intervento del Banco</button><p class="foot">Anteprima della bozza: il Banco colpisce la tua squadra e un’altra.</p>`;
+}
+
+function render(){
+  const a=$('#app');
+  if(!S.team){a.innerHTML=selectView();$('#nav').hidden=true;return}
+  $('#nav').hidden=false;
+  a.innerHTML=({home,rank,bets,radio})[S.tab]();
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.act==='tab:'+S.tab));
+  const n=toDo().length,bd=$('#bdg');bd.hidden=!n;bd.textContent=n;
+}
+
+/* ---------- sheets ---------- */
+function sheet(html){const r=$('#sheet');r.innerHTML='<div class="bd" data-act="close"></div><div class="sh" role="dialog" aria-modal="true">'+html+'</div>';r.hidden=false;document.body.classList.add('lock')}
+function closeSheet(){const r=$('#sheet');r.hidden=true;r.innerHTML='';document.body.classList.remove('lock');S.ctx=null;S.busy=false}
+
+function openBet(id,side){
+  const m=find(id);if(!m||m.status!=='open'||m.my||m.by===S.team||S.bk)return;
+  const qc=side==='yes'?m.yes:m.no;
+  S.ctx={id:m.id,side,qc};
+  sheet(`<div class="hd"><span class="qq">${side==='yes'?'SÌ':'NO'}</span><span class="num">@ ${qs(qc)}</span></div><p class="sq">${esc(m.text)}</p>
+  <label for="amt">Importo (₡)</label><input id="amt" type="number" inputmode="numeric" min="10" step="1" value="50">
+  <div class="chips">${[25,50,100,250].map(v=>`<button class="chip" data-act="amt:${v}">${v}</button>`).join('')}<button class="chip" data-act="amt:max">MAX</button></div>
+  <dl class="sum"><div><dt>Quota</dt><dd>${qs(qc)}</dd></div><div><dt>Puntata</dt><dd id="sP">₡ 50</dd></div><div class="big"><dt>Incasso potenziale</dt><dd id="sW">₡ 0</dd></div></dl>
+  <p class="err" id="err" role="alert"></p>
+  <button class="cta sm" id="ok" data-act="confirmBet">CONFERMA PUNTATA</button><button class="ghost" data-act="close">Annulla</button>`);
+  upBet();
+}
+function upBet(){
+  if(!S.ctx||!$('#amt'))return;
+  const v=Number($('#amt').value),okInt=Number.isInteger(v);
+  let e='';
+  if(!okInt||v<10)e='Puntata minima ₡ 10.';
+  else if(v>S.balance)e='Saldo insufficiente: hai '+cur(S.balance)+'.';
+  $('#err').textContent=e;$('#ok').disabled=!!e;
+  $('#sP').textContent=okInt?cur(v):'—';$('#sW').textContent=okInt&&v>0?cur(pay(v,S.ctx.qc)):'—';
+  document.querySelectorAll('.chip[data-act^="amt"]').forEach(c=>{const k=c.dataset.act.split(':')[1];c.classList.toggle('on',(k==='max'?S.balance:Number(k))===v)});
+}
+function confirmBet(){
+  if(S.busy||!S.ctx)return;
+  const m=find(S.ctx.id),v=Number($('#amt').value);
+  if(!m||m.status!=='open'){$('#err').textContent='La scommessa è già chiusa.';return}
+  if(!Number.isInteger(v)||v<10||v>S.balance||S.bk)return;
+  S.busy=true;
+  const side=S.ctx.side;
+  m.my={side,amt:v};if(side==='yes')m.py+=v;else m.pn+=v;
+  led('bet','Puntata '+(side==='yes'?'SÌ':'NO')+' su n. '+m.id,-v);
+  closeSheet();toast('Puntata confermata: '+cur(v)+' su '+(side==='yes'?'SÌ':'NO'));render();
+}
+
+let closeKind='live';
+function openCreate(){
+  if(S.balance<100||S.bk)return;
+  closeKind='live';
+  sheet(`<div class="hd">NUOVA SCOMMESSA</div>
+  <label for="cq">Domanda con esito SÌ / NO</label><textarea id="cq" maxlength="120" placeholder="Es. Paolo offre una birra a Sonia entro le 23:00?"></textarea>
+  <div class="two"><div><label for="cy">Quota SÌ</label><input id="cy" inputmode="decimal" value="1,90"></div><div><label for="cn">Quota NO</label><input id="cn" inputmode="decimal" value="1,90"></div></div>
+  <p class="note">Quote da 1,10 a 10,00, fisse per tutta la durata.</p>
+  <label>Chiusura</label>
+  <div class="chips" id="cc"><button class="chip on" data-act="cl:live">LIVE 20 MIN</button><button class="chip" data-act="cl:30">+30 min</button><button class="chip" data-act="cl:60">+1 h</button><button class="chip" data-act="cl:120">+2 h</button><button class="chip" data-act="cl:time">Orario</button></div>
+  <div id="ct" hidden><label for="ctime">Orario di chiusura (entro le 03:00)</label><input id="ctime" type="time"></div>
+  <p class="note">Dovrai indicare l’esito entro 15 minuti dalla scadenza; chiunque non abbia puntato può farlo al tuo posto. Se nessuno esita, la scommessa è annullata.</p>
+  <p class="err" id="err" role="alert"></p>
+  <button class="cta sm" data-act="publish">PUBBLICA · ₡ 100</button><button class="ghost" data-act="close">Annulla</button>`);
+}
+function parseQ(s){
+  const v=parseFloat(String(s).replace(',','.'));
+  if(!isFinite(v))return null;
+  const c=Math.round(v*100);
+  if(Math.abs(v*100-c)>1e-6||c<110||c>1000)return null;
+  return c;
+}
+function publish(){
+  const text=$('#cq').value.trim(),y=parseQ($('#cy').value),n=parseQ($('#cn').value);
+  const err=m=>{$('#err').textContent=m};
+  if(text.length<8)return err('Scrivi una domanda chiara, almeno 8 caratteri.');
+  if(!y||!n)return err('Le quote devono essere tra 1,10 e 10,00, con due decimali.');
+  let exp,kind='due';
+  if(closeKind==='live'){exp=now()+20*MIN;kind='live'}
+  else if(closeKind==='time'){
+    const v=$('#ctime').value;if(!v)return err('Scegli un orario di chiusura.');
+    const [h,mi]=v.split(':').map(Number);const d=new Date();d.setHours(h,mi,0,0);
+    if(d.getTime()<=now())d.setDate(d.getDate()+1);
+    const lim=new Date();lim.setHours(3,0,0,0);if(lim.getTime()<=now())lim.setDate(lim.getDate()+1);
+    if(d.getTime()>lim.getTime())return err('Oltre le 03:00 non si può.');
+    if(d.getTime()-now()<MIN)return err('Scegli un orario più avanti.');
+    exp=d.getTime();
+  }else exp=now()+Number(closeKind)*MIN;
+  if(S.balance<100)return err('Servono almeno ₡ 100.');
+  const m={id:S.nextNo++,text,by:S.team,yes:y,no:n,kind,exp,py:0,pn:0,status:'open',my:null};
+  S.markets.push(m);led('create','Pubblicazione scommessa n. '+m.id,-100);
+  closeSheet();toast('Scommessa n. '+m.id+' pubblicata');S.tab='home';render();window.scrollTo(0,0);
+}
+
+/* ---------- esito ---------- */
+function esita(id,out){
+  const m=find(id);if(!m||m.out||m.status==='void'||m.status==='done')return;
+  m.status='done';m.out=out;m.contest=now()+3*MIN;
+  if(m.my){
+    if(m.my.side===out){const p=pay(m.my.amt,out==='yes'?m.yes:m.no);m.my.res='win';m.my.pay=p;S.correct++;led('win','Vincita scommessa n. '+m.id,p);toast('Esito registrato: hai vinto '+cur(p))}
+    else{m.my.res='loss';toast('Esito registrato: scommessa persa')}
+  }else toast('Esito registrato. Contestazione aperta per 3 minuti.');
+  $('#must').hidden=true;S.esitaFlag=null;document.body.classList.remove('lock');render();
+}
+function showMust(m){
+  S.esitaFlag=m.id;const el=$('#must');
+  el.innerHTML=`<div class="box"><h2>ESITA LA SCOMMESSA!</h2><p class="q">${esc(m.text)}</p><p class="s">Scommessa n. ${m.id}. Le puntate sono chiuse. Restano <b class="num" data-until="${m.deadline}">${mmss(m.deadline-now())}</b>.</p>
+  <div class="btns" style="margin-top:22px"><button data-act="esita:${m.id}:yes">SÌ</button><button data-act="esita:${m.id}:no">NO</button></div></div>`;
+  el.hidden=false;document.body.classList.add('lock');
+}
+
+/* ---------- banco ---------- */
+const BONUS=[['PREMIO COMBATTIVITÀ','La giuria premia {n} per un attacco tanto coraggioso quanto inspiegabile. Il Banco accredita {i} Carletti.'],['ENERGIA DA MAGLIA ROSA','Enel ricarica {n} con {i} Carletti. La giuria precisa che la bolletta resta a carico del gruppo.'],['CONSEGNA ESPRESSA','GLS recapita {i} Carletti a {n}. Il pacco era destinato a un’altra squadra, ma il corriere non rilegge mai l’indirizzo.']];
+const MALUS=[['CONTROLLI ANTIDOPING!','La direzione corsa ha fermato {n}. Le analisi sono ancora in corso, ma il Banco ha già emesso una multa da {i} Carletti.'],['CORSA A PIEDI','L’ammiraglia di {n} è rimasta bloccata nel traffico e la salita è finita a piedi, come sul Ventoux nel 2016. Noleggio scarpe: {i} Carletti.'],['SARA AGGIORNA LA POLIZZA','Dopo i sinistri della serata, Sara Assicurazioni ritocca il premio di {n}: {i} Carletti, con effetto immediato.']];
+function banco(){
+  const others=TEAMS.filter((t,i)=>!NOT_IN.has(i)&&t!==S.team);
+  const other=others[Math.floor(Math.random()*others.length)];
+  const amt=100+10*Math.floor(Math.random()*16);
+  const bonus=Math.random()<.55||S.balance<10;
+  const pool=bonus?BONUS:MALUS,p=pool[Math.floor(Math.random()*pool.length)];
+  const names=joinNames([S.team,other]);
+  news(bonus?'bonus':'malus',p[0],p[1].replace('{n}',names).replace('{i}',amt));
+  led('banco',p[0].replace('!','').toLowerCase().replace(/^./,c=>c.toUpperCase()),bonus?amt:-amt);
+  toast('Il Banco è intervenuto: '+(bonus?'+':'−')+cur(amt));render();
+}
+
+/* ---------- actions ---------- */
+function enter(i){
+  S.team=TEAMS[i];S.balance=1000;S.ledger=[];S.bk=null;S.cassa=3240;
+  S.ledger.unshift({t:now(),kind:'start',label:'Ingresso in gara',amt:1000});
+  store('mazzobet-team',String(i));closeSheet();S.tab='home';render();window.scrollTo(0,0);
+}
+const acts={
+  pick(i){i=Number(i);
+    if(NOT_IN.has(i))return enter(i);
+    sheet(`<div class="hd">STAI ENTRANDO COME</div><p class="sq" style="font-size:22px">${esc(TEAMS[i])}</p><p class="note">Questa squadra risulta già aperta su un altro dispositivo. Il Banco vede tutto e non perdona gli scambi di persona.</p><button class="cta sm" data-act="enter:${i}">SONO IO, ENTRA</button><button class="ghost" data-act="close">Indietro</button>`)},
+  enter(i){enter(Number(i))},
+  tab(t){S.tab=t;render();window.scrollTo(0,0)},
+  rk(k){S.rank=k;render()},
+  bet(id,side){openBet(Number(id),side)},
+  create:openCreate,publish,close:closeSheet,confirmBet,banco,
+  amt(v){$('#amt').value=v==='max'?S.balance:v;upBet()},
+  cl(k){closeKind=k;document.querySelectorAll('#cc .chip').forEach(c=>c.classList.toggle('on',c.dataset.act==='cl:'+k));$('#ct').hidden=k!=='time'},
+  esita(id,out){esita(Number(id),out)},
+  esitaora(id){const m=find(Number(id));if(!m||m.status!=='open')return;m.status='closed';m.deadline=now()+15*MIN;m.exp=now();showMust(m);render()},
+  contest(id){toast('Ricorso registrato. Il Banco valuterà.');},
+  readmit(){if(!S.bk||now()<S.bk.until)return;const d=500-S.balance;S.readm++;led('reamm','Riammissione, debito azzerato',d);news('bank','RIENTRO IN GRUPPO',S.team+' rientra in corsa con 500 Carletti. La giuria invita a non ripetere l’esperienza.');toast('Sei di nuovo in gara con '+cur(500));render()},
+  reset(){store('mazzobet-team');S.team=null;render()}
+};
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b||b.disabled)return;
+  const p=b.dataset.act.split(':'),f=acts[p[0]];if(f)f(...p.slice(1));
+});
+document.addEventListener('input',e=>{if(e.target.id==='amt')upBet()});
+
+/* ---------- tick ---------- */
+function tick(){
+  const t=now();let ch=false;
+  S.markets.forEach(m=>{
+    if(m.status==='open'&&m.exp<=t){m.status='closed';m.deadline=m.exp+15*MIN;ch=true}
+    if(m.status==='closed'&&m.deadline<=t){
+      m.status='void';ch=true;
+      if(m.my){led('refund','Rimborso scommessa n. '+m.id,m.my.amt);toast('Scommessa n. '+m.id+' annullata: puntata rimborsata')}
+    }
+  });
+  if(S.bk&&!S.bkReady&&t>=S.bk.until){S.bkReady=true;ch=true}
+  document.querySelectorAll('[data-until]').forEach(el=>{el.textContent=mmss(Number(el.dataset.until)-t)});
+  const must=S.team&&S.markets.find(m=>m.by===S.team&&m.status==='closed'&&!m.out);
+  if(must&&S.esitaFlag!==must.id)showMust(must);
+  else if(!must&&S.esitaFlag){$('#must').hidden=true;S.esitaFlag=null;document.body.classList.remove('lock')}
+  if(ch&&S.team)render();
+}
+setInterval(tick,1000);
+setInterval(()=>{if(S.team&&S.tab==='home'){S.bi++;const b=$('#bn');if(b)b.innerHTML=bannerHtml()}},4500);
+
+/* ---------- boot ---------- */
+const saved=load('mazzobet-team');
+if(saved!==null&&TEAMS[Number(saved)]){const i=Number(saved);S.team=TEAMS[i];S.ledger.unshift({t:now(),kind:'start',label:'Ingresso in gara',amt:1000})}
+render();
+})();
+</script>
+
+</body></html>

@@ -1,0 +1,415 @@
+{
+  "versione": "0.2",
+  "nota": "Modifica titolo e testo; conserva le variabili tra parentesi graffe. Gli importi sono gestiti dal motore di gioco, non da questo catalogo. {nomeSquadre} contiene l'elenco gia formattato (es. 'Rabobank', 'Rabobank e Team Patxi', 'A, B e C'): i testi evitano verbi coniugati sul soggetto, cosi funzionano con 1, 2 o 3 squadre.",
+  "variabili": {
+    "nomeSquadre": "una o piu squadre destinatarie, gia formattate",
+    "nomeSquadra": "singola squadra (bancarotta, riammissione, grande vincita)",
+    "importo": "importo in Carletti dell'evento",
+    "numeroScommessa": "numero progressivo della scommessa (es. 42)",
+    "nomeSponsor": "nome dello sponsor",
+    "importoSponsor": "somma versata dallo sponsor al Banco",
+    "numeroSquadre": "tutte le squadre entrate almeno una volta nella sessione, incluse quelle in bancarotta",
+    "importoPerSquadra": "importo della pioggia a testa",
+    "elencoCaduti": "squadre fallite nella catena, esclusa la prima"
+  },
+  "bonus": [
+    {
+      "id": "bonus_combattivita_001",
+      "evento": "premio_combattivita",
+      "titolo": "PREMIO COMBATTIVITÀ",
+      "testo": "La giuria premia {nomeSquadre} per un attacco tanto coraggioso quanto inspiegabile. Il Banco accredita {importo} Carletti."
+    },
+    {
+      "id": "bonus_combattivita_002",
+      "evento": "premio_combattivita",
+      "titolo": "ATTACCO A 81 CHILOMETRI",
+      "testo": "Qualcuno, a Strade Bianche 2024, è partito a 81 chilometri dall'arrivo e ha avuto ragione. Per {nomeSquadre} stessa idea, motore da verificare: il Banco premia comunque con {importo} Carletti."
+    },
+    {
+      "id": "bonus_combattivita_003",
+      "evento": "premio_combattivita",
+      "titolo": "IN FUGA DA ORE",
+      "testo": "Nessuno ha capito perché, ma la giuria ha visto {nomeSquadre} davanti al gruppo per tutta la serata. Premio combattività: {importo} Carletti."
+    },
+    {
+      "id": "bonus_rifornimento_001",
+      "evento": "rifornimento",
+      "titolo": "RIFORNIMENTO VOLANTE",
+      "testo": "{nomeSquadre} trova una borraccia piena di Carletti. Il Banco ne certifica il contenuto: {importo}."
+    },
+    {
+      "id": "bonus_rifornimento_002",
+      "evento": "rifornimento",
+      "titolo": "TRAGUARDO VOLANTE ESTATHÉ",
+      "testo": "Al traguardo volante, Estathé rifornisce {nomeSquadre} con {importo} Carletti. Il tè è freddo, i Carletti sono caldi."
+    },
+    {
+      "id": "bonus_rifornimento_003",
+      "evento": "rifornimento",
+      "titolo": "BRINDISI SUL PODIO",
+      "testo": "Astoria stappa per {nomeSquadre}. Il prosecco finisce in fretta, restano {importo} Carletti."
+    },
+    {
+      "id": "bonus_rifornimento_004",
+      "evento": "rifornimento",
+      "titolo": "ESPRESSO PRIMA DELLA SALITA",
+      "testo": "Saeco offre a {nomeSquadre} un caffè lungo e {importo} Carletti. Il gruppo apprezza, la crema un po' meno."
+    },
+    {
+      "id": "bonus_rifornimento_005",
+      "evento": "rifornimento",
+      "titolo": "TAGLIERE IN AMMIRAGLIA",
+      "testo": "Molteni porta un tagliere e {importo} Carletti a {nomeSquadre}. Gregari rifocillati, classifica in attesa."
+    },
+    {
+      "id": "bonus_sponsor_001",
+      "evento": "nuovo_sponsor",
+      "titolo": "ENERGIA DA MAGLIA ROSA",
+      "testo": "Enel ricarica {nomeSquadre} con {importo} Carletti. La giuria precisa che la bolletta resta a carico del gruppo."
+    },
+    {
+      "id": "bonus_sponsor_002",
+      "evento": "nuovo_sponsor",
+      "titolo": "MAGLIA AZZURRA, CONTO AZZURRO",
+      "testo": "Banca Mediolanum riconosce a {nomeSquadre} la scalata del giorno: {importo} Carletti accreditati. Nessun mutuo, per ora."
+    },
+    {
+      "id": "bonus_sponsor_003",
+      "evento": "nuovo_sponsor",
+      "titolo": "CONSEGNA ESPRESSA",
+      "testo": "GLS recapita {importo} Carletti a {nomeSquadre}. Il pacco era destinato a un'altra squadra, ma il corriere non rilegge mai l'indirizzo."
+    },
+    {
+      "id": "bonus_sponsor_004",
+      "evento": "nuovo_sponsor",
+      "titolo": "VETTURA DI SERVIZIO",
+      "testo": "Toyota mette a disposizione di {nomeSquadre} un'ammiraglia nuova e {importo} Carletti per il carburante. Il cambio è automatico, il destino no."
+    },
+    {
+      "id": "bonus_sponsor_005",
+      "evento": "nuovo_sponsor",
+      "titolo": "ARRIVO IN ORARIO",
+      "testo": "Trenitalia comunica che {importo} Carletti sono arrivati a {nomeSquadre} con puntualità. Si tratta di un'eccezione e non verrà ripetuta."
+    },
+    {
+      "id": "bonus_tecnico_001",
+      "evento": "finanziamento_tecnico",
+      "titolo": "BIANCHI AFFINA LA TECNICA",
+      "testo": "Dalla fabbrica di biciclette più antica del mondo arrivano {importo} Carletti per {nomeSquadre}. Il telaio è celeste, il bilancio un po' meno."
+    },
+    {
+      "id": "bonus_tecnico_002",
+      "evento": "finanziamento_tecnico",
+      "titolo": "UNA COLATA DI MAPEI",
+      "testo": "Mapei stende {importo} Carletti sotto le ruote di {nomeSquadre}. Fondamenta solide, sul resto nessuna garanzia."
+    },
+    {
+      "id": "bonus_tecnico_003",
+      "evento": "finanziamento_tecnico",
+      "titolo": "INTONACO FRESCO",
+      "testo": "Fassa Bortolo rifinisce le casse di {nomeSquadre} con {importo} Carletti. Pareti lisce, conti da asciugare."
+    },
+    {
+      "id": "bonus_tecnico_004",
+      "evento": "finanziamento_tecnico",
+      "titolo": "LAMIERA D'ORO",
+      "testo": "Lampre rivernicia il budget di {nomeSquadre}: {importo} Carletti, preverniciati e pronti all'uso."
+    },
+    {
+      "id": "bonus_tecnico_005",
+      "evento": "finanziamento_tecnico",
+      "titolo": "GAS A TUTTA",
+      "testo": "Liquigas riempie la bombola di {nomeSquadre}: {importo} Carletti. Si raccomanda di non accendere nulla in discesa."
+    },
+    {
+      "id": "bonus_contributo_001",
+      "evento": "contributo_straordinario",
+      "titolo": "CUCINA COMPONIBILE",
+      "testo": "Salvarani monta {importo} Carletti nella cucina di {nomeSquadre}. Montaggio incluso, istruzioni mancanti."
+    },
+    {
+      "id": "bonus_contributo_002",
+      "evento": "contributo_straordinario",
+      "titolo": "DENIM D'ARGENTO",
+      "testo": "Carrera Jeans veste {nomeSquadre} con {importo} Carletti. Resistenti, aderenti, sconsigliati in salita."
+    },
+    {
+      "id": "bonus_contributo_003",
+      "evento": "contributo_straordinario",
+      "titolo": "MOBILI DA PIANCASTAGNAIO",
+      "testo": "Il mobilificio Furzi di Piancastagnaio arreda {nomeSquadre} con {importo} Carletti. Consegna al piano, montaggio a rischio dell'acquirente."
+    },
+    {
+      "id": "bonus_contributo_004",
+      "evento": "contributo_straordinario",
+      "titolo": "RIMBORSO SINISTRO",
+      "testo": "Sara Assicurazioni liquida a {nomeSquadre} {importo} Carletti per un danno mai denunciato. La pratica risulta in lavorazione."
+    },
+    {
+      "id": "bonus_contributo_005",
+      "evento": "contributo_straordinario",
+      "titolo": "BONIFICO SENZA MITTENTE",
+      "testo": "Un bonifico anonimo di {importo} Carletti raggiunge {nomeSquadre}. La direzione corsa non fa domande, per quieto vivere."
+    },
+    {
+      "id": "bonus_tappa_001",
+      "evento": "premio_tappa",
+      "titolo": "VITTORIA DI TAPPA",
+      "testo": "{nomeSquadre} taglia il traguardo della serata con {importo} Carletti di premio. Nessuno ricorda la tappa, tutti ricordano l'assegno."
+    }
+  ],
+  "malus": [
+    {
+      "id": "malus_antidoping_001",
+      "evento": "antidoping",
+      "titolo": "CONTROLLI ANTIDOPING!",
+      "testo": "La direzione corsa ha fermato {nomeSquadre}. Le analisi sono ancora in corso, ma il Banco ha già emesso una multa da {importo} Carletti."
+    },
+    {
+      "id": "malus_antidoping_002",
+      "evento": "antidoping",
+      "titolo": "CONTROLLO A SORPRESA",
+      "testo": "Ispezione in ammiraglia per {nomeSquadre}: trovate solo borracce e cattive intenzioni. Sanzione amministrativa di {importo} Carletti."
+    },
+    {
+      "id": "malus_sponsor_001",
+      "evento": "sponsor_deluso",
+      "titolo": "SPONSOR IN FUGA",
+      "testo": "Lo sponsor puntava su una vittoria di tappa di {nomeSquadre}. Dopo aver visto la corsa, reclama {importo} Carletti a titolo di danni morali."
+    },
+    {
+      "id": "malus_sponsor_002",
+      "evento": "sponsor_deluso",
+      "titolo": "SAECO RITIRA LA MACCHINA",
+      "testo": "Saeco riprende la macchina del caffè dall'ammiraglia di {nomeSquadre}: troppa schiuma, poca vittoria. Addebito di {importo} Carletti."
+    },
+    {
+      "id": "malus_sponsor_003",
+      "evento": "sponsor_deluso",
+      "titolo": "LIQUIGAS CHIUDE IL RUBINETTO",
+      "testo": "Liquigas ha letto la classifica e ha chiuso la bombola a {nomeSquadre}. Si resta a secco per {importo} Carletti."
+    },
+    {
+      "id": "malus_sponsor_004",
+      "evento": "sponsor_deluso",
+      "titolo": "SARA AGGIORNA LA POLIZZA",
+      "testo": "Dopo i sinistri della serata, Sara Assicurazioni ritocca il premio di {nomeSquadre}: {importo} Carletti, con effetto immediato."
+    },
+    {
+      "id": "malus_sponsor_005",
+      "evento": "sponsor_deluso",
+      "titolo": "MEDIOLANUM RIVEDE IL FIDO",
+      "testo": "Banca Mediolanum riesamina la posizione di {nomeSquadre}. Commissione di istruttoria: {importo} Carletti, senza garanzia sull'esito."
+    },
+    {
+      "id": "malus_meccanica_001",
+      "evento": "spese_meccaniche",
+      "titolo": "CONTO DEL MECCANICO",
+      "testo": "Catena, cambio e una ruota storta: il meccanico presenta il conto a {nomeSquadre}. {importo} Carletti. La bici resiste, il budget meno."
+    },
+    {
+      "id": "malus_meccanica_002",
+      "evento": "spese_meccaniche",
+      "titolo": "GLS: NESSUNO AL CITOFONO",
+      "testo": "Il corriere GLS non trova nessuno in casa di {nomeSquadre}. Spese di giacenza: {importo} Carletti."
+    },
+    {
+      "id": "malus_meccanica_003",
+      "evento": "spese_meccaniche",
+      "titolo": "SUPPLEMENTO TRENITALIA",
+      "testo": "Trenitalia addebita a {nomeSquadre} il supplemento per la prima fila: {importo} Carletti. Il ritardo, invece, è gratuito."
+    },
+    {
+      "id": "malus_meccanica_004",
+      "evento": "spese_meccaniche",
+      "titolo": "RIFORNIMENTO TOYOTA",
+      "testo": "L'ammiraglia di {nomeSquadre} ha fatto il pieno nel momento sbagliato. Toyota non c'entra, il conto da {importo} Carletti sì."
+    },
+    {
+      "id": "malus_direzione_001",
+      "evento": "penali_direzione",
+      "titolo": "CORSA A PIEDI",
+      "testo": "L'ammiraglia di {nomeSquadre} è rimasta bloccata nel traffico e la salita è finita a piedi, come sul Ventoux nel 2016. Noleggio scarpe: {importo} Carletti."
+    },
+    {
+      "id": "malus_direzione_002",
+      "evento": "penali_direzione",
+      "titolo": "BRACCIA ALZATE TROPPO PRESTO",
+      "testo": "{nomeSquadre} ha esultato prima della linea. Alla Liegi del 2020 è costata una vittoria, qui costa {importo} Carletti."
+    },
+    {
+      "id": "malus_direzione_003",
+      "evento": "penali_direzione",
+      "titolo": "TEMPI CONGELATI",
+      "testo": "Tempesta sulla corsa e tempi presi in cima, come all'Iseran nel 2019. La direzione contesta a {nomeSquadre} una discesa non autorizzata: {importo} Carletti."
+    },
+    {
+      "id": "malus_direzione_004",
+      "evento": "penali_direzione",
+      "titolo": "CARTELLONE SULLA TRAIETTORIA",
+      "testo": "Un cartello a bordo strada ha messo in crisi il gruppo, come al Tour 2021. Penale per intralcio a {nomeSquadre}: {importo} Carletti."
+    },
+    {
+      "id": "malus_direzione_005",
+      "evento": "penali_direzione",
+      "titolo": "VOLATA IRREGOLARE",
+      "testo": "La giuria ha rivisto la volata e ha trovato una traiettoria discutibile di {nomeSquadre}. Penale di {importo} Carletti."
+    },
+    {
+      "id": "malus_iscrizione_001",
+      "evento": "quota_bila",
+      "titolo": "BILA PRESENTA IL CONTO",
+      "testo": "Bila annuncia l'apertura delle iscrizioni alla prossima stagione. Per {nomeSquadre} la quota straordinaria è di {importo} Carletti."
+    },
+    {
+      "id": "malus_iscrizione_002",
+      "evento": "quota_bila",
+      "titolo": "ISCRIZIONE ANTICIPATA 2027",
+      "testo": "La direzione corsa precisa che il futuro non è ancora iniziato, ma il debito sì. A {nomeSquadre}: {importo} Carletti."
+    }
+  ],
+  "sponsor": [
+    {
+      "id": "sponsor_enel_001",
+      "nome": "Enel",
+      "titolo": "ENEL RICARICA IL BANCO",
+      "testoCassa": "{nomeSponsor} versa {importoSponsor} Carletti nelle casse del Banco. La corrente è tornata, il bilancio anche.",
+      "testoPioggia": "Sotto la maglia rosa, {nomeSponsor} fa scorrere energia nel gruppo: {importoPerSquadra} Carletti a ciascuna delle {numeroSquadre} squadre in gara."
+    },
+    {
+      "id": "sponsor_mediolanum_001",
+      "nome": "Banca Mediolanum",
+      "titolo": "MEDIOLANUM APRE IL CREDITO",
+      "testoCassa": "{nomeSponsor} accredita {importoSponsor} Carletti al Banco, senza chiedere garanzie. La provenienza dei fondi non è oggetto del comunicato.",
+      "testoPioggia": "{nomeSponsor} festeggia la maglia azzurra con {importoPerSquadra} Carletti per ciascuna delle {numeroSquadre} squadre in gara."
+    },
+    {
+      "id": "sponsor_trenitalia_001",
+      "nome": "Trenitalia",
+      "titolo": "IL TRENO DEI CAPITALI",
+      "testoCassa": "{nomeSponsor} fa arrivare {importoSponsor} Carletti in cassa. Binario unico, arrivo in orario: la giuria controlla.",
+      "testoPioggia": "{nomeSponsor} annuncia {importoPerSquadra} Carletti a bordo per ciascuna delle {numeroSquadre} squadre in gara. Fermata unica, nessun ritardo."
+    },
+    {
+      "id": "sponsor_toyota_001",
+      "nome": "Toyota",
+      "titolo": "TOYOTA RIEMPIE IL SERBATOIO",
+      "testoCassa": "{nomeSponsor} fa il pieno al Banco con {importoSponsor} Carletti. Ibrido, discreto e ricco.",
+      "testoPioggia": "{nomeSponsor} distribuisce {importoPerSquadra} Carletti a ciascuna delle {numeroSquadre} squadre in gara. Vettura ufficiale, generosità ufficiosa."
+    },
+    {
+      "id": "sponsor_astoria_001",
+      "nome": "Astoria",
+      "titolo": "ASTORIA STAPPA PER IL BANCO",
+      "testoCassa": "{nomeSponsor} brinda con {importoSponsor} Carletti. Il Banco ringrazia e si scorda di riempire i bicchieri.",
+      "testoPioggia": "Bollicine sul podio: {nomeSponsor} dedica {importoPerSquadra} Carletti a ciascuna delle {numeroSquadre} squadre in gara."
+    },
+    {
+      "id": "sponsor_mapei_001",
+      "nome": "Mapei",
+      "titolo": "UNA COLATA DI MAPEI",
+      "testoCassa": "{nomeSponsor} getta nelle fondamenta del Banco {importoSponsor} Carletti. Presa rapida, domande lente.",
+      "testoPioggia": "{nomeSponsor} stende {importoPerSquadra} Carletti a ciascuna delle {numeroSquadre} squadre in gara. Superficie piana, aspettative alte."
+    },
+    {
+      "id": "sponsor_pomata_001",
+      "nome": "Pomata del Gregario S.r.l.",
+      "titolo": "NUOVO SPONSOR IN AMMIRAGLIA",
+      "testoCassa": "{nomeSponsor} firma un accordo con il Banco e versa {importoSponsor} Carletti. La provenienza dei fondi non è oggetto del comunicato.",
+      "testoPioggia": "{nomeSponsor} ha concluso l'accordo: le {numeroSquadre} squadre in gara ricevono {importoPerSquadra} Carletti ciascuna."
+    },
+    {
+      "id": "sponsor_borraccia_001",
+      "nome": "Borraccia Senza Fondo",
+      "titolo": "CAPITALI FRESCHI PER IL GRUPPO",
+      "testoCassa": "{nomeSponsor} entra nel ciclismo dalla porta principale con {importoSponsor} Carletti per il Banco.",
+      "testoPioggia": "Il Banco annuncia {importoPerSquadra} Carletti per ciascuna delle {numeroSquadre} squadre in gara. Offre {nomeSponsor}, borraccia senza fondo."
+    }
+  ],
+  "radiocorsa": [
+    {
+      "id": "radio_bancarotta_001",
+      "evento": "bancarotta",
+      "titolo": "CRISI DI FAME",
+      "testo": "{nomeSquadra} ha finito i Carletti prima delle energie. Il Banco dispone il fermo amministrativo della squadra."
+    },
+    {
+      "id": "radio_bancarotta_002",
+      "evento": "bancarotta",
+      "titolo": "FUORI TEMPO MASSIMO",
+      "testo": "{nomeSquadra} è fuori dal tempo massimo e salta in ammiraglia. Il Banco ringrazia per la partecipazione e annota il rientro."
+    },
+    {
+      "id": "radio_bancarotta_003",
+      "evento": "bancarotta",
+      "titolo": "BANDIERA GIALLA, CASSA VUOTA",
+      "testo": "La bicicletta di {nomeSquadra} procede ancora, ma la cassa è già al deposito. Il Banco sospende la squadra."
+    },
+    {
+      "id": "radio_riammissione_001",
+      "evento": "riammissione",
+      "titolo": "RIENTRO IN GRUPPO",
+      "testo": "{nomeSquadra} rientra in corsa con {importo} Carletti. La giuria invita a non ripetere l'esperienza."
+    },
+    {
+      "id": "radio_riammissione_002",
+      "evento": "riammissione",
+      "titolo": "DALL'AMMIRAGLIA ALLA SELLA",
+      "testo": "{nomeSquadra} sale di nuovo in sella con {importo} Carletti. Il Banco ricorda che il debito è stato condonato, la memoria no."
+    },
+    {
+      "id": "radio_grande_vincita_001",
+      "evento": "grande_vincita",
+      "titolo": "ATTACCO DA LONTANO",
+      "testo": "{nomeSquadra} incassa {importo} Carletti. Il gruppo non ha ancora capito da dove sia partito l'attacco."
+    },
+    {
+      "id": "radio_grande_vincita_002",
+      "evento": "grande_vincita",
+      "titolo": "GREGARIO IN MAGLIA ROSA",
+      "testo": "{nomeSquadra} intasca {importo} Carletti. Il Banco chiede chi sia stato a dirgli che poteva vincere."
+    },
+    {
+      "id": "radio_ricorso_001",
+      "evento": "ricorso_accolto",
+      "titolo": "LA GIURIA RIBALTA IL VERDETTO",
+      "testo": "Sulla scommessa n. {numeroScommessa} il risultato è stato ribaltato. Il Banco prende atto della volontà del gruppo, con evidente disappunto."
+    },
+    {
+      "id": "radio_ricorso_002",
+      "evento": "ricorso_accolto",
+      "titolo": "REPERTO VIDEO, ARRIVO CAMBIATO",
+      "testo": "Dopo un lungo esame del fotofinish, la scommessa n. {numeroScommessa} cambia verdetto. Come alla Liegi 2020: l'ordine d'arrivo non è mai l'ultima parola."
+    },
+    {
+      "id": "radio_colletta_001",
+      "evento": "colletta",
+      "titolo": "COLLETTA PER IL GREGARIO CADUTO",
+      "testo": "La crisi di {nomeSquadra} mobilita il gruppo. La direzione corsa dispone un contributo di {importo} Carletti per ogni squadra non in bancarotta."
+    },
+    {
+      "id": "radio_colletta_002",
+      "evento": "colletta_cascata",
+      "titolo": "EFFETTO DOMINO IN GRUPPO",
+      "testo": "La colletta per {nomeSquadra} fa cadere anche {elencoCaduti}. Il gruppo si ricompone, ma nessuno è più dove era partito."
+    },
+    {
+      "id": "radio_cassa_001",
+      "evento": "cassa_in_rosso",
+      "titolo": "IL BANCO È IN ROSSO",
+      "testo": "La cassa del Banco scende sotto lo zero. La direzione corsa assicura che la situazione è sotto controllo e che nessuno ha ancora guardato i conti."
+    },
+    {
+      "id": "radio_cassa_002",
+      "evento": "cassa_in_attivo",
+      "titolo": "IL BANCO TORNA IN ATTIVO",
+      "testo": "La cassa del Banco risale sopra lo zero. I gregari tornano a pedalare, i commissari tornano a dormire."
+    },
+    {
+      "id": "radio_mercato_001",
+      "evento": "mercato_annullato",
+      "titolo": "CORSA ANNULLATA",
+      "testo": "Nessuno ha esitato la scommessa n. {numeroScommessa} entro il tempo massimo. Le puntate sono rimborsate, la quota di iscrizione no."
+    }
+  ]
+}
