@@ -8,23 +8,20 @@
 - [ ] **1.2 Prelievo della colletta oltre il saldo:** oggi preleva sempre 25 Carletti anche a chi ne ha 10–24 e lo porta in negativo. Limitarlo al saldo disponibile? (Nella nuova simulazione non è mai successo, ma può.)
 - [ ] **1.3 Banco ordinario:** estrazione pesata per ridurre le squadre mai colpite (17 su 24 in un'ora) oppure va bene così?
 - [ ] **1.4 Database di produzione.** Oggi tutto è nel progetto Supabase `giochi_ufficio`, schema `mazzobet`, condiviso con gli altri giochi (non tocca le loro tabelle). Il PRD chiede test e produzione separati: nuovo progetto Supabase (costo da verificare) o si resta così per la prima serata?
-- [ ] **1.5 GitHub e ramo di lavoro.** Il lavoro è sul ramo `regole-v06`. Posso unirlo a `main` quando dai il via libera. Per il VPS serve un repository: lo creo io su GitHub (consiglio **privato**, i tuoi altri giochi sono pubblici) o preferisci copiare la cartella a mano sul VPS?
+- [ ] **1.5 Ramo di lavoro.** Il repository privato `Sg0B/mazzobet` esiste e il VPS lo legge. Il lavoro è sul ramo `regole-v06`: posso unirlo a `main` quando dai il via libera.
 - [ ] **1.6 Rischi sociali** (esiti in malafede da terzi, doppio dispositivo, puntate su eventi già accaduti): confermi di accettarli o vuoi un rimedio minimo? Da osservare nella prova generale.
 - [ ] **1.7 Dopo la chiusura serata:** chi usa «Cambia squadra» a serata chiusa non può rientrare. Va bene?
 - [ ] **1.8 Catalogo testi:** alcuni usano il verbo al singolare anche con 2–3 squadre («trova»). Correggere a mano il catalogo.
 
-## 2. Messa online sul VPS (in corso)
+## 2. Messa online sul VPS — **fatta il 23 ottobre 2026**
 
-Preparato: `Dockerfile`, `deploy/docker-compose.yml`, `deploy/Caddyfile.mazzobet`, `deploy/aggiorna.sh`, `deploy/README.md` (passi in italiano semplice). **Da fare:**
+Online su **https://mazzobet.sourlemon.cloud** (repository privato `Sg0B/mazzobet`, ramo `regole-v06`, contenitore `mazzobet` dietro Caddy, HTTPS e compressione attivi). Dettagli e comandi in `deploy/README.md`. Provato dall'esterno: pagina, elenco squadre dal database, certificato valido, risposte compresse, `/api/state` senza chiave = 401, aggiornamento con `deploy/aggiorna.sh`. Gli altri giochi sul VPS rispondono ancora normalmente.
 
-- [ ] **Accesso al VPS:** da questo PC non riesco a collegarmi (nessuna chiave SSH, il VPS chiede la password). Due strade: (a) lanci tu i comandi della guida e mi incolli l'esito, (b) aggiungiamo una chiave SSH dedicata e li eseguo io.
-- [ ] Controlli di sola lettura (rete di Caddy, Caddyfile, DNS di `mazzobet.sourlemon.cloud`) e correggere `name:` in `deploy/docker-compose.yml` se la rete non è `n8n_default`.
-- [ ] Creare il repository su GitHub (1.5) e clonarlo sul VPS in `/home/lemon/mazzobet`.
-- [ ] Creare **a mano sul VPS** il file `.env` con `SUPABASE_URL` e la chiave **segreta** `service_role` (non la «publishable» dei tuoi appunti). Mai in chat, mai su Git.
-- [ ] `docker compose -f deploy/docker-compose.yml up -d --build` (l'immagine non è stata provata su questo PC: Docker non c'è).
-- [ ] Aggiungere il blocco al Caddyfile (con copia di sicurezza e `caddy validate` prima del reload: il Caddyfile è condiviso con gli altri giochi).
-- [ ] Prova: `https://mazzobet.sourlemon.cloud/api/health`, poi dal telefono.
-- [ ] **Aprire la serata** il giorno stesso con `server/db/ops/05_nuova_serata.sql`: la serata attuale nel database finisce alle 03:00 di stanotte.
+- [x] Accesso SSH con chiave dedicata, controlli di sola lettura, repository privato su GitHub (account Sg0B, nessuna chiave nei file), chiave di deploy di sola lettura sul VPS, cartella `/home/lemon/mazzobet`, `.env` copiato senza mostrarlo, contenitore avviato, record DNS, blocco di Caddy (con copia di sicurezza e validazione).
+- [ ] **Aprire la serata** il giorno stesso con `server/db/ops/05_nuova_serata.sql`: quella attuale nel database finisce alle 03:00 di stanotte e contiene la tua squadra di prova.
+- [ ] **Revocare la chiave SSH** di lavoro (riga `claude-mazzobet-20261023` in `/root/.ssh/authorized_keys`) quando non serve più.
+- [ ] **Unire `regole-v06` a `main`** (e far puntare il VPS su `main`) quando dai il via libera.
+- [ ] Nessun backup automatico del database e nessun monitoraggio: valuta se servono prima della serata vera.
 
 ## 3. Tecnico
 

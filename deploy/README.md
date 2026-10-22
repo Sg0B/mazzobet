@@ -1,74 +1,39 @@
-# Messa online di MazzoBet sul VPS
+# MazzoBet sul VPS
 
-**Come è fatto il VPS** (dai tuoi appunti): Hostinger `srv1255004` (72.62.181.36), Caddy dentro Docker (contenitore `n8n-caddy-1`, Caddyfile in `/home/lemon/n8n/Caddyfile`), dominio `sourlemon.cloud`. Gli altri giochi sono pagine statiche in `/home/lemon/<nome>`. MazzoBet è diverso: ha un **server Node** (le regole e il Banco), quindi gira in un **suo contenitore Docker** e Caddy gli fa da porta d'ingresso su `mazzobet.sourlemon.cloud`. Non si toccano gli altri giochi.
+**Stato (23 ottobre 2026): online su https://mazzobet.sourlemon.cloud**, ramo `regole-v06` del repository privato `Sg0B/mazzobet`.
 
-> Non ho potuto collegarmi al VPS (serve la password o una chiave SSH). Questi passi si possono fare a mano oppure io li eseguo se aggiungiamo una chiave SSH.
+## Come è fatto
 
-## 1. Controlli prima di cominciare (solo lettura, non cambiano niente)
+- VPS Hostinger `srv1255004` (72.62.181.36). Caddy gira in Docker (`n8n-caddy-1`, file `/home/lemon/n8n/Caddyfile`); gli altri giochi sono pagine statiche o app già presenti, e non vengono toccati.
+- MazzoBet è un **contenitore Docker** chiamato `mazzobet`, collegato alla rete `n8n_default` (la stessa di Caddy), **senza porte pubbliche**: Caddy lo raggiunge con `reverse_proxy mazzobet:3000`, mette l'HTTPS (certificato Let's Encrypt automatico) e comprime le risposte.
+- Il codice sta in `/home/lemon/mazzobet`, clonato da GitHub con una **chiave di sola lettura** (`/root/.ssh/mazzobet_deploy`, registrata come «deploy key» del solo repository).
+- La chiave segreta di Supabase è in `/home/lemon/mazzobet/.env` (permessi solo root, escluso da Git). Il database è il progetto `giochi_ufficio`, schema `mazzobet`.
+- Il blocco di Caddy è in fondo al Caddyfile; c'è una copia di sicurezza accanto (`Caddyfile.bak-<data>`).
 
-```bash
-ssh root@72.62.181.36
-docker ps                                   # il contenitore n8n-caddy-1 deve risultare attivo
-docker inspect n8n-caddy-1 --format '{{json .NetworkSettings.Networks}}'   # nome della rete di Caddy
-cat /home/lemon/n8n/Caddyfile               # per vedere come sono scritti gli altri giochi
-nslookup mazzobet.sourlemon.cloud           # deve rispondere 72.62.181.36
-```
+## Aggiornare dopo una modifica
 
-Se il nome della rete **non** è `n8n_default`, correggilo in `deploy/docker-compose.yml` (riga `name:`).
-
-## 2. Una sola volta
-
-```bash
-cd /home/lemon
-git clone <indirizzo-del-repository> mazzobet      # oppure copia la cartella dal PC
-cd mazzobet
-nano .env                                          # vedi sotto
-chmod 600 .env
-docker compose -f deploy/docker-compose.yml up -d --build
-```
-
-Il file `.env` (si crea **solo sul VPS**, mai su GitHub, mai in chat):
-
-```
-SUPABASE_URL=https://fxnfaotahrlmmrundkib.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=incolla-qui-la-chiave-SEGRETA
-PORT=3000
-```
-
-Attenzione: la chiave «publishable» (`sb_publishable_…`) dei tuoi appunti **non basta**: il server usa la chiave segreta `service_role`, la stessa che hai messo in `server/.env` sul PC.
-
-## 3. Collegare il dominio (Caddy)
-
-```bash
-cd /home/lemon/n8n
-cp Caddyfile Caddyfile.bak                         # copia di sicurezza
-cat /home/lemon/mazzobet/deploy/Caddyfile.mazzobet >> Caddyfile
-docker exec n8n-caddy-1 caddy validate --config /etc/caddy/Caddyfile   # deve dire «Valid configuration»
-docker exec n8n-caddy-1 caddy reload   --config /etc/caddy/Caddyfile
-```
-
-(Se il percorso del Caddyfile dentro il contenitore è diverso, lo trovi nel `docker-compose.yml` di Caddy.)
-
-## 4. Prova
-
-```bash
-curl https://mazzobet.sourlemon.cloud/api/health      # risposta: {"ok":true}
-```
-
-Poi apri `https://mazzobet.sourlemon.cloud` dal telefono.
-
-## 5. Aggiornamenti futuri
-
-Dopo ogni modifica spinta su GitHub:
+Sul PC: commit e `git push`. Sul VPS:
 
 ```bash
 cd /home/lemon/mazzobet && sh deploy/aggiorna.sh
 ```
 
+Lo script scarica l'ultima versione, ricostruisce il contenitore, lo riavvia e controlla che risponda. Per cambiare ramo: `git checkout <ramo>` prima dello script.
+
+## Controlli utili (sola lettura)
+
+```bash
+docker ps --filter name=mazzobet                 # stato e salute
+docker logs --tail 100 mazzobet                  # ultimi log
+curl https://mazzobet.sourlemon.cloud/api/health # risposta: {"ok":true}
+```
+
 ## Cose da sapere
 
-- **Database:** oggi MazzoBet usa il progetto Supabase `giochi_ufficio`, lo stesso degli altri giochi (schema separato `mazzobet`, non tocca le loro tabelle). Il PRD chiede test e produzione separati: valuta un progetto a parte prima della serata vera.
-- **Serata:** prima di giocare, nell'editor SQL di Supabase, apri la serata con `server/db/ops/05_nuova_serata.sql` (la fine serata è alle 03:00 di Roma).
-- **Log:** `docker logs --tail 100 mazzobet`.
-- **Sicurezza:** la chiave `service_role` sta solo nel `.env` del VPS. Se mai venisse mostrata in chiaro, va rigenerata da Supabase.
-- Il contenitore non è stato ancora costruito in prova su questo PC (Docker non installato): la prima costruzione sul VPS può richiedere qualche minuto.
+- **Serata:** prima di giocare apri la serata nell'editor SQL di Supabase con `server/db/ops/05_nuova_serata.sql` (la fine serata è alle 03:00 di Roma). Si chiude con `03_chiudi_serata.sql`.
+- **Database:** è lo stesso progetto Supabase degli altri giochi (schema separato, non tocca le loro tabelle). Il PRD chiede test e produzione separati: valuta un progetto a parte.
+- **Chiave segreta:** vive solo nel `.env` del VPS e in `server/.env` sul PC. Se mai venisse mostrata in chiaro, va rigenerata da Supabase.
+- **Accesso SSH usato per la messa online:** chiave dedicata (commento `claude-mazzobet-20261023`) in `/root/.ssh/authorized_keys`. Si revoca cancellando quella riga.
+- **DNS:** record A `mazzobet` → `72.62.181.36` nella zona di `sourlemon.cloud`. Alcuni provider (e le reti con filtri) impiegano un po' a vedere i nomi nuovi.
+- **Ripristino di Caddy:** se un blocco rompe qualcosa, `cp /home/lemon/n8n/Caddyfile.bak-<data> /home/lemon/n8n/Caddyfile` e `docker exec n8n-caddy-1 caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile`.
+- **Fermare MazzoBet** senza toccare altro: `cd /home/lemon/mazzobet && docker compose -f deploy/docker-compose.yml down`.
