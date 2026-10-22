@@ -1,9 +1,9 @@
 # MazzoBet — Product Requirements Document (PRD)
 
-**Versione:** 0.8 — allineata all'implementazione (frontend, server, database, Banco, ricorsi, chiusura serata) e ai risultati della prima simulazione di carico  
-**Data:** 21 ottobre 2026  
-**Stato:** implementazione V1 completata per gli aspetti funzionali; **in attesa di decisioni** su colletta/puntata MAX e messa online (vedi Appendice D e `TASKS.md`)  
-**Fonti:** PRD v0.7; decisioni prese durante lo sviluppo (registrate in Appendice D); `catalogo_banco_v02.json`; report `MazzoBet_Report_Simulazione_60min.md`; prototipo `MazzoBet.html` usato come riferimento UX, non come specifica delle regole. In caso di conflitto prevale questa v0.8. Le modifiche rispetto alla v0.7 sono elencate in **Appendice D**.
+**Versione:** 0.9 — regole del prompt v0.6 confermate e implementate (bancarotta con puntate in corso, precedenza del creatore, compenso di chi esita, valuta «Carletti», controllo sulle quote) e risultati della seconda simulazione  
+**Data:** 23 ottobre 2026  
+**Stato:** V1 funzionale completa e provata (test SQL, test di concorrenza, due simulazioni); **in attesa di messa online** e di poche decisioni residue (vedi Appendice E e `TASKS.md`)  
+**Fonti:** PRD v0.8; `prompt_claude_code_mazzobet_v06.md` (regole confermate il 23/10/2026); `docs/delta-v0.6.md`; report `MazzoBet_Report_Simulazione_60min.md` e `MazzoBet_Report_Simulazione_v09.md`; `catalogo_banco_v02.json`. In caso di conflitto prevale questa v0.9. Le modifiche rispetto alla v0.8 sono in **Appendice E**; le Appendici A–D restano come storico.
 
 > **Obiettivo:** individuare rischi, casi limite e semplificazioni senza snaturare MazzoBet. I requisiti approvati non vanno sostituiti con alternative solo perché tecnicamente più convenzionali.
 
@@ -374,7 +374,7 @@ Denaro reale; PIN/account/password; app native; GPS; LLM runtime; quote dinamich
 
 ### Da misurare nella prova generale, non da sovraprogettare
 
-8. **Colletta:** rischio di effetto valanga; quanti giri e quante squadre travolte. **[MISURATO v0.8 — CRITICO]** Nella simulazione (24 squadre, 60 minuti): 41 catene, 71 bancarotte, 28.675 Carletti prelevati (più dei 24.000 Carletti iniziali), 23 squadre su 24 fallite almeno una volta. 37 bancarotte su 71 nascono da una puntata MAX che azzera il saldo. **Serve una decisione prima della serata vera** (Appendice D.4).
+8. **Colletta:** rischio di effetto valanga. **[MISURATO v0.8 — CRITICO; RISOLTO in v0.9]** Prima simulazione (24 squadre, 60 minuti): 41 catene, 71 bancarotte, 28.675 Carletti prelevati (più dei 24.000 iniziali), 23 squadre su 24 fallite; 37 bancarotte su 71 nascevano da una puntata che azzerava il saldo. Con la regola «bancarotta solo senza puntate in corso» la stessa simulazione dà **1 catena, 1 bancarotta, 500 Carletti prelevati**. Da riconfermare con altri seed e con persone vere.
 9. **Banco:** frequenza reale ~4–7 interventi/ora a seconda dell'estrazione, più eventi straordinari; percezione d'invasività e squadre mai colpite.
 10. **Sponsor:** quante ricapitalizzazioni, quanto la pioggia altera la classifica.
 11. **Quote fino a 10.00:** se la classifica diventa una lotteria, rivalutare il tetto.
@@ -556,3 +556,51 @@ Notizie editoriali «grande vincita» (soglia non definita) e «cassa in rosso /
 ### D.7 Rischi sociali accettati (confermati)
 
 Esiti in malafede da non scommettitori (mitigati solo dal ricorso), identità multi-dispositivo senza autenticazione forte, puntate su eventi già accaduti prima dell'esito. Da osservare nella prova generale con persone vere.
+
+## Appendice E — Delta v0.8 → v0.9 e stato dell'implementazione (23 ottobre 2026)
+
+### E.1 Modifiche normative (confermate il 23/10/2026)
+
+1. **Bancarotta con puntate in corso (§8):** saldo < 10 **e** nessuna puntata ancora da risolvere; chi punta tutto fallisce solo se poi perde e resta sotto soglia. (Era l'opzione A di TASKS 1.1.)
+2. **Precedenza del creatore (§7):** da T a T+2′ esita solo il creatore; da T+2′ a T+17′ anche chi non ha puntato; a T+17′ senza esito la scommessa è annullata e rimborsata.
+3. **Scommessa senza puntate (§7):** si chiude alla scadenza senza esito, contestazione né annullamento.
+4. **Compenso di chi esita (§7):** 10% del totale puntato, massimo 250; il creatore incassa C, un altro esitatore `floor(C/2)`; pagato a fine contestazione e solo se l'esito non è ribaltato.
+5. **Valuta (§1):** «Carletti» per esteso, senza simbolo; «1 Carletto»; tasto **TUTTI I CARLETTI**.
+6. **Controllo sul margine delle quote (§5):** `100·(A+B) ≥ A·B`.
+7. **ESITA ORA in un solo passo (§5, §7):** si sceglie SÌ o NO e si chiude subito.
+8. **Banco (§9.1, §10):** importi in multipli di 10; testi non ripetuti nella serata; registro con i saldi risultanti; nuovi comunicati «cassa in rosso», «cassa in attivo», «grande vincita» (≥ 500 Carletti).
+9. **Parametri in configurazione (§13, invariante 10).**
+
+Dal prompt v0.6 **non** sono state riprese, perché sostituite dal PRD v0.7: lo sponsor a soglia di cassa (resta lo sponsor a timer con la formula `2000 + 150·N + max(0, −C)`) e gli script di fine serata semplificati (restano la chiusura in due tempi e gli snippet di `server/db/ops/`). **Da confermare:** il mantenimento dello sponsor v0.7 e il controllo sul margine, applicati come scelta predefinita.
+
+### E.2 Interpretazioni adottate
+
+- Il compenso si calcola sul totale puntato **al momento dell'esito** (le puntate sono chiuse); con ESITA ORA vale il totale in quel momento.
+- Tutte le puntate della scommessa si valutano per la bancarotta **dopo** l'esito; la colletta parte in quel momento.
+- Il compenso dell'altro esitatore è `floor(C × 50 / 100)`; con totale 15 il creatore prende 1 e un altro 0.
+- «Da esitare» e il badge del tab Scommesse compaiono agli altri solo da T+2′; la schermata obbligatoria del creatore da T, solo se la scommessa ha puntate.
+- Restano valide le interpretazioni di Appendice D.3 (importo unico per evento del Banco; malus e colletta senza tetto al saldo).
+
+### E.3 Risultati della seconda simulazione
+
+24 squadre, 60 minuti di serata in 10 reali, seed 7, stesse regole del simulatore salvo le quote valide per il controllo sul margine. Dettagli in `MazzoBet_Report_Simulazione_v09.md`.
+
+| Metrica | v0.8 | v0.9 |
+| --- | --- | --- |
+| Catene di colletta | 41 | 1 |
+| Bancarotte | 71 | 1 |
+| Carletti prelevati dalla colletta | 28.675 | 500 |
+| Saldo mediano a fine run | 347 | 749 |
+| Esitate dal creatore | 17 su 39 | 34 su 35 |
+| Compensi pagati | — | 32 (1.591 Carletti) |
+| Banco ordinario | 4,3 interventi/ora, 15 squadre mai colpite | 5,0 interventi/ora, 17 mai colpite |
+
+Il criterio di successo del §18 («memorabile e imprevedibile, ma non ingestibile») è ora rispettato in questo scenario. Una sola esecuzione per versione.
+
+### E.4 Ancora aperto
+
+Prelievo della colletta oltre il saldo disponibile (oggi preleva sempre 25); estrazione pesata del Banco (squadre mai colpite); database di produzione separato; esiti in malafede, doppio dispositivo, toast live su telefono vero; spareggi in classifica; messa online sul VPS; Supabase Realtime. Elenco completo e ordinato in `TASKS.md`.
+
+### E.5 Struttura del progetto
+
+Repository Git (`main` = stato della v0.8; lavoro sul ramo `regole-v06`, da unire dopo il tuo via libera). `server/db/` migrazioni 001–010; `server/db/tests/` quattro suite di test SQL ripetibili; `server/tests/concorrenza.mjs` prova di concorrenza sull'API; `server/sim/` simulatore e metriche; `deploy/` Dockerfile, compose per il VPS, blocco Caddy, script di aggiornamento e guida; `docs/delta-v0.6.md` confronto con il prompt v0.6.
