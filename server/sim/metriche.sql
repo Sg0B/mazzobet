@@ -85,6 +85,11 @@ esiti as (
     'ricorsi_totali', (select count(*) from mazzobet.appeals a, p where a.session_id = p.sid),
     'mercati_con_ricorso', (select count(distinct market_id) from mazzobet.appeals a, p where a.session_id = p.sid),
     'verdetti_ribaltati', count(*) filter (where flipped),
+    'senza_puntate', count(*) filter (where status = 'empty'),
+    'compensi_pagati', (select count(*) from mazzobet.ledger_transactions lt, p where lt.session_id = p.sid and lt.kind = 'esito_compenso'),
+    'totale_compensi_carletti', (select coalesce(sum(le.amount), 0) from mazzobet.ledger_entries le
+         join mazzobet.ledger_transactions lt on lt.id = le.transaction_id, p
+        where lt.session_id = p.sid and lt.kind = 'esito_compenso' and le.team_id is not null),
     'da_esitare_contemporanei_max', (select coalesce(max(c), 0) from (
         select sum(d) over (order by t, d) c from (
           select actual_closed_at t, 1 d from mazzobet.markets m3, p where m3.session_id = p.sid and actual_closed_at is not null

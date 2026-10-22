@@ -51,6 +51,9 @@ function token(req: FastifyRequest, reply: FastifyReply): string | null {
 
 const int = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) ? v : null)
 
+// Controllo di salute per Docker e per il monitoraggio: non tocca il database.
+app.get('/api/health', async () => ({ ok: true }))
+
 app.get('/api/teams', async (_req, reply) => rpc(reply, 'mb_list_teams'))
 
 app.post('/api/enter', async (req, reply) => {

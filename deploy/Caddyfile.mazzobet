@@ -1,0 +1,7 @@
+# Blocco da AGGIUNGERE in fondo a /home/lemon/n8n/Caddyfile (senza toccare gli altri giochi).
+# «mazzobet» è il nome del contenitore: Caddy lo raggiunge sulla rete condivisa.
+# encode comprime le risposte (le risposte di stato pesano ~27 KB l'una e il telefono le chiede ogni 3 secondi).
+mazzobet.sourlemon.cloud {
+	encode zstd gzip
+	reverse_proxy mazzobet:3000
+}

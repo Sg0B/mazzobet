@@ -1,0 +1,20 @@
+# MazzoBet sul VPS. Si lancia dalla cartella del progetto (es. /home/lemon/mazzobet):
+#   docker compose -f deploy/docker-compose.yml up -d --build
+# Il file .env (nella radice del progetto, accanto al Dockerfile) va creato A MANO sul VPS (vedi deploy/README.md):
+# contiene la chiave segreta di Supabase e non va mai su GitHub.
+services:
+  mazzobet:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: mazzobet
+    restart: unless-stopped
+    env_file: ../.env
+    networks: [caddy_net]
+
+networks:
+  caddy_net:
+    external: true
+    # Nome della rete a cui è collegato il contenitore di Caddy (n8n-caddy-1).
+    # DA VERIFICARE sul VPS con:  docker inspect n8n-caddy-1 --format '{{json .NetworkSettings.Networks}}'
+    name: n8n_default
