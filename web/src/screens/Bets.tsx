@@ -1,3 +1,4 @@
+import { useState, type ReactNode } from 'react'
 import { cur, fmt, odds } from '../lib/format'
 import { payout } from '../lib/rules'
 import { actions, toResolve, useGame, type LedgerKind, type Market } from '../store/game'
@@ -14,12 +15,13 @@ const LEDGER_LABEL: Record<LedgerKind, string> = {
   colletta: 'COLLETTA',
   sponsor: 'SPONSOR',
   adjust: 'RETTIFICA',
+  fee: 'COMPENSO',
   reamm: 'RIAMMISSIONE',
   other: 'ALTRO',
 }
-const BANK_KINDS: LedgerKind[] = ['bonus', 'malus', 'colletta', 'sponsor', 'adjust', 'reamm']
+const BANK_KINDS: LedgerKind[] = ['bonus', 'malus', 'colletta', 'sponsor', 'adjust', 'fee', 'reamm']
 
-function betStatus(m: Market, now: number): { label: string; cls: string; note: React.ReactNode } {
+function betStatus(m: Market, now: number): { label: string; cls: string; note: ReactNode } {
   const my = m.my!
   if (m.status === 'void') return { label: 'ANNULLATA', cls: '', note: 'Rimborsata.' }
   if (m.status === 'done') {
@@ -34,11 +36,44 @@ function betStatus(m: Market, now: number): { label: string; cls: string; note: 
   return { label: 'IN CORSO', cls: '', note: `Incasso potenziale ${cur(payout(my.amount, my.side === 'yes' ? m.yes : m.no))}.` }
 }
 
+/** Compenso di chi esita, dal punto di vista del creatore: potenziale mentre è aperta, ricevuto a esito chiuso. */
+function feeNote(m: Market, teamId: number | null): string {
+  if (m.status === 'open' || m.status === 'closed') return m.feeCreator > 0 ? `Compenso se esiti tu: ${cur(m.feeCreator)}.` : ''
+  if (m.status !== 'done') return ''
+  if (m.flipped) return 'Esito ribaltato: nessun compenso.'
+  if (m.feeTeamId === undefined) return ''
+  if (m.feeTeamId !== teamId) return 'Ha esitato un’altra squadra: nessun compenso per te.'
+  return m.feePaid ? `Compenso ricevuto: ${cur(m.feeAmount)}.` : `Compenso in arrivo a fine contestazione: ${cur(m.feeAmount)}.`
+}
+
+/** ESITA ORA in un passo: tocchi, scegli SÌ o NO, e le puntate si chiudono con l'esito registrato. */
+function EsitaOra({ id }: { id: number }) {
+  const [choosing, setChoosing] = useState(false)
+  if (!choosing) {
+    return (
+      <div className="btns">
+        <button className="sm" onClick={() => setChoosing(true)}>ESITA ORA</button>
+      </div>
+    )
+  }
+  return (
+    <>
+      <p className="m">Chiudi subito la scommessa con quale esito?</p>
+      <div className="btns">
+        <button onClick={() => actions.resolve(id, 'yes')}>SÌ</button>
+        <button onClick={() => actions.resolve(id, 'no')}>NO</button>
+        <button className="sm" onClick={() => setChoosing(false)}>Annulla</button>
+      </div>
+    </>
+  )
+}
+
 export function Bets() {
   const s = useGame()
   const mine = s.markets.filter((m) => m.my).sort((a, b) => b.num - a.num)
   const made = s.markets.filter((m) => m.by === s.team).sort((a, b) => b.num - a.num)
   const todo = toResolve(s)
+  const frozen = s.sessionStatus === 'closed'
 
   return (
     <>
@@ -52,10 +87,13 @@ export function Bets() {
             <span className="cd num" style={{ fontSize: 16 }}>restano <Countdown until={m.resolveBy ?? 0} /></span>
           </div>
           <p className="q">{m.text}</p>
-          <p className="m">Scommessa n. {m.num} · di {m.by}. Chi ha puntato non può esitare. La prima risposta vale.</p>
+          <p className="m">
+            Scommessa n. {m.num} · di {m.by}. Chi ha puntato non può esitare. La prima risposta vale.
+            {m.feeOther > 0 && <> <b>Esita per {cur(m.feeOther)}.</b></>}
+          </p>
           <div className="btns">
-            <button onClick={() => actions.resolve(m.id, 'yes')}>SÌ</button>
-            <button onClick={() => actions.resolve(m.id, 'no')}>NO</button>
+            <button disabled={frozen} onClick={() => actions.resolve(m.id, 'yes')}>SÌ</button>
+            <button disabled={frozen} onClick={() => actions.resolve(m.id, 'no')}>NO</button>
           </div>
         </div>
       )) : <p className="empty">Nessuna scommessa da esitare.</p>}
@@ -76,21 +114,23 @@ export function Bets() {
       }) : <p className="empty">Non hai ancora puntato.</p>}
 
       <h2 className="sec">Create da me</h2>
-      {made.length ? made.map((m) => (
-        <div className="item" key={m.id}>
-          <div className="h">
-            <span className="pill">{m.status === 'open' ? 'APERTA' : m.status === 'closed' ? 'DA ESITARE' : m.status === 'void' ? 'ANNULLATA' : `ESITATA ${m.outcome === 'yes' ? 'SÌ' : 'NO'}`}</span>
-            <span className="cd num" style={{ fontSize: 16 }}>{m.status === 'open' && <Countdown until={m.expiresAt} />}</span>
+      {made.length ? made.map((m) => {
+        const label = m.status === 'open' ? 'APERTA' : m.status === 'closed' ? 'DA ESITARE' : m.status === 'void' ? 'ANNULLATA' : m.status === 'empty' ? 'SENZA PUNTATE' : `ESITATA ${m.outcome === 'yes' ? 'SÌ' : 'NO'}`
+        const fee = feeNote(m, s.teamId)
+        return (
+          <div className="item" key={m.id}>
+            <div className="h">
+              <span className="pill">{label}</span>
+              <span className="cd num" style={{ fontSize: 16 }}>{m.status === 'open' && <Countdown until={m.expiresAt} />}</span>
+            </div>
+            <p className="q">{m.text}</p>
+            <p className="m">Scommessa n. {m.num} · SÌ {odds(m.yes)} / NO {odds(m.no)}{fee && <><br />{fee}</>}</p>
+            {m.status === 'open' && !frozen && <EsitaOra id={m.id} />}
           </div>
-          <p className="q">{m.text}</p>
-          <p className="m">Scommessa n. {m.num} · SÌ {odds(m.yes)} / NO {odds(m.no)}</p>
-          {m.status === 'open' && (
-            <div className="btns"><button className="sm" onClick={() => actions.resolveNow(m.id)}>ESITA ORA</button></div>
-          )}
-        </div>
-      )) : <p className="empty">Non hai creato scommesse.</p>}
+        )
+      }) : <p className="empty">Non hai creato scommesse.</p>}
 
-      <h2 className="sec">Movimenti</h2>
+      <h2 className="sec">Movimenti (Carletti)</h2>
       <div className="tbl" style={{ marginTop: 0 }}>
         {s.ledger.map((l) => (
           <div className="led" key={l.id}>

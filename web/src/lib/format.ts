@@ -2,10 +2,12 @@ export const MIN = 60_000
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
+/** Numero con il punto per le migliaia: 1.000 (meno tipografico per i negativi). */
 export const fmt = (n: number) =>
   (n < 0 ? '−' : '') + String(Math.abs(Math.round(n))).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 
-export const cur = (n: number) => '₡ ' + fmt(n)
+/** Importo con la valuta scritta per esteso, senza simbolo: «1.000 Carletti», «1 Carletto». */
+export const cur = (n: number) => `${fmt(n)} ${Math.abs(Math.round(n)) === 1 ? 'Carletto' : 'Carletti'}`
 
 /** Quota in centesimi → "1,80". */
 export const odds = (cents: number) => (cents / 100).toFixed(2).replace('.', ',')

@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react'
-import { START_BALANCE } from '../lib/rules'
-import { cur } from '../lib/format'
 import { actions, type TeamInfo } from '../store/game'
 import { Sheet } from '../components/Sheet'
 
@@ -32,7 +30,7 @@ export function TeamSelect() {
       <div className="top"><div className="logo">MAZZO<b>BET</b></div></div>
       <div className="hero">
         <h1>Con quale squadra giochi?</h1>
-        <p>Scegli la tua squadra ed entri in gara con {cur(START_BALANCE)}. Nessuna registrazione.</p>
+        <p>Scegli la tua squadra ed entri in gara con i tuoi Carletti. Nessuna registrazione.</p>
       </div>
       {error && <p className="err" role="alert">{error}</p>}
       {loadError && <p className="err" role="alert">Non riesco a contattare il server. Ricarica la pagina.</p>}

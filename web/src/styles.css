@@ -159,3 +159,6 @@ textarea{resize:none;min-height:76px}
 .cd small{margin:0;font:600 11px/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase}
 .by{line-height:1.5}
 .leave{margin-top:36px}
+
+/* saldo: numero grande con la parola «Carletti» più piccola accanto */
+.bal .v small{font:600 16px/1 var(--f-body);color:var(--muted);letter-spacing:.04em;margin-left:4px}

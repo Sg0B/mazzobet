@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
+import { cur } from '../lib/format'
 import { actions, mustResolve, useGame } from '../store/game'
 import { Countdown } from './Countdown'
 
-/** Schermata obbligatoria e bloccante per il creatore (PRD §7, §10). Coda: un mercato alla volta. */
+/** Schermata obbligatoria e bloccante per il creatore (PRD §7, §10). Coda: una scommessa alla volta. */
 export function MustResolve() {
   const s = useGame()
   const queue = mustResolve(s)
@@ -13,13 +14,17 @@ export function MustResolve() {
     return () => document.body.classList.remove('lock')
   }, [m])
   if (!m) return null
+  const priority = (m.creatorOnlyUntil ?? 0) > s.now
   return (
     <div id="must">
       <div className="box">
         <h2>ESITA LA SCOMMESSA!</h2>
         <p className="q">{m.text}</p>
         <p className="s">
-          Scommessa n. {m.num}. Le puntate sono chiuse. Restano <b><Countdown until={m.resolveBy ?? 0} /></b>.
+          Scommessa n. {m.num}. Le puntate sono chiuse.
+          {m.feeCreator > 0 && <> Esita ora e incassi <b>{cur(m.feeCreator)}</b>.</>}
+          {' '}Restano <b><Countdown until={m.resolveBy ?? 0} /></b>.
+          {priority && ' Per il momento puoi esitare solo tu.'}
           {queue.length > 1 && ` Altre ${queue.length - 1} in coda.`}
         </p>
         <div className="btns" style={{ marginTop: 22 }}>

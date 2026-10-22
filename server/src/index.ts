@@ -88,13 +88,8 @@ app.post<{ Params: { id: string } }>('/api/markets/:id/bets', async (req, reply)
   const b = (req.body ?? {}) as { side?: unknown; amount?: unknown }
   const amount = int(b.amount)
   if (b.side !== 'yes' && b.side !== 'no') return reply.code(400).send({ error: 'invalid_side', message: 'Lato non valido.' })
-  if (amount === null) return reply.code(400).send({ error: 'invalid_amount', message: 'Puntata minima ₡ 10.' })
+  if (amount === null) return reply.code(400).send({ error: 'invalid_amount', message: 'Puntata minima 10 Carletti.' })
   return rpc(reply, 'mb_place_bet', { p_token: t, p_market: Number(req.params.id), p_side: b.side, p_amount: amount })
-})
-
-app.post<{ Params: { id: string } }>('/api/markets/:id/close', async (req, reply) => {
-  const t = token(req, reply)
-  if (t) return rpc(reply, 'mb_close_now', { p_token: t, p_market: Number(req.params.id) })
 })
 
 app.post<{ Params: { id: string } }>('/api/markets/:id/resolve', async (req, reply) => {

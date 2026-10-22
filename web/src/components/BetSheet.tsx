@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { cur, odds } from '../lib/format'
-import { MIN_BET, payout } from '../lib/rules'
+import { payout } from '../lib/rules'
 import { actions, useGame, type Side } from '../store/game'
 import { Sheet } from './Sheet'
 
@@ -12,11 +12,12 @@ export function BetSheet({ marketId, side, onClose }: { marketId: number; side: 
   const [busy, setBusy] = useState(false)
   if (!m) return null
 
+  const min = s.config.betMin
   const cents = side === 'yes' ? m.yes : m.no
   const amount = Number(raw)
   const valid = raw.trim() !== '' && Number.isInteger(amount)
   let error = ''
-  if (!valid || amount < MIN_BET) error = `Puntata minima ${cur(MIN_BET)}.`
+  if (!valid || amount < min) error = `Puntata minima ${cur(min)}.`
   else if (amount > s.balance) error = `Saldo insufficiente: hai ${cur(s.balance)}.`
 
   const confirm = async () => {
@@ -35,12 +36,12 @@ export function BetSheet({ marketId, side, onClose }: { marketId: number; side: 
         <span className="num">@ {odds(cents)}</span>
       </div>
       <p className="sq">{m.text}</p>
-      <label htmlFor="amt">Importo (₡)</label>
+      <label htmlFor="amt">Importo in Carletti</label>
       <input
         id="amt"
         type="number"
         inputMode="numeric"
-        min={MIN_BET}
+        min={min}
         step={1}
         value={raw}
         onChange={(e) => {
@@ -55,7 +56,7 @@ export function BetSheet({ marketId, side, onClose }: { marketId: number; side: 
           </button>
         ))}
         <button className={`chip${amount === s.balance ? ' on' : ''}`} onClick={() => setRaw(String(s.balance))}>
-          MAX
+          TUTTI I CARLETTI
         </button>
       </div>
       <dl className="sum">

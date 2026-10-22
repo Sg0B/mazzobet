@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { CREATE_FEE, parseOdds } from '../lib/rules'
+import { oddsMarginOk, parseOdds } from '../lib/rules'
 import { MIN, cur } from '../lib/format'
 import { actions, serverNow, useGame } from '../store/game'
 import { Sheet } from './Sheet'
@@ -15,23 +15,24 @@ const CHOICES: { id: Close; label: string }[] = [
 
 export function CreateSheet({ onClose }: { onClose: () => void }) {
   const s = useGame()
+  const c = s.config
   const [text, setText] = useState('')
   const [yes, setYes] = useState('1,90')
   const [no, setNo] = useState('1,90')
   const [close, setClose] = useState<Close>('20')
   const [time, setTime] = useState('')
   const [error, setError] = useState('')
-
-  const attempt = useRef(crypto.randomUUID()) // stessa chiave a ogni retry: mai due mercati
+  const attempt = useRef(crypto.randomUUID()) // stessa chiave a ogni retry: mai due scommesse
   const [busy, setBusy] = useState(false)
 
   const publish = async () => {
     if (busy) return
     const q = text.trim()
-    const y = parseOdds(yes)
-    const n = parseOdds(no)
+    const y = parseOdds(yes, c.oddsMin, c.oddsMax)
+    const n = parseOdds(no, c.oddsMin, c.oddsMax)
     if (q.length < 8) return setError('Scrivi una domanda chiara, almeno 8 caratteri.')
     if (!y || !n) return setError('Le quote devono essere tra 1,10 e 10,00, con due decimali.')
+    if (!oddsMarginOk(y, n)) return setError('Quote troppo generose: con queste il Banco regalerebbe Carletti. Abbassa una delle due.')
     const now = serverNow()
     let expiresAt: number
     if (close === 'time') {
@@ -70,9 +71,9 @@ export function CreateSheet({ onClose }: { onClose: () => void }) {
       <p className="note">Quote da 1,10 a 10,00, fisse per tutta la durata.</p>
       <label>Chiusura</label>
       <div className="chips">
-        {CHOICES.map((c) => (
-          <button key={c.id} className={`chip${close === c.id ? ' on' : ''}`} onClick={() => setClose(c.id)}>
-            {c.label}
+        {CHOICES.map((ch) => (
+          <button key={ch.id} className={`chip${close === ch.id ? ' on' : ''}`} onClick={() => setClose(ch.id)}>
+            {ch.label}
           </button>
         ))}
       </div>
@@ -82,9 +83,15 @@ export function CreateSheet({ onClose }: { onClose: () => void }) {
           <input id="ctime" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </>
       )}
-      <p className="note">Dovrai indicare l’esito entro 15 minuti dalla scadenza; chiunque non abbia puntato può farlo al tuo posto. Se nessuno esita, la scommessa è annullata.</p>
+      <p className="note">
+        Se esiti tu la scommessa ricevi il {c.feePct}% delle puntate (max {cur(c.feeCap)}). Se la esita un altro, non ricevi nulla.
+      </p>
+      <p className="note">
+        Dopo la scadenza esiti per primo tu ({c.creatorPriorityMin} minuti); poi può farlo chiunque non abbia puntato, fino a {c.creatorPriorityMin + c.resolveWindowMin} minuti.
+        Se nessuno esita la scommessa è annullata. Senza puntate si chiude da sola.
+      </p>
       <p className="err" role="alert">{error}</p>
-      <button className="cta sm" disabled={s.balance < CREATE_FEE || busy} onClick={publish}>PUBBLICA · {cur(CREATE_FEE)}</button>
+      <button className="cta sm" disabled={s.balance < c.createFee || busy} onClick={publish}>PUBBLICA · {cur(c.createFee)}</button>
       <button className="ghost" onClick={onClose}>Annulla</button>
     </Sheet>
   )

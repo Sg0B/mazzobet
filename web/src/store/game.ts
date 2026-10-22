@@ -5,9 +5,31 @@
  */
 import { useSyncExternalStore } from 'react'
 import { ApiError, api, getToken, setToken } from '../lib/api'
+import { cur } from '../lib/format'
 
 export type Side = 'yes' | 'no'
-export type MarketStatus = 'open' | 'closed' | 'done' | 'void'
+/** open = puntate aperte · closed = da esitare · done = esitata · void = annullata · empty = chiusa senza puntate */
+export type MarketStatus = 'open' | 'closed' | 'done' | 'void' | 'empty'
+
+/** Parametri di gioco: arrivano dal server (tabella di configurazione); questi sono solo valori di partenza. */
+export interface Config {
+  betMin: number
+  createFee: number
+  oddsMin: number
+  oddsMax: number
+  feePct: number
+  feeCap: number
+  feeOtherPct: number
+  creatorPriorityMin: number
+  resolveWindowMin: number
+  appealMin: number
+  bankruptThreshold: number
+  readmitBalance: number
+}
+const DEFAULT_CONFIG: Config = {
+  betMin: 10, createFee: 100, oddsMin: 110, oddsMax: 1000, feePct: 10, feeCap: 250, feeOtherPct: 50,
+  creatorPriorityMin: 2, resolveWindowMin: 15, appealMin: 3, bankruptThreshold: 10, readmitBalance: 500,
+}
 
 export interface Bet {
   side: Side
@@ -30,9 +52,18 @@ export interface Market {
   noPool: number
   status: MarketStatus
   resolveBy?: number
+  /** Fino a qui può esitare solo il creatore. */
+  creatorOnlyUntil?: number
   outcome?: Side
   flipped: boolean
   appealUntil?: number
+  /** Compenso se esita il creatore / se esita un altro (calcolato sul totale puntato). */
+  feeCreator: number
+  feeOther: number
+  /** Compenso fissato all'esito, chi lo incassa e se è già stato pagato. */
+  feeAmount: number
+  feeTeamId?: number
+  feePaid: boolean
   my: Bet | null
 }
 
@@ -45,7 +76,7 @@ export interface News {
   text: string
 }
 
-export type LedgerKind = 'start' | 'create' | 'bet' | 'win' | 'refund' | 'bonus' | 'malus' | 'colletta' | 'sponsor' | 'adjust' | 'reamm' | 'other'
+export type LedgerKind = 'start' | 'create' | 'bet' | 'win' | 'refund' | 'bonus' | 'malus' | 'colletta' | 'sponsor' | 'adjust' | 'fee' | 'reamm' | 'other'
 export interface LedgerEntry {
   id: number
   at: number
@@ -74,6 +105,8 @@ export interface GameState {
   now: number
   ready: boolean
   team: string | null
+  teamId: number | null
+  config: Config
   tab: 'home' | 'rank' | 'bets' | 'radio'
   balance: number
   bankruptUntil: number | null
@@ -102,6 +135,8 @@ let state: GameState = {
   now: Date.now(),
   ready: false,
   team: null,
+  teamId: null,
+  config: DEFAULT_CONFIG,
   tab: 'home',
   balance: 0,
   bankruptUntil: null,
@@ -138,10 +173,10 @@ export const useGame = () =>
 export const isMine = (m: Market) => m.by === state.team
 export const committed = (s: GameState) =>
   s.markets.filter((m) => m.my && (m.status === 'open' || m.status === 'closed')).reduce((a, m) => a + m.my!.amount, 0)
-/** Mercati da esitare in cui posso rispondere: non ho puntato io. */
+/** Scommesse da esitare in cui posso rispondere: non ho puntato, e la precedenza del creatore è finita. */
 export const toResolve = (s: GameState) =>
-  s.markets.filter((m) => m.status === 'closed' && !m.outcome && !m.my && m.by !== s.team)
-/** Obbligo bloccante: miei mercati chiusi non ancora esitati. */
+  s.markets.filter((m) => m.status === 'closed' && !m.outcome && !m.my && m.by !== s.team && (m.creatorOnlyUntil ?? 0) <= s.now)
+/** Obbligo bloccante: mie scommesse (con puntate) scadute e non ancora esitate. */
 export const mustResolve = (s: GameState) => s.markets.filter((m) => m.by === s.team && m.status === 'closed' && !m.outcome)
 
 /* ---------- server clock ---------- */
@@ -168,19 +203,26 @@ interface ServerMarket {
   noOdds: number
   createdAt: string
   expiresAt: string
-  status: 'open' | 'closed' | 'resolved' | 'void'
+  status: 'open' | 'closed' | 'resolved' | 'void' | 'empty'
   resolveBy: string | null
+  creatorOnlyUntil: string | null
   outcome: Side | null
   flipped: boolean
   appealUntil: string | null
   yesPool: number
   noPool: number
+  feeCreator: number
+  feeOther: number
+  feeAmount: number
+  feeTeamId: number | null
+  feePaid: boolean
   my: { side: Side; amount: number; result: Bet['result'] | null; payout: number | null; appealed: boolean } | null
 }
 interface ServerState {
   now: string
   session: { endsAt: string; status: GameState['sessionStatus'] }
-  me: { name: string; balance: number; status: string; bankruptUntil: string | null; readmissions: number; correct: number }
+  config: Config
+  me: { teamId: number; name: string; balance: number; status: string; bankruptUntil: string | null; readmissions: number; correct: number }
   markets: ServerMarket[]
   ledger: { id: number; at: string; kind: string; marketNo: number | null; amount: number }[]
   news: { id: number; at: string; kind: NewsKind; title: string; text: string }[]
@@ -192,7 +234,7 @@ const ts = (v: string | null) => (v ? new Date(v).getTime() : undefined)
 
 const LEDGER_KIND: Record<string, LedgerKind> = {
   start: 'start', create: 'create', bet: 'bet', win: 'win', refund: 'refund', readmit: 'reamm',
-  bonus: 'bonus', malus: 'malus', colletta: 'colletta', sponsor_rain: 'sponsor', appeal_adjust: 'adjust',
+  bonus: 'bonus', malus: 'malus', colletta: 'colletta', sponsor_rain: 'sponsor', appeal_adjust: 'adjust', esito_compenso: 'fee',
 }
 function ledgerLabel(kind: string, no: number | null) {
   const n = no !== null ? ` n. ${no}` : ''
@@ -208,6 +250,7 @@ function ledgerLabel(kind: string, no: number | null) {
     case 'colletta': return 'Colletta per il gregario caduto'
     case 'sponsor_rain': return 'Pioggia di Carletti dello sponsor'
     case 'appeal_adjust': return `Rettifica per ricorso, scommessa${n}`
+    case 'esito_compenso': return `Compenso per l'esito, scommessa${n}`
     default: return kind
   }
 }
@@ -226,9 +269,15 @@ function mapMarket(m: ServerMarket): Market {
     noPool: Number(m.noPool),
     status: m.status === 'resolved' ? 'done' : m.status,
     resolveBy: ts(m.resolveBy),
+    creatorOnlyUntil: ts(m.creatorOnlyUntil),
     outcome: m.outcome ?? undefined,
     flipped: m.flipped,
     appealUntil: ts(m.appealUntil),
+    feeCreator: Number(m.feeCreator),
+    feeOther: Number(m.feeOther),
+    feeAmount: Number(m.feeAmount),
+    feeTeamId: m.feeTeamId ?? undefined,
+    feePaid: m.feePaid,
     my: m.my ? { side: m.my.side, amount: Number(m.my.amount), result: m.my.result ?? undefined, payout: m.my.payout === null ? undefined : Number(m.my.payout), appealed: m.my.appealed } : null,
   }
 }
@@ -239,7 +288,7 @@ function announceChanges(prev: Market[], next: Market[]) {
     const before = prev.find((p) => p.id === m.id)
     if (!before || !m.my || before.status === m.status) continue
     if (m.status === 'void') toast(`Scommessa n. ${m.num} annullata: puntata rimborsata`)
-    else if (m.status === 'done' && before.status !== 'done') toast(m.my.result === 'win' ? `Scommessa n. ${m.num} vinta: +₡ ${m.my.payout}` : `Scommessa n. ${m.num} persa`)
+    else if (m.status === 'done' && before.status !== 'done') toast(m.my.result === 'win' ? `Scommessa n. ${m.num} vinta: +${cur(m.my.payout ?? 0)}` : `Scommessa n. ${m.num} persa`)
   }
 }
 
@@ -268,6 +317,8 @@ export async function refresh() {
       ready: true,
       now: serverNow(),
       team: s.me.name,
+      teamId: s.me.teamId,
+      config: { ...DEFAULT_CONFIG, ...s.config },
       balance: Number(s.me.balance),
       bankruptUntil: s.me.status === 'bankrupt' && s.me.bankruptUntil ? new Date(s.me.bankruptUntil).getTime() : null,
       readmissions: s.me.readmissions,
@@ -324,7 +375,7 @@ export const actions = {
 
   leaveTeam() {
     setToken(null)
-    set({ team: null, markets: [], ledger: [], leaderboard: [], balance: 0, bankruptUntil: null })
+    set({ team: null, teamId: null, markets: [], ledger: [], leaderboard: [], balance: 0, bankruptUntil: null })
   },
 
   setTab(tab: GameState['tab']) {
@@ -333,7 +384,7 @@ export const actions = {
   },
 
   placeBet(marketId: number, side: Side, amount: number): Promise<Result> {
-    return run(() => api(`/markets/${marketId}/bets`, { body: { side, amount } }), `Puntata confermata: ₡ ${amount} su ${side === 'yes' ? 'SÌ' : 'NO'}`)
+    return run(() => api(`/markets/${marketId}/bets`, { body: { side, amount } }), `Puntata confermata: ${cur(amount)} su ${side === 'yes' ? 'SÌ' : 'NO'}`)
   },
 
   /** `key` identifica il tentativo: un retry con la stessa chiave non crea due mercati né due addebiti. */
@@ -348,16 +399,13 @@ export const actions = {
     )
   },
 
-  /** Esito da creatore o da squadra che non ha puntato. */
+  /**
+   * Esito da creatore o da squadra che non ha puntato. Se la scommessa è ancora aperta (solo il creatore)
+   * è «ESITA ORA»: chiude subito le puntate, registra l'esito e apre la contestazione.
+   */
   async resolve(marketId: number, outcome: Side) {
     const r = await run(() => api(`/markets/${marketId}/resolve`, { body: { outcome } }))
-    toast(r.ok ? 'Esito registrato. Contestazione aperta per 3 minuti.' : r.error)
-  },
-
-  /** ESITA ORA: chiude subito le puntate e apre l'esito (solo creatore). */
-  async resolveNow(marketId: number) {
-    const r = await run(() => api(`/markets/${marketId}/close`, { body: {} }))
-    if (!r.ok) toast(r.error)
+    toast(r.ok ? `Esito registrato. Contestazione aperta per ${state.config.appealMin} minuti.` : r.error)
   },
 
   /** Contesta l'esito (solo chi ha puntato). Soglia e contatore non sono mai mostrati. */
@@ -367,7 +415,7 @@ export const actions = {
   },
 
   async readmit() {
-    const r = await run(() => api('/readmit', { body: {} }), 'Sei di nuovo in gara con ₡ 500')
+    const r = await run(() => api('/readmit', { body: {} }), `Sei di nuovo in gara con ${cur(state.config.readmitBalance)}`)
     if (!r.ok) toast(r.error)
   },
 }

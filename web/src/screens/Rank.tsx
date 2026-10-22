@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { cur } from '../lib/format'
+import { cur, fmt } from '../lib/format'
 import { useGame, type LeaderRow } from '../store/game'
 
 type Mode = 'wealth' | 'picks' | 'bank'
@@ -32,9 +32,15 @@ export function Rank() {
     <>
       <div className="top"><div className="logo">CLASSIFICHE</div></div>
       <div className="seg">{seg('wealth', 'Patrimonio')}{seg('picks', 'Pronostici')}{seg('bank', 'Banco')}</div>
-      {mode === 'wealth' && table(rows.slice().sort((a, b) => b.balance - a.balance || b.correct - a.correct), (r) => cur(r.balance))}
+      {mode === 'wealth' && (
+        <>
+          <h2 className="sec">Patrimonio (Carletti)</h2>
+          {table(rows.slice().sort((a, b) => b.balance - a.balance || b.correct - a.correct), (r) => fmt(r.balance))}
+        </>
+      )}
       {mode === 'picks' && (
         <>
+          <h2 className="sec">Pronostici corretti</h2>
           {table(rows.slice().sort((a, b) => b.correct - a.correct || b.balance - a.balance), (r) => r.correct)}
           <p className="note">Pronostici corretti. A parità conta il patrimonio.</p>
         </>
