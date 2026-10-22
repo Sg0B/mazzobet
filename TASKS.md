@@ -1,57 +1,50 @@
 # MazzoBet — cose da fare e decisioni da prendere
 
-**Aggiornato:** 21 ottobre 2026 · **Dove eravamo:** V1 funzionale completa (frontend, server, database, ricorsi, Banco, sponsor, chiusura serata) e prima simulazione di carico fatta. Il PRD è alla **v0.8** (`MazzoBet_PRD_v0.8.md`, vedi Appendice D). Per ripartire leggi prima questo file, poi il report `MazzoBet_Report_Simulazione_60min.md`.
+**Aggiornato:** 23 ottobre 2026 · **Dove siamo:** regole del prompt v0.6 confermate e implementate (ramo Git `regole-v06`), test del database salvati, prova di concorrenza e due simulazioni fatte (la colletta ora è sotto controllo), file per la messa online pronti. Il PRD è alla **v0.9** (`MazzoBet_PRD_v0.9.md`, Appendice E). Per ripartire leggi questo file, poi `MazzoBet_Report_Simulazione_v09.md` e `docs/delta-v0.6.md`.
 
-## 1. Decisioni da prendere (nell'ordine)
+## 1. Decisioni da prendere
 
-- [ ] **1.1 Puntata MAX e bancarotta (bloccante).** Oggi una puntata che azzera il saldo manda subito in bancarotta e fa partire la colletta su tutte le squadre. Nella simulazione: 41 catene, ₡28.675 prelevati (la moneta iniziale è ₡24.000), 23 squadre su 24 fallite. Scegli una opzione:
-  - **A.** Bancarotta solo con saldo < ₡10 **e nessuna puntata in corso** (consigliata: coerente con «chi fallisce incassa le puntate già piazzate»).
-  - **B.** Una puntata non può far scendere il saldo sotto ₡10 (MAX lascia ₡10).
-  - **C.** Si tiene la regola, ma la colletta non parte se la bancarotta nasce da una propria puntata, oppure c'è un tempo di attesa tra una catena e l'altra.
-- [ ] **1.2 Prelievo della colletta:** limitarlo al saldo disponibile (oggi preleva ₡25 anche a chi ne ha 10–24 e lo porta in negativo; minimo visto −₡114)?
-- [ ] **1.3 Convenienza dell'all-in:** fallire non costa niente (debito azzerato e ₡500 gratis, pagano gli altri). Dopo 1.1, serve altro?
-- [ ] **1.4 Banco ordinario:** estrazione pesata per ridurre le squadre mai colpite (15 su 24 nella simulazione) oppure va bene così?
-- [ ] **1.5 Conferma delle interpretazioni adottate** (PRD v0.8, D.3): importo del Banco unico per evento e uguale per tutti i destinatari; malus senza tetto (saldo negativo possibile).
-- [ ] **1.6 Database di produzione.** Oggi tutto è nel progetto Supabase `giochi_ufficio`, schema `mazzobet`, condiviso con altri giochi. Il PRD vuole test e produzione separati: nuovo progetto Supabase (costo da verificare) o altro?
-- [ ] **1.7 Eventi RadioCorsa non implementati:** «grande vincita» (serve una soglia, es. incasso ≥ ₡X) e «cassa in rosso / in attivo»: li vuoi in V1?
-- [ ] **1.8 Rischi sociali** (esiti in malafede da terzi, doppio dispositivo, puntate su eventi già accaduti): confermi di accettarli o vuoi un rimedio minimo? Da guardare nella prova generale.
-- [ ] **1.9 Dopo la chiusura serata:** chi usa «Cambia squadra» a serata chiusa non può rientrare. Va bene o si consente comunque la sola lettura?
-- [ ] **1.10 Catalogo testi:** alcuni testi usano il verbo al singolare anche con 2–3 squadre («trova»). Correggere a mano il catalogo.
+- [ ] **1.1 Due scelte che ho applicato io come predefinite:** (a) **controllo sul margine delle quote** (blocca coppie come 5,00 e 5,00): tenerlo? (b) **sponsor**: ho tenuto quello del PRD v0.7 (timer 8–45′, `2000 + 150·N`, pioggia 150) e non quello del prompt v0.6 (soglia di cassa −2.000): confermi?
+- [ ] **1.2 Prelievo della colletta oltre il saldo:** oggi preleva sempre 25 Carletti anche a chi ne ha 10–24 e lo porta in negativo. Limitarlo al saldo disponibile? (Nella nuova simulazione non è mai successo, ma può.)
+- [ ] **1.3 Banco ordinario:** estrazione pesata per ridurre le squadre mai colpite (17 su 24 in un'ora) oppure va bene così?
+- [ ] **1.4 Database di produzione.** Oggi tutto è nel progetto Supabase `giochi_ufficio`, schema `mazzobet`, condiviso con gli altri giochi (non tocca le loro tabelle). Il PRD chiede test e produzione separati: nuovo progetto Supabase (costo da verificare) o si resta così per la prima serata?
+- [ ] **1.5 GitHub e ramo di lavoro.** Il lavoro è sul ramo `regole-v06`. Posso unirlo a `main` quando dai il via libera. Per il VPS serve un repository: lo creo io su GitHub (consiglio **privato**, i tuoi altri giochi sono pubblici) o preferisci copiare la cartella a mano sul VPS?
+- [ ] **1.6 Rischi sociali** (esiti in malafede da terzi, doppio dispositivo, puntate su eventi già accaduti): confermi di accettarli o vuoi un rimedio minimo? Da osservare nella prova generale.
+- [ ] **1.7 Dopo la chiusura serata:** chi usa «Cambia squadra» a serata chiusa non può rientrare. Va bene?
+- [ ] **1.8 Catalogo testi:** alcuni usano il verbo al singolare anche con 2–3 squadre («trova»). Correggere a mano il catalogo.
 
-## 2. Da fare dopo le decisioni
+## 2. Messa online sul VPS (in corso)
 
-- [ ] Applicare 1.1 e 1.2 (modifica funzioni SQL + eventuale blocco nell'interfaccia, es. tasto MAX) e **rifare la simulazione con lo stesso seed (7)** per confrontare con il report.
-- [ ] Applicare 1.3–1.4 se decisi.
-- [ ] Riscrivere/aggiornare il PRD a v0.9 con le decisioni prese.
+Preparato: `Dockerfile`, `deploy/docker-compose.yml`, `deploy/Caddyfile.mazzobet`, `deploy/aggiorna.sh`, `deploy/README.md` (passi in italiano semplice). **Da fare:**
 
-## 3. Tecnico, già noto
+- [ ] **Accesso al VPS:** da questo PC non riesco a collegarmi (nessuna chiave SSH, il VPS chiede la password). Due strade: (a) lanci tu i comandi della guida e mi incolli l'esito, (b) aggiungiamo una chiave SSH dedicata e li eseguo io.
+- [ ] Controlli di sola lettura (rete di Caddy, Caddyfile, DNS di `mazzobet.sourlemon.cloud`) e correggere `name:` in `deploy/docker-compose.yml` se la rete non è `n8n_default`.
+- [ ] Creare il repository su GitHub (1.5) e clonarlo sul VPS in `/home/lemon/mazzobet`.
+- [ ] Creare **a mano sul VPS** il file `.env` con `SUPABASE_URL` e la chiave **segreta** `service_role` (non la «publishable» dei tuoi appunti). Mai in chat, mai su Git.
+- [ ] `docker compose -f deploy/docker-compose.yml up -d --build` (l'immagine non è stata provata su questo PC: Docker non c'è).
+- [ ] Aggiungere il blocco al Caddyfile (con copia di sicurezza e `caddy validate` prima del reload: il Caddyfile è condiviso con gli altri giochi).
+- [ ] Prova: `https://mazzobet.sourlemon.cloud/api/health`, poi dal telefono.
+- [ ] **Aprire la serata** il giorno stesso con `server/db/ops/05_nuova_serata.sql`: la serata attuale nel database finisce alle 03:00 di stanotte.
 
-- [ ] **Alleggerire le risposte di stato:** 27 KB per aggiornamento (circa 32 MB/ora per telefono), crescono con i mercati. Compressione, meno dati per aggiornamento o Supabase Realtime con polling di riserva.
-- [ ] **Supabase Realtime** al posto del solo polling ogni 3 s (invariante 8 del PRD).
-- [ ] **Salvare i test come suite ripetibile:** i test SQL del database (accesso, puntata, ricorsi, catena, Banco, sponsor, chiusura) sono stati eseguiti una tantum e non sono nel repository. Includere sempre `set local role service_role` + `set constraints all immediate`.
-- [ ] **Test di concorrenza reale** (puntate simultanee stessa squadra/mercato, doppio tap, riavvio server durante un evento) e test del riavvio dei timer.
-- [ ] **Token dei dispositivi dopo la chiusura serata:** i vecchi token restano legati alla vecchia serata; decidere cosa succede alla serata successiva (oggi bisogna ripassare dalla scelta squadra).
-- [ ] Messaggio più chiaro quando si perde la gara per l'esito («Esito già registrato»): in simulazione è capitato nel 26% dei tentativi.
-- [ ] Orari: oggi la scadenza «Orario» nel form usa l'ora del telefono; il server valida (fine serata 03:00 Europe/Rome). Verificare cambio ora legale e attraversamento mezzanotte.
-- [ ] Pulire: `server/sim/out/` (risultati delle simulazioni) e `server/sim/out-run.log` non servono nel repository.
+## 3. Tecnico
 
-## 4. Messa online
+- [ ] **Supabase Realtime** al posto del solo polling ogni 3 s (invariante 8 del PRD). Con la compressione di Caddy il peso degli aggiornamenti (23 KB, max 42 KB) scende molto, ma il polling resta.
+- [ ] **Prova del riavvio vero del server** durante un esito o un blocco di bancarotta (scenario 13 del prompt): i timer dipendono solo dagli orari nel database e ripetere il timer non duplica nulla (provato), ma non l'ho fatto con un riavvio reale.
+- [ ] **Token dei dispositivi dopo la chiusura serata:** i vecchi token restano legati alla vecchia serata; decidere cosa vede chi riapre l'app il giorno dopo.
+- [ ] Orari: la scadenza «Orario» usa l'ora del telefono nel form; il server valida (fine serata 03:00 Europe/Rome). Verificare ora legale e attraversamento della mezzanotte.
+- [ ] Ripetere la simulazione con **altri seed** e per più tempo (almeno 30 minuti reali) prima della serata vera.
+- [ ] Ambiente Docker locale per provare l'immagine prima del VPS (opzionale).
 
-- [ ] Creare il repository Git (la cartella **non è ancora un repository**), primo commit, `.gitignore` già presente (esclude `.env`, `node_modules`, `dist`).
-- [ ] Database di produzione separato (1.6): applicare le migrazioni `server/db/001`–`008`, caricare le squadre (già nella 001), aprire la serata.
-- [ ] VPS: build (`npm --prefix web run build`), server Node come servizio, Caddy per HTTPS e reverse proxy, variabili d'ambiente (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `PORT`).
-- [ ] La chiave `service_role` è solo in `server/.env` sul tuo PC: tenerla fuori da Git e dalla chat; ruotarla se è mai uscita.
-- [ ] Controllare i consigli di sicurezza di Supabase sul progetto di produzione.
+## 4. Prova generale con persone vere
 
-## 5. Prova generale (con persone vere)
-
-- [ ] Telefoni veri, più dispositivi insieme: leggibilità del countdown, tasto MAX, bottom sheet, toast delle notizie (durata, sovrapposizione, priorità), schermata ESITA obbligatoria.
-- [ ] Misure che la simulazione non può dare: tempo per puntare/creare, invasività percepita del Banco, lettura delle notizie.
+- [ ] Telefoni veri, più dispositivi insieme: leggibilità del countdown, tasto «TUTTI I CARLETTI», messaggio del controllo sulle quote, schermata ESITA obbligatoria, «Esita per X Carletti», toast delle notizie (durata, sovrapposizione, priorità).
+- [ ] Casi che la simulazione non copre: scommessa che nessuno esita (annullamento a T+17′), tempi di reazione reali, tempo per puntare/creare, invasività percepita del Banco.
 - [ ] Prova di fine serata con gli snippet di `server/db/ops/`: pausa, chiusura, classifica finale, verifica conti.
-- [ ] Rifare la simulazione di carico più lunga (almeno 30 minuti reali o 60+ di serata) dopo le modifiche.
 
 ## Come si lavora (promemoria)
 
-- Avvio locale: `npm --prefix server run dev` e `npm --prefix web run dev`; app su `http://localhost:5173`.
-- Snippet operativi: `server/db/ops/` (da incollare nell'editor SQL di Supabase). Simulazione: `server/sim/sim.mjs` con serata pulita e `time_scale = 6`; poi chiudere la serata e aprirne una nuova.
-- Registro delle modifiche rispetto al PRD: memoria del progetto (`prd-deviations-log`) e PRD v0.8, Appendice D.
+- Avvio locale: `npm --prefix server run dev` e `npm --prefix web run dev` (app su `http://localhost:5173`).
+- Test del database: incolla un file di `server/db/tests/` nell'editor SQL di Supabase (serve una serata attiva e vuota); se vedi `TEST_OK …` è andato bene. Prova di concorrenza: `node server/tests/concorrenza.mjs` con il server acceso.
+- Simulazione: serata pulita, `update mazzobet.game_sessions set time_scale = 6 where status = 'active'`, poi `node server/sim/sim.mjs --teams 24 --sim-minutes 60 --scale 6 --seed 7`; dopo, chiudere la serata e aprirne una nuova. **Non modificare il server durante la prova** (si riavvia). Metriche: `server/sim/metriche.sql`.
+- Snippet operativi: `server/db/ops/` (da incollare nell'editor SQL di Supabase).
+- Registro delle modifiche rispetto al PRD: PRD v0.9, Appendice E, e la memoria del progetto.
