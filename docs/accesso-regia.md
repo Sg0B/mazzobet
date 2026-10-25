@@ -57,7 +57,7 @@ L'opzione «Riporta l'apertura del Banco al 13/11 alle 20:00» è attiva di defa
 - Il **creatore riceve subito il compenso C** come se avesse esitato lui (10% del totale puntato, massimo 250). La Regia non incassa nulla e non muove Carletti a proprio favore.
 - Ai giocatori compare «Esitata dalla Regia» nel dettaglio della scommessa.
 - **Annulla con rimborso** restituisce le puntate; il costo di creazione non torna. Una scommessa già esitata o già annullata non si può riaprire.
-- **Rettifica saldo**: serve il motivo (almeno 3 caratteri) e il saldo non può andare sotto zero. Il movimento compare nello storico del giocatore come «Rettifica della Regia».
+- **Rettifica saldo**: si sceglie «+ Aggiungi» o «− Togli» e si scrivono solo le cifre (la tastiera numerica del telefono non ha il segno meno); serve il motivo (almeno 3 caratteri) e il saldo non può andare sotto zero. Il movimento compare nello storico del giocatore come «Rettifica della Regia».
 
 ### Il Banco e il suo orario
 

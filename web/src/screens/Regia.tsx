@@ -285,6 +285,7 @@ function Schermo({ st, act, busy }: P) {
 function Squadre({ st, act, busy }: P) {
   const [open, setOpen] = useState<number | null>(null)
   const [delta, setDelta] = useState('')
+  const [sign, setSign] = useState<1 | -1>(1)
   const [reason, setReason] = useState('')
   return (
     <div className="tbl">
@@ -303,10 +304,14 @@ function Squadre({ st, act, busy }: P) {
           )}
           {open === t.id && (
             <div className="rform">
-              <input inputMode="numeric" placeholder="± Carletti (es. -50)" value={delta} onChange={(e) => setDelta(e.target.value)} />
+              <div className="rkchips" role="group" aria-label="Segno della rettifica">
+                <button className={`chip${sign === 1 ? ' on' : ''}`} onClick={() => setSign(1)}>+ Aggiungi</button>
+                <button className={`chip${sign === -1 ? ' on' : ''}`} onClick={() => setSign(-1)}>− Togli</button>
+              </div>
+              <input inputMode="numeric" placeholder="Quanti Carletti (solo cifre)" value={delta} onChange={(e) => setDelta(e.target.value.replace(/\D/g, ''))} />
               <input placeholder="Motivo (obbligatorio)" value={reason} onChange={(e) => setReason(e.target.value)} />
-              <button className="sm" disabled={busy || !/^-?\d+$/.test(delta) || reason.trim().length < 3}
-                onClick={async () => { if (await act('adjust', { teamId: t.id, delta: Number(delta), reason }, 'Saldo rettificato.', `Rettificare ${t.name} di ${delta} Carletti?`)) { setOpen(null); setDelta(''); setReason('') } }}>Applica</button>
+              <button className="sm" disabled={busy || !/^[1-9]\d*$/.test(delta) || reason.trim().length < 3}
+                onClick={async () => { if (await act('adjust', { teamId: t.id, delta: sign * Number(delta), reason }, 'Saldo rettificato.', `${sign === 1 ? 'Aggiungere' : 'Togliere'} ${delta} Carletti a ${t.name}?`)) { setOpen(null); setDelta(''); setReason(''); setSign(1) } }}>Applica</button>
             </div>
           )}
         </div>
