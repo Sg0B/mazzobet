@@ -1,57 +1,74 @@
 # MazzoBet — cose da fare e decisioni da prendere
 
-**Aggiornato:** 23 ottobre 2026 · **Dove siamo:** regole del prompt v0.6 confermate e implementate (ramo Git `regole-v06`), test del database salvati, prova di concorrenza e due simulazioni fatte (la colletta ora è sotto controllo), file per la messa online pronti. Il PRD è alla **v0.9** (`MazzoBet_PRD_v0.9.md`, Appendice E). Per ripartire leggi questo file, poi `MazzoBet_Report_Simulazione_v09.md` e `docs/delta-v0.6.md`.
+**Aggiornato:** 26 ottobre 2026 · **Dove siamo:** online https://mazzobet.sourlemon.cloud (ramo Git `regole-v06`, repository privato `Sg0B/mazzobet`). Fatti: regole v0.6, aiuto MAX sulle quote, classifiche, **Banco di Regia** (`/regia`), colletta limitata al saldo, Banco con estrazione pesata, **schermo della sala** (`/tv`). Migration 001–014 applicate a `giochi_ufficio`. Il PRD è alla **v1.0** (`MazzoBet_PRD_v1.0.md`, Appendice F). Per ripartire leggi questo file, poi l'Appendice F del PRD, `docs/accesso-regia.md` e `docs/schermo-tv.md`.
 
-## 1. Decisioni da prendere
+## 0. Prossimi passi, in ordine
 
-- [ ] **1.1 Due scelte che ho applicato io come predefinite:** (a) **controllo sul margine delle quote** (blocca coppie come 5,00 e 5,00): tenerlo? (b) **sponsor**: ho tenuto quello del PRD v0.7 (timer 8–45′, `2000 + 150·N`, pioggia 150) e non quello del prompt v0.6 (soglia di cassa −2.000): confermi?
-- [ ] **1.2 Prelievo della colletta oltre il saldo:** oggi preleva sempre 25 Carletti anche a chi ne ha 10–24 e lo porta in negativo. Limitarlo al saldo disponibile? (Nella nuova simulazione non è mai successo, ma può.)
-- [ ] **1.3 Banco ordinario:** estrazione pesata per ridurre le squadre mai colpite (17 su 24 in un'ora) oppure va bene così?
-- [ ] **1.4 Database di produzione.** Oggi tutto è nel progetto Supabase `giochi_ufficio`, schema `mazzobet`, condiviso con gli altri giochi (non tocca le loro tabelle). Il PRD chiede test e produzione separati: nuovo progetto Supabase (costo da verificare) o si resta così per la prima serata?
-- [ ] **1.5 Ramo di lavoro.** Il repository privato `Sg0B/mazzobet` esiste e il VPS lo legge. Il lavoro è sul ramo `regole-v06`: posso unirlo a `main` quando dai il via libera.
-- [ ] **1.6 Rischi sociali** (esiti in malafede da terzi, doppio dispositivo, puntate su eventi già accaduti): confermi di accettarli o vuoi un rimedio minimo? Da osservare nella prova generale.
-- [ ] **1.7 Dopo la chiusura serata:** chi usa «Cambia squadra» a serata chiusa non può rientrare. Va bene?
-- [ ] **1.8 Catalogo testi:** alcuni usano il verbo al singolare anche con 2–3 squadre («trova»). Correggere a mano il catalogo.
+1. **Sul VPS:** aggiornare il codice (`sh deploy/aggiorna.sh`) e impostare `ADMIN_CODE` nel `.env` (almeno 12 caratteri, mai in chat), poi ricreare il contenitore. Comandi in `docs/accesso-regia.md`. *(La Regia è già stata provata dall'utente online; la `/tv` e la scheda «Schermo» arrivano con l'aggiornamento.)*
+2. **Provare `/tv` su una TV vera** (leggibilità da lontano, dimensione del testo, browser della smart TV o HDMI).
+3. **Nuova simulazione** (24 squadre, 60′ ×6): misurare le squadre mai colpite con l'estrazione pesata e decidere il **saldo iniziale** (oggi 1.000, ora parametro in Regia). Prima: `banco_inizio` nel passato, poi ripristinarlo (vedi guida Regia).
+4. **PIN delle squadre** (prompt accesso §1): «Resetta squadra» dovrà cancellare anche il PIN. Migration 015.
+5. **Notifiche push** (prompt notifiche): leggere precedenza e finestra di esito dal database, non da variabili d'ambiente; disattivare le iscrizioni al reset squadra.
+6. **Prova generale con persone vere** (sezione 4) e unione di `regole-v06` a `main`.
 
-## 2. Messa online sul VPS — **fatta il 23 ottobre 2026**
+## 1. Decisioni
 
-Online su **https://mazzobet.sourlemon.cloud** (repository privato `Sg0B/mazzobet`, ramo `regole-v06`, contenitore `mazzobet` dietro Caddy, HTTPS e compressione attivi). Dettagli e comandi in `deploy/README.md`. Provato dall'esterno: pagina, elenco squadre dal database, certificato valido, risposte compresse, `/api/state` senza chiave = 401, aggiornamento con `deploy/aggiorna.sh`. Gli altri giochi sul VPS rispondono ancora normalmente.
+Prese il 25/10/2026 (registro nel PRD v1.0, F.2):
 
-- [x] Accesso SSH con chiave dedicata, controlli di sola lettura, repository privato su GitHub (account Sg0B, nessuna chiave nei file), chiave di deploy di sola lettura sul VPS, cartella `/home/lemon/mazzobet`, `.env` copiato senza mostrarlo, contenitore avviato, record DNS, blocco di Caddy (con copia di sicurezza e validazione).
-- [ ] **Aprire la serata** il giorno stesso con `server/db/ops/05_nuova_serata.sql`: quella attuale nel database finisce alle 03:00 di stanotte e contiene la tua squadra di prova.
+- [x] **1.1** Controllo sul margine delle quote **tenuto**; sponsor del PRD v0.7 **tenuto**.
+- [x] **1.2** Colletta limitata al saldo disponibile — **fatto** (migration 013).
+- [x] **1.3** Banco ordinario con estrazione pesata — **fatto** (migration 013; corretto anche il difetto che pescava sempre le squadre con id basso).
+- [x] **1.4** Database: resta il progetto Supabase `giochi_ufficio` (schema `mazzobet`, condiviso con altri giochi), **con backup prima della serata**.
+- [x] **1.5** Merge di `regole-v06` su `main` solo a lavoro finito e provato.
+- [x] **1.6** Rischi sociali accettati (esiti in malafede, doppio dispositivo, puntate su eventi già accaduti): da osservare nella prova generale.
+- [x] **1.7** Dopo la chiusura serata non si rientra con «Cambia squadra».
+- [ ] **1.8** Catalogo testi: verbi al singolare con 2–3 squadre («trova»); da correggere **a mano** in `catalogo_banco_v02_allineato_v07.json`.
+- [ ] **1.9 Saldo iniziale:** resta 1.000; decidere dopo la nuova simulazione (parametro in Regia).
+- [ ] **1.10 Chiave `service_role`:** non ruotata per scelta; rivalutare se il codice o i file circolano.
+
+## 2. Messa online sul VPS — fatta il 23 ottobre 2026
+
+Online su **https://mazzobet.sourlemon.cloud** (contenitore `mazzobet` dietro Caddy, HTTPS e compressione attivi). Dettagli e comandi in `deploy/README.md`. Aggiornamento: `cd /home/lemon/mazzobet && sh deploy/aggiorna.sh`; dopo una modifica al `.env`: `docker compose -f deploy/docker-compose.yml up -d --force-recreate`.
+
+- [x] SSH con chiave dedicata, repository privato, chiave di deploy di sola lettura, cartella `/home/lemon/mazzobet`, `.env`, contenitore, DNS, blocco di Caddy.
+- [x] Aggiornamenti del 25/10 (quote, classifiche) online.
+- [ ] **Aggiornamento con Regia/colletta/TV** e `ADMIN_CODE` nel `.env` (vedi sezione 0).
+- [ ] **Aprire la serata** il giorno stesso: oggi nel database c'è «Prova famiglia» (8 squadre di prova). Per ripartire pulito basta **Reset totale** dalla Regia (parola `RESET`); in alternativa `server/db/ops/05_nuova_serata.sql`.
 - [ ] **Revocare la chiave SSH** di lavoro (riga `claude-mazzobet-20261023` in `/root/.ssh/authorized_keys`) quando non serve più.
-- [ ] **Unire `regole-v06` a `main`** (e far puntare il VPS su `main`) quando dai il via libera.
-- [ ] Nessun backup automatico del database e nessun monitoraggio: valuta se servono prima della serata vera.
+- [ ] **Backup** del database prima della serata; nessun backup automatico né monitoraggio oggi.
+- [ ] **Unire `regole-v06` a `main`** (e far puntare il VPS su `main`) dopo la prova generale.
 
 ## 3. Tecnico
 
-- [ ] **Supabase Realtime** al posto del solo polling ogni 3 s (invariante 8 del PRD). Con la compressione di Caddy il peso degli aggiornamenti (23 KB, max 42 KB) scende molto, ma il polling resta.
-- [ ] **Prova del riavvio vero del server** durante un esito o un blocco di bancarotta (scenario 13 del prompt): i timer dipendono solo dagli orari nel database e ripetere il timer non duplica nulla (provato), ma non l'ho fatto con un riavvio reale.
-- [ ] **Token dei dispositivi dopo la chiusura serata:** i vecchi token restano legati alla vecchia serata; decidere cosa vede chi riapre l'app il giorno dopo.
-- [ ] Orari: la scadenza «Orario» usa l'ora del telefono nel form; il server valida (fine serata 03:00 Europe/Rome). Verificare ora legale e attraversamento della mezzanotte.
-- [ ] Ripetere la simulazione con **altri seed** e per più tempo (almeno 30 minuti reali) prima della serata vera.
+- [ ] **Supabase Realtime** al posto del solo polling ogni 3 s (invariante 8 del PRD).
+- [ ] **Prova del riavvio vero del server** durante un esito o un blocco di bancarotta (scenario 13 del prompt).
+- [ ] Orari: la scadenza «Orario» usa l'ora del telefono nel form; il server valida (fine serata 03:00 Europe/Rome). Verificare ora legale (il 25/10/2026 si è tornati all'ora solare) e attraversamento della mezzanotte.
+- [ ] Ripetere la simulazione con altri seed e per più tempo (almeno 30′ reali).
+- [ ] Possibile pulizia: rimuovere `leaderboard` da `mb_get_state` (non più usato dopo le classifiche).
 - [ ] Ambiente Docker locale per provare l'immagine prima del VPS (opzionale).
 
 ## 4. Prova generale con persone vere
 
-- [ ] Telefoni veri, più dispositivi insieme: leggibilità del countdown, tasto «TUTTI I CARLETTI», messaggio del controllo sulle quote, schermata ESITA obbligatoria, «Esita per X Carletti», toast delle notizie (durata, sovrapposizione, priorità).
-- [ ] Casi che la simulazione non copre: scommessa che nessuno esita (annullamento a T+17′), tempi di reazione reali, tempo per puntare/creare, invasività percepita del Banco.
-- [ ] Prova di fine serata con gli snippet di `server/db/ops/`: pausa, chiusura, classifica finale, verifica conti.
+- [ ] Telefoni veri, più dispositivi insieme: countdown, «TUTTI I CARLETTI», aiuto MAX sulle quote, schermata ESITA obbligatoria, «Esita per X Carletti», toast delle notizie, classifiche (`Rank`), pagina Regia da telefono.
+- [ ] **Schermo `/tv`** su una TV vera: leggibilità, scene, eventi a tutto schermo, annuncio dalla Regia, QR.
+- [ ] Casi che la simulazione non copre: scommessa che nessuno esita (annullamento a T+17′), tempi di reazione reali, invasività percepita del Banco.
+- [ ] Prova di fine serata: pausa, chiusura, classifica finale, verifica conti (snippet in `server/db/ops/` o dalla Regia).
+- [ ] Test con amici nei giorni prima (reset totali frequenti dalla Regia; il Banco resta spento fino a `banco_inizio`, usare «Avvia Banco adesso» per provarlo).
+
+## 5. Fatto dal 25 al 26 ottobre 2026
+
+- [x] Aiuto «MAX» sulle quote; classifiche (migration 012); saldo del Banco in RadioCorsa.
+- [x] **Banco di Regia** (migration 011, `/regia`, guida `docs/accesso-regia.md`): codice `ADMIN_CODE`, reset squadra e totale, parametri, orario del Banco, esito/annulla/rettifica, log.
+- [x] **Colletta e Banco pesato** (migration 013).
+- [x] **Schermo della sala** (migration 014, `/tv`, guida `docs/schermo-tv.md`) con annuncio dalla Regia.
+- [x] PRD v1.0 con Appendice F; test su Postgres in memoria in `server/tests/pglite/` (44 controlli Regia, 4 suite SQL, TV, confronto Banco).
 
 ## Come si lavora (promemoria)
 
-- Avvio locale: `npm --prefix server run dev` e `npm --prefix web run dev` (app su `http://localhost:5173`).
-- Test del database: incolla un file di `server/db/tests/` nell'editor SQL di Supabase (serve una serata attiva e vuota); se vedi `TEST_OK …` è andato bene. Prova di concorrenza: `node server/tests/concorrenza.mjs` con il server acceso.
-- Simulazione: serata pulita, `update mazzobet.game_sessions set time_scale = 6 where status = 'active'`, poi `node server/sim/sim.mjs --teams 24 --sim-minutes 60 --scale 6 --seed 7`; dopo, chiudere la serata e aprirne una nuova. **Non modificare il server durante la prova** (si riavvia). Metriche: `server/sim/metriche.sql`.
-- Snippet operativi: `server/db/ops/` (da incollare nell'editor SQL di Supabase).
-- Registro delle modifiche rispetto al PRD: PRD v0.9, Appendice E, e la memoria del progetto.
-
-## 5. Aggiornamento del 25 ottobre 2026 — Regia, classifiche, quote
-
-- [x] Aiuto «MAX» sulle quote, classifiche (migration 012 **applicata**) e saldo del Banco in RadioCorsa: online.
-- [ ] **Banco di Regia** (`/regia`, `docs/accesso-regia.md`): scritto e provato in locale. Da fare: (1) via libera e applicazione della **migration 011** su Supabase (prima, poi il VPS); (2) impostare `ADMIN_CODE` nel `.env` del VPS e ricreare il contenitore; (3) prova da telefono vero.
-- [ ] **PIN delle squadre** (prompt accesso §1): dopo la Regia (migration 014 se serve); «Resetta squadra» cancellerà anche il PIN.
-- [ ] **Notifiche push** (prompt notifiche): dopo il PIN. Leggere precedenza e finestra di esito dal DB, non da variabili d'ambiente.
-- [ ] Colletta limitata al saldo (1.2) e Banco con estrazione pesata (1.3): scritte in `server/db/013_colletta_banco_pesato.sql`, provate su Postgres in memoria, **da applicare a giochi_ufficio dopo l'OK**. Poi una simulazione per misurare le squadre mai colpite.
-- [ ] **Schermo della sala `/tv`** (richiesto il 26/10): scritto (`web/src/screens/Tv.tsx`, `server/db/014_tv.sql`, annuncio in Regia → Schermo, guida `docs/schermo-tv.md`), provato su Postgres in memoria e nel browser con dati finti. **Migration 014 da applicare a giochi_ufficio dopo l'OK, poi deploy sul VPS e prova su una vera TV.**
-- [ ] Prima di simulazioni e test SQL: il Banco parte solo dopo `banco_inizio` (vedi la guida della Regia).
+- Avvio locale: `npm --prefix server run dev` (carica `server/.env` con la chiave **vera**: per prove usa un finto Supabase come in `server/tests/pglite/`) e `npm --prefix web run dev` (app su `http://localhost:5173`; `/regia` e `/tv` sono pagine dello stesso frontend).
+- Prove senza toccare il database vero: `npm i --no-save @electric-sql/pglite`, poi `node server/tests/pglite/db-tests.mjs` (suite SQL), `regia.mjs`, `tv.mjs`, `banco-pesato.mjs`.
+- Test SQL sul database vero: file di `server/db/tests/` nell'editor SQL di Supabase (serata attiva e vuota, `banco_inizio` nel passato); `TEST_OK …` = ok. Concorrenza: `node server/tests/concorrenza.mjs` con il server acceso.
+- Simulazione: serata pulita, `update mazzobet.game_sessions set time_scale = 6 where status = 'active'`, poi `node server/sim/sim.mjs --teams 24 --sim-minutes 60 --scale 6 --seed 7`; non modificare il server durante la prova. Metriche: `server/sim/metriche.sql`.
+- Migration: file numerati in `server/db/`, applicate a mano a `giochi_ufficio` (via editor SQL o strumento Supabase) **solo dopo l'OK**; l'intestazione del file dice se è applicata.
+- Snippet operativi: `server/db/ops/`. Registro delle modifiche rispetto al PRD: PRD v1.0, Appendice F, e la memoria del progetto.
+- Pubblicazione: `git -c credential.helper= -c credential.helper='!gh auth git-credential' push origin regole-v06` (account Sg0B).

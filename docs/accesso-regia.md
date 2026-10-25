@@ -88,7 +88,7 @@ node server/tests/pglite/regia.mjs
 node server/tests/pglite/db-tests.mjs
 ```
 
-Caricano lo schema reale (migration 001–012) in un Postgres in memoria: non toccano nessun database vero. `regia.mjs` prova orario del Banco, scadenze, esito dalla Regia, rimborsi, rettifiche, reset e permessi.
+Caricano lo schema reale (migration 001–014) in un Postgres in memoria: non toccano nessun database vero. `regia.mjs` prova orario del Banco, scadenze, esito dalla Regia, rimborsi, rettifiche, reset e permessi.
 
 ## Limiti noti
 
