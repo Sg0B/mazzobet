@@ -45,3 +45,12 @@ Online su **https://mazzobet.sourlemon.cloud** (repository privato `Sg0B/mazzobe
 - Simulazione: serata pulita, `update mazzobet.game_sessions set time_scale = 6 where status = 'active'`, poi `node server/sim/sim.mjs --teams 24 --sim-minutes 60 --scale 6 --seed 7`; dopo, chiudere la serata e aprirne una nuova. **Non modificare il server durante la prova** (si riavvia). Metriche: `server/sim/metriche.sql`.
 - Snippet operativi: `server/db/ops/` (da incollare nell'editor SQL di Supabase).
 - Registro delle modifiche rispetto al PRD: PRD v0.9, Appendice E, e la memoria del progetto.
+
+## 5. Aggiornamento del 25 ottobre 2026 — Regia, classifiche, quote
+
+- [x] Aiuto «MAX» sulle quote, classifiche (migration 012 **applicata**) e saldo del Banco in RadioCorsa: online.
+- [ ] **Banco di Regia** (`/regia`, `docs/accesso-regia.md`): scritto e provato in locale. Da fare: (1) via libera e applicazione della **migration 011** su Supabase (prima, poi il VPS); (2) impostare `ADMIN_CODE` nel `.env` del VPS e ricreare il contenitore; (3) prova da telefono vero.
+- [ ] **PIN delle squadre** (prompt accesso §1): dopo la Regia (migration 013 se serve); «Resetta squadra» cancellerà anche il PIN.
+- [ ] **Notifiche push** (prompt notifiche): dopo il PIN. Leggere precedenza e finestra di esito dal DB, non da variabili d'ambiente.
+- [ ] Colletta limitata al saldo disponibile (1.2) e Banco ordinario con estrazione pesata (1.3), da fare con la prossima simulazione.
+- [ ] Prima di simulazioni e test SQL: il Banco parte solo dopo `banco_inizio` (vedi la guida della Regia).

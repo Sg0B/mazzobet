@@ -174,3 +174,25 @@ textarea{resize:none;min-height:76px}
 
 /* saldo: numero grande con la parola «Carletti» più piccola accanto */
 .bal .v small{font:600 16px/1 var(--f-body);color:var(--muted);letter-spacing:.04em;margin-left:4px}
+
+/* Banco di Regia */
+.regia input,.regia select{width:100%}
+.rrow{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}
+.rrow:last-child{border-bottom:0}
+.rrow span{color:var(--muted);font-size:14px}
+.rteam{padding:12px 14px;border-bottom:1px solid var(--line)}
+.rteam:last-child{border-bottom:0}
+.rteam .rh{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.rteam .nm{font-weight:700}
+.rteam .nm em{font-style:normal;color:var(--bad);font-weight:400;font-size:13px}
+.rteam .val{font:700 20px var(--f-disp);font-variant-numeric:tabular-nums}
+.rteam .rs{color:var(--muted);font-size:13px;margin-top:2px}
+.rteam .rq{font-size:14px;margin-top:4px}
+.rform{display:grid;gap:8px;margin-top:10px}
+.rparam{margin-top:12px}
+.rparam .rp{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.rlog{display:grid;grid-template-columns:48px 1fr;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.rlog .t{color:var(--muted);font-variant-numeric:tabular-nums}
+.rlog small{color:var(--muted)}
+.rcheck{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:14px;color:var(--muted)}
+.rcheck input{width:22px;height:22px;flex:0 0 auto;margin:0}

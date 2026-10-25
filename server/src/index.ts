@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify'
@@ -17,7 +18,8 @@ if (!url || !key) {
 // Chiave privilegiata solo qui: il browser non vede mai il database.
 const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })
 
-const app = Fastify({ logger: true })
+// Dietro Caddy: l'IP reale arriva da X-Forwarded-For (serve ai limiti per indirizzo).
+const app = Fastify({ logger: true, trustProxy: true })
 // Limite leggero PER DISPOSITIVO (token), non per IP: a una cena tutti i telefoni sono dietro lo stesso wifi,
 // quindi lo stesso IP. Senza token (scelta squadra) vale un limite più largo per IP.
 await app.register(rateLimit, {
@@ -135,6 +137,81 @@ app.post<{ Params: { id: string } }>('/api/markets/:id/appeal', async (req, repl
 app.post('/api/readmit', async (req, reply) => {
   const t = token(req, reply)
   if (t) return rpc(reply, 'mb_readmit', { p_token: t })
+})
+
+/* ---------- Banco di Regia ---------- */
+// Codice unico in ADMIN_CODE (variabile d'ambiente del server, mai nel repo né nel frontend). Nessuna sessione:
+// il browser lo rimanda a ogni richiesta e il controllo avviene qui, ogni volta. Dopo 10 codici sbagliati in un minuto
+// lo stesso indirizzo viene fermato per il resto del minuto.
+// Il valore di esempio di .env.example e i codici troppo corti non attivano la Regia.
+const rawAdminCode = process.env.ADMIN_CODE ?? ''
+const ADMIN_CODE = rawAdminCode.length >= 8 && rawAdminCode !== 'metti-qui-un-codice-tuo' ? rawAdminCode : ''
+const digest = (v: string) => createHash('sha256').update(v).digest()
+const adminFails = new Map<string, { n: number; until: number }>()
+
+function admin(req: FastifyRequest, reply: FastifyReply): boolean {
+  if (!ADMIN_CODE) {
+    reply.code(503).send({ error: 'admin_disabled', message: 'La Regia non è configurata sul server (manca ADMIN_CODE).' })
+    return false
+  }
+  const now = Date.now()
+  const f = adminFails.get(req.ip)
+  if (f && f.until > now && f.n >= 10) {
+    reply.code(429).send({ error: 'too_many', message: 'Troppi tentativi: riprova tra un minuto.' })
+    return false
+  }
+  const c = req.headers['x-admin-code']
+  if (typeof c === 'string' && timingSafeEqual(digest(c), digest(ADMIN_CODE))) {
+    adminFails.delete(req.ip)
+    return true
+  }
+  adminFails.set(req.ip, f && f.until > now ? { n: f.n + 1, until: f.until } : { n: 1, until: now + 60_000 })
+  if (adminFails.size > 200) for (const [k, v] of adminFails) if (v.until < now) adminFails.delete(k)
+  reply.code(401).send({ error: 'wrong_code', message: 'Codice Regia errato.' })
+  return false
+}
+
+/** Azione di Regia: controlla il codice, poi chiama la funzione SQL (le modifiche ai giocatori si vedono al prossimo polling). */
+const adminAct = (path: string, fn: string, args: (req: FastifyRequest) => Record<string, unknown> | null) =>
+  app.post(`/api/regia/${path}`, async (req, reply) => {
+    if (!admin(req, reply)) return
+    const a = args(req)
+    if (a === null) return reply.code(400).send({ error: 'bad_param', message: 'Dati non validi.' })
+    rankings = null
+    return rpc(reply, fn, a)
+  })
+const body = (req: FastifyRequest) => (req.body ?? {}) as Record<string, unknown>
+const marketId = (req: FastifyRequest) => Number((req.params as { id: string }).id)
+
+app.get('/api/regia/state', async (req, reply) => {
+  if (admin(req, reply)) return rpc(reply, 'mb_admin_state')
+})
+adminAct('reset-team', 'mb_admin_reset_team', (r) => { const t = int(body(r).teamId); return t === null ? null : { p_team: t } })
+adminAct('reset-all', 'mb_admin_reset_all', (r) => ({
+  p_confirm: typeof body(r).confirm === 'string' ? body(r).confirm : null,
+  p_restore_bank_start: body(r).restoreBank !== false,
+}))
+adminAct('param', 'mb_admin_set_param', (r) => {
+  const b = body(r)
+  return typeof b.key === 'string' && typeof b.value === 'number' && Number.isFinite(b.value) ? { p_key: b.key, p_value: b.value } : null
+})
+adminAct('bank-start', 'mb_admin_set_bank_start', (r) => {
+  const at = typeof body(r).at === 'string' ? new Date(body(r).at as string) : null
+  return at && !isNaN(at.getTime()) ? { p_at: at.toISOString() } : null
+})
+adminAct('bank-now', 'mb_admin_bank_now', () => ({}))
+adminAct('bank-pause', 'mb_admin_bank_pause', (r) => (typeof body(r).paused === 'boolean' ? { p_paused: body(r).paused } : null))
+adminAct('close-session', 'mb_admin_close_session', () => ({}))
+adminAct('force-finalize', 'mb_admin_force_finalize', () => ({}))
+adminAct('markets/:id/resolve', 'mb_admin_resolve', (r) => {
+  const o = body(r).outcome
+  return (o === 'yes' || o === 'no') && Number.isInteger(marketId(r)) ? { p_market: marketId(r), p_outcome: o } : null
+})
+adminAct('markets/:id/void', 'mb_admin_void', (r) => (Number.isInteger(marketId(r)) ? { p_market: marketId(r) } : null))
+adminAct('adjust', 'mb_admin_adjust', (r) => {
+  const b = body(r)
+  const t = int(b.teamId), d = int(b.delta)
+  return t === null || d === null || typeof b.reason !== 'string' ? null : { p_team: t, p_delta: d, p_reason: b.reason }
 })
 
 // Catalogo editoriale: validato prima del caricamento. Se non valido si tiene quello già nel DB

@@ -64,6 +64,8 @@ export interface Market {
   feeAmount: number
   feeTeamId?: number
   feePaid: boolean
+  /** Esitata dalla Regia: definitiva, senza contestazione. */
+  byAdmin: boolean
   my: Bet | null
 }
 
@@ -229,6 +231,7 @@ interface ServerMarket {
   feeAmount: number
   feeTeamId: number | null
   feePaid: boolean
+  byAdmin: boolean
   my: { side: Side; amount: number; result: Bet['result'] | null; payout: number | null; appealed: boolean } | null
 }
 interface ServerState {
@@ -247,7 +250,7 @@ const ts = (v: string | null) => (v ? new Date(v).getTime() : undefined)
 
 const LEDGER_KIND: Record<string, LedgerKind> = {
   start: 'start', create: 'create', bet: 'bet', win: 'win', refund: 'refund', readmit: 'reamm',
-  bonus: 'bonus', malus: 'malus', colletta: 'colletta', sponsor_rain: 'sponsor', appeal_adjust: 'adjust', esito_compenso: 'fee',
+  bonus: 'bonus', malus: 'malus', colletta: 'colletta', sponsor_rain: 'sponsor', appeal_adjust: 'adjust', rettifica: 'adjust', esito_compenso: 'fee',
 }
 function ledgerLabel(kind: string, no: number | null) {
   const n = no !== null ? ` n. ${no}` : ''
@@ -263,6 +266,7 @@ function ledgerLabel(kind: string, no: number | null) {
     case 'colletta': return 'Colletta per il gregario caduto'
     case 'sponsor_rain': return 'Pioggia di Carletti dello sponsor'
     case 'appeal_adjust': return `Rettifica per ricorso, scommessa${n}`
+    case 'rettifica': return `Rettifica della Regia`
     case 'esito_compenso': return `Compenso per l'esito, scommessa${n}`
     default: return kind
   }
@@ -291,6 +295,7 @@ function mapMarket(m: ServerMarket): Market {
     feeAmount: Number(m.feeAmount),
     feeTeamId: m.feeTeamId ?? undefined,
     feePaid: m.feePaid,
+    byAdmin: !!m.byAdmin,
     my: m.my ? { side: m.my.side, amount: Number(m.my.amount), result: m.my.result ?? undefined, payout: m.my.payout === null ? undefined : Number(m.my.payout), appealed: m.my.appealed } : null,
   }
 }

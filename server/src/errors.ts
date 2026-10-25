@@ -28,6 +28,11 @@ const ERRORS: Record<string, { status: number; message: string }> = {
   not_appealable: { status: 409, message: 'Questa scommessa non è contestabile.' },
   already_flipped: { status: 409, message: 'Il verdetto è già stato ribaltato: niente secondo ricorso.' },
   appeal_window_closed: { status: 409, message: 'Il tempo per contestare è scaduto.' },
+  confirm_required: { status: 400, message: 'Per confermare scrivi RESET.' },
+  bad_param: { status: 400, message: 'Valore non valido per questo parametro.' },
+  not_voidable: { status: 409, message: 'Questa scommessa non si può più annullare.' },
+  reason_required: { status: 400, message: 'Scrivi il motivo (almeno 3 caratteri).' },
+  reset_failed: { status: 500, message: 'Reset non riuscito: controlla lo stato della serata.' },
   lock_active: { status: 409, message: 'Il blocco di 5 minuti non è ancora finito.' },
 }
 

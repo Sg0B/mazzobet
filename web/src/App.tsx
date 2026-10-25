@@ -9,11 +9,17 @@ import { Bets } from './screens/Bets'
 import { Home } from './screens/Home'
 import { Radio } from './screens/Radio'
 import { Rank } from './screens/Rank'
+import { Regia } from './screens/Regia'
 import { TeamSelect } from './screens/TeamSelect'
 
 type SheetState = { type: 'bet'; id: number; side: Side } | { type: 'create' } | null
 
 export default function App() {
+  if (window.location.pathname.startsWith('/regia')) return <Regia />
+  return <Game />
+}
+
+function Game() {
   const s = useGame()
   const [sheet, setSheet] = useState<SheetState>(null)
   const close = () => setSheet(null)

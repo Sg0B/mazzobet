@@ -27,7 +27,7 @@ function betStatus(m: Market, now: number): { label: string; cls: string; note: 
   if (m.status === 'done') {
     const canAppeal = m.appealUntil && m.appealUntil > now && !m.flipped
     const appeal = canAppeal && !my.appealed ? <> <button className="sm" style={{ textDecoration: 'underline' }} onClick={() => actions.appeal(m.id)}>Contesta</button></> : null
-    const flipped = m.flipped ? ' Verdetto ribaltato dalla giuria.' : ''
+    const flipped = (m.flipped ? ' Verdetto ribaltato dalla giuria.' : '') + (m.byAdmin ? ' Esitata dalla Regia.' : '')
     return my.result === 'win'
       ? { label: 'VINTA', cls: 'ok', note: <>+{cur(my.payout ?? 0)}.{flipped}{appeal}</> }
       : { label: 'PERSA', cls: 'ko', note: <>−{cur(my.amount)}.{flipped}{appeal}</> }
@@ -41,6 +41,7 @@ function feeNote(m: Market, teamId: number | null): string {
   if (m.status === 'open' || m.status === 'closed') return m.feeCreator > 0 ? `Compenso se esiti tu: ${cur(m.feeCreator)}.` : ''
   if (m.status !== 'done') return ''
   if (m.flipped) return 'Esito ribaltato: nessun compenso.'
+  if (m.byAdmin) return `Esitata dalla Regia.${m.feeAmount > 0 ? ` Compenso ricevuto: ${cur(m.feeAmount)}.` : ''}`
   if (m.feeTeamId === undefined) return ''
   if (m.feeTeamId !== teamId) return 'Ha esitato un’altra squadra: nessun compenso per te.'
   return m.feePaid ? `Compenso ricevuto: ${cur(m.feeAmount)}.` : `Compenso in arrivo a fine contestazione: ${cur(m.feeAmount)}.`
