@@ -53,4 +53,5 @@ Online su **https://mazzobet.sourlemon.cloud** (repository privato `Sg0B/mazzobe
 - [ ] **PIN delle squadre** (prompt accesso §1): dopo la Regia (migration 014 se serve); «Resetta squadra» cancellerà anche il PIN.
 - [ ] **Notifiche push** (prompt notifiche): dopo il PIN. Leggere precedenza e finestra di esito dal DB, non da variabili d'ambiente.
 - [ ] Colletta limitata al saldo (1.2) e Banco con estrazione pesata (1.3): scritte in `server/db/013_colletta_banco_pesato.sql`, provate su Postgres in memoria, **da applicare a giochi_ufficio dopo l'OK**. Poi una simulazione per misurare le squadre mai colpite.
+- [ ] **Schermo della sala `/tv`** (richiesto il 26/10): scritto (`web/src/screens/Tv.tsx`, `server/db/014_tv.sql`, annuncio in Regia → Schermo, guida `docs/schermo-tv.md`), provato su Postgres in memoria e nel browser con dati finti. **Migration 014 da applicare a giochi_ufficio dopo l'OK, poi deploy sul VPS e prova su una vera TV.**
 - [ ] Prima di simulazioni e test SQL: il Banco parte solo dopo `banco_inizio` (vedi la guida della Regia).

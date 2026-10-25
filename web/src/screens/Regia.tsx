@@ -38,6 +38,7 @@ interface State {
   now: string
   sessions: { session: string; status: string; bankPaused: boolean; nextBank: string | null; nextSponsor: string | null; endsAt: string; teams: number; openMarkets: number; awaitingResult: number; inAppealWindow: number; bankCash: number }[]
   session: { id: string; name: string; status: string; endsAt: string; bankPaused: boolean; bankNextAt: string | null; sponsorNextAt: string | null } | null
+  tvMessage: { text: string; until: string } | null
   bankStart: string
   bankOpen: boolean
   params: Record<string, number>
@@ -61,13 +62,14 @@ const ACTION: Record<string, string> = {
   banco_adesso: 'Banco avviato adesso', banco_pausa: 'Banco in pausa', banco_ripresa: 'Banco ripreso',
   chiusura_serata: 'Chiusura serata', chiusura_forzata: 'Chiusura forzata', esito_regia: 'Esito dalla Regia',
   annulla_rimborso: 'Annulla con rimborso', rettifica_saldo: 'Rettifica saldo',
+  annuncio_tv: 'Annuncio sulla TV', annuncio_tv_tolto: 'Annuncio TV tolto',
 }
 const STATUS: Record<string, string> = { open: 'APERTA', closed: 'DA ESITARE', resolved: 'ESITATA', void: 'ANNULLATA', empty: 'SENZA PUNTATE' }
 
-type Tab = 'serata' | 'banco' | 'squadre' | 'scommesse' | 'parametri' | 'log'
+type Tab = 'serata' | 'banco' | 'squadre' | 'scommesse' | 'schermo' | 'parametri' | 'log'
 const TABS: { id: Tab; label: string }[] = [
   { id: 'serata', label: 'Serata' }, { id: 'banco', label: 'Banco' }, { id: 'squadre', label: 'Squadre' },
-  { id: 'scommesse', label: 'Scommesse' }, { id: 'parametri', label: 'Parametri' }, { id: 'log', label: 'Log' },
+  { id: 'scommesse', label: 'Scommesse' }, { id: 'schermo', label: 'Schermo' }, { id: 'parametri', label: 'Parametri' }, { id: 'log', label: 'Log' },
 ]
 
 const localInput = (iso: string) => {
@@ -186,6 +188,7 @@ export function Regia() {
       {tab === 'banco' && <Banco st={st} act={act} busy={busy} />}
       {tab === 'squadre' && <Squadre st={st} act={act} busy={busy} />}
       {tab === 'scommesse' && <Scommesse st={st} act={act} busy={busy} />}
+      {tab === 'schermo' && <Schermo st={st} act={act} busy={busy} />}
       {tab === 'parametri' && <Parametri st={st} act={act} busy={busy} />}
       {tab === 'log' && (
         <div className="tbl">
@@ -254,6 +257,27 @@ function Banco({ st, act, busy }: P) {
       <div className="btns" style={{ marginTop: 12 }}>
         <button disabled={busy || !st.session} onClick={() => void act('bank-pause', { paused: !paused }, paused ? 'Banco ripreso.' : 'Banco in pausa.')}>{paused ? 'Riprendi Banco' : 'Metti in pausa'}</button>
       </div>
+    </>
+  )
+}
+
+function Schermo({ st, act, busy }: P) {
+  const [text, setText] = useState('')
+  const [minutes, setMinutes] = useState('10')
+  const m = Number(minutes)
+  const valid = text.trim().length > 0 && Number.isInteger(m) && m >= 1 && m <= 240
+  return (
+    <>
+      <p className="note">Lo schermo della sala è <b>/tv</b>: si apre da qualsiasi browser, senza codice. L'annuncio compare in un banner in alto per il tempo scelto.</p>
+      <div className="tbl" style={{ padding: 14 }}>
+        <div className="rrow"><span>Ora sullo schermo</span><b>{st.tvMessage ? `«${st.tvMessage.text}» fino alle ${when(st.tvMessage.until)}` : 'nessun annuncio'}</b></div>
+      </div>
+      <label htmlFor="tvt">Annuncio (max 140 caratteri)</label>
+      <input id="tvt" maxLength={140} placeholder="Es. Si cena alle 21!" value={text} onChange={(e) => setText(e.target.value)} />
+      <label htmlFor="tvm">Per quanti minuti</label>
+      <input id="tvm" inputMode="numeric" value={minutes} onChange={(e) => setMinutes(e.target.value)} />
+      <button className="cta sm" disabled={busy || !st.session || !valid} onClick={() => void act('tv-message', { text: text.trim(), minutes: m }, 'Annuncio sullo schermo.').then((ok) => { if (ok) setText('') })}>MANDA SULLO SCHERMO</button>
+      <button className="ghost" disabled={busy || !st.tvMessage} onClick={() => void act('tv-message', { text: '' }, 'Annuncio tolto.')}>Togli l'annuncio</button>
     </>
   )
 }

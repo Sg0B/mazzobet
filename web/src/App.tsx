@@ -11,11 +11,13 @@ import { Radio } from './screens/Radio'
 import { Rank } from './screens/Rank'
 import { Regia } from './screens/Regia'
 import { TeamSelect } from './screens/TeamSelect'
+import { TvScreen } from './screens/Tv'
 
 type SheetState = { type: 'bet'; id: number; side: Side } | { type: 'create' } | null
 
 export default function App() {
   if (window.location.pathname.startsWith('/regia')) return <Regia />
+  if (window.location.pathname.startsWith('/tv')) return <TvScreen />
   return <Game />
 }
 

@@ -95,6 +95,25 @@ app.get('/api/rankings', async (req, reply) => {
   return data
 })
 
+// Schermo della sala (/tv): sola lettura, senza token, uguale per tutti → una lettura ogni pochi secondi.
+const TV_TTL_MS = 3_000
+let tv: { at: number; data: unknown } | null = null
+let tvLoading: Promise<{ data: unknown; error: unknown }> | null = null
+
+app.get('/api/tv', async (_req, reply) => {
+  reply.header('cache-control', 'no-store')
+  const now = Date.now()
+  if (tv && now - tv.at < TV_TTL_MS) return tv.data
+  tvLoading ??= Promise.resolve(db.rpc('mb_get_tv')).finally(() => { tvLoading = null })
+  const { data, error } = await tvLoading
+  if (error) {
+    app.log.error({ fn: 'mb_get_tv', error }, 'rpc failed')
+    return reply.code(500).send({ error: 'server_error', message: 'Dati non disponibili.' })
+  }
+  tv = { at: Date.now(), data }
+  return data
+})
+
 app.post('/api/markets', async (req, reply) => {
   const t = token(req, reply)
   if (!t) return
@@ -178,6 +197,7 @@ const adminAct = (path: string, fn: string, args: (req: FastifyRequest) => Recor
     const a = args(req)
     if (a === null) return reply.code(400).send({ error: 'bad_param', message: 'Dati non validi.' })
     rankings = null
+    tv = null
     return rpc(reply, fn, a)
   })
 const body = (req: FastifyRequest) => (req.body ?? {}) as Record<string, unknown>
@@ -199,7 +219,12 @@ adminAct('bank-start', 'mb_admin_set_bank_start', (r) => {
   const at = typeof body(r).at === 'string' ? new Date(body(r).at as string) : null
   return at && !isNaN(at.getTime()) ? { p_at: at.toISOString() } : null
 })
-adminAct('bank-now', 'mb_admin_bank_now', () => ({}))
+adminAct('tv-message', 'mb_admin_set_tv', (r) => {
+  const b = body(r)
+  const m = b.minutes === undefined ? 10 : int(b.minutes)
+  return typeof b.text === 'string' && m !== null ? { p_text: b.text, p_minutes: m } : null
+})
+adminAct('bank-now','mb_admin_bank_now', () => ({}))
 adminAct('bank-pause', 'mb_admin_bank_pause', (r) => (typeof body(r).paused === 'boolean' ? { p_paused: body(r).paused } : null))
 adminAct('close-session', 'mb_admin_close_session', () => ({}))
 adminAct('force-finalize', 'mb_admin_force_finalize', () => ({}))
