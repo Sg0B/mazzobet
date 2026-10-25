@@ -1,5 +1,5 @@
 -- Classifiche: patrimonio, pronostici corretti, striscia vincente, somma puntate, bancarotte.
--- NON applicata: da incollare nell'editor SQL di Supabase solo dopo il via libera.
+-- Applicata a giochi_ufficio il 25/10/2026 (migration mazzobet_012_classifiche).
 -- Nessuna tabella nuova: tutto è calcolato da bets, markets, session_teams, bankruptcy_events.
 
 insert into mazzobet.config (key, value, note) values
