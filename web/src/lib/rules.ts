@@ -19,5 +19,9 @@ export function parseOdds(input: string, min: number, max: number): number | nul
 /** Controllo sul margine: 1/qSÌ + 1/qNO ≥ 1, in soli interi (blocca le quote «regalo» come 5,00 e 5,00). */
 export const oddsMarginOk = (yesCents: number, noCents: number) => 100 * (yesCents + noCents) >= yesCents * noCents
 
+/** Quota massima dell'altro lato data una quota: la più alta con oddsMarginOk ancora vero (centesimi, tetto oddsMax). */
+export const maxOtherOdds = (cents: number, oddsMax: number) =>
+  cents <= 100 ? oddsMax : Math.min(oddsMax, Math.floor((100 * cents) / (cents - 100)))
+
 /** Compenso di chi esita: percentuale del totale puntato, con un tetto. */
 export const resolverFee = (total: number, pct: number, cap: number) => Math.min(Math.floor((total * pct) / 100), cap)

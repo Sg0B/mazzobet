@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { oddsMarginOk, parseOdds } from '../lib/rules'
+import { maxOtherOdds, oddsMarginOk, parseOdds } from '../lib/rules'
 import { MIN, cur } from '../lib/format'
 import { actions, serverNow, useGame } from '../store/game'
 import { Sheet } from './Sheet'
@@ -24,6 +24,18 @@ export function CreateSheet({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState('')
   const attempt = useRef(crypto.randomUUID()) // stessa chiave a ogni retry: mai due scommesse
   const [busy, setBusy] = useState(false)
+  const [last, setLast] = useState<'yes' | 'no'>('yes') // ultimo campo modificato: è quello che resta fermo nel messaggio d'errore
+
+  const cents = (v: string) => parseOdds(v, c.oddsMin, c.oddsMax)
+  const odds = (n: number) => (n / 100).toFixed(2).replace('.', ',')
+  const yC = cents(yes)
+  const nC = cents(no)
+  const maxNo = yC ? maxOtherOdds(yC, c.oddsMax) : null // massimo del NO data la quota SÌ
+  const maxYes = nC ? maxOtherOdds(nC, c.oddsMax) : null
+  const marginBad = !!yC && !!nC && !oddsMarginOk(yC, nC)
+  const marginMsg = !marginBad ? '' : last === 'yes'
+    ? `Con SÌ a ${odds(yC!)} il NO può arrivare al massimo a ${odds(maxNo!)}.`
+    : `Con NO a ${odds(nC!)} il SÌ può arrivare al massimo a ${odds(maxYes!)}.`
 
   const publish = async () => {
     if (busy) return
@@ -32,7 +44,7 @@ export function CreateSheet({ onClose }: { onClose: () => void }) {
     const n = parseOdds(no, c.oddsMin, c.oddsMax)
     if (q.length < 8) return setError('Scrivi una domanda chiara, almeno 8 caratteri.')
     if (!y || !n) return setError('Le quote devono essere tra 1,10 e 10,00, con due decimali.')
-    if (!oddsMarginOk(y, n)) return setError('Quote troppo generose: con queste il Banco regalerebbe Carletti. Abbassa una delle due.')
+    if (!oddsMarginOk(y, n)) return setError(marginMsg)
     const now = serverNow()
     let expiresAt: number
     if (close === 'time') {
@@ -61,11 +73,21 @@ export function CreateSheet({ onClose }: { onClose: () => void }) {
       <div className="two">
         <div>
           <label htmlFor="cy">Quota SÌ</label>
-          <input id="cy" inputMode="decimal" value={yes} onChange={(e) => setYes(e.target.value)} />
+          <input id="cy" inputMode="decimal" value={yes} onChange={(e) => { setYes(e.target.value); setLast('yes'); setError('') }} />
+          {maxYes && (
+            <button type="button" className={`maxhint${marginBad ? ' bad' : ''}`} onClick={() => { setYes(odds(maxYes)); setLast('no'); setError('') }}>
+              MAX {odds(maxYes)}
+            </button>
+          )}
         </div>
         <div>
           <label htmlFor="cn">Quota NO</label>
-          <input id="cn" inputMode="decimal" value={no} onChange={(e) => setNo(e.target.value)} />
+          <input id="cn" inputMode="decimal" value={no} onChange={(e) => { setNo(e.target.value); setLast('no'); setError('') }} />
+          {maxNo && (
+            <button type="button" className={`maxhint${marginBad ? ' bad' : ''}`} onClick={() => { setNo(odds(maxNo)); setLast('yes'); setError('') }}>
+              MAX {odds(maxNo)}
+            </button>
+          )}
         </div>
       </div>
       <p className="note">Quote da 1,10 a 10,00, fisse per tutta la durata.</p>
@@ -90,8 +112,8 @@ export function CreateSheet({ onClose }: { onClose: () => void }) {
         Dopo la scadenza esiti per primo tu ({c.creatorPriorityMin} minuti); poi può farlo chiunque non abbia puntato, fino a {c.creatorPriorityMin + c.resolveWindowMin} minuti.
         Se nessuno esita la scommessa è annullata. Senza puntate si chiude da sola.
       </p>
-      <p className="err" role="alert">{error}</p>
-      <button className="cta sm" disabled={s.balance < c.createFee || busy} onClick={publish}>PUBBLICA · {cur(c.createFee)}</button>
+      <p className="err" role="alert">{error || marginMsg}</p>
+      <button className="cta sm" disabled={s.balance < c.createFee || busy || marginBad} onClick={publish}>PUBBLICA · {cur(c.createFee)}</button>
       <button className="ghost" onClick={onClose}>Annulla</button>
     </Sheet>
   )

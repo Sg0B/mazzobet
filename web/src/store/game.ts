@@ -94,6 +94,17 @@ export interface LeaderRow {
   readmissions: number
 }
 
+/** Righe delle classifiche calcolate dal server (posizioni già assegnate, parità comprese). */
+export interface RankRow { teamId: number; name: string; pos: number | null }
+export interface Rankings {
+  minEsitate: number
+  patrimonio: (RankRow & { value: number; balance: number })[]
+  pronostici: (RankRow & { won: number; done: number; pct: number | null })[]
+  striscia: (RankRow & { best: number; cur: number })[]
+  puntate: (RankRow & { value: number })[]
+  bancarotte: (RankRow & { value: number })[]
+}
+
 export interface TeamInfo {
   id: number
   name: string
@@ -119,6 +130,7 @@ export interface GameState {
   news: News[]
   ledger: LedgerEntry[]
   leaderboard: LeaderRow[]
+  rankings: Rankings | null
   bankCash: number
   bankInPlay: number
   toast: string | null
@@ -148,6 +160,7 @@ let state: GameState = {
   news: [],
   ledger: [],
   leaderboard: [],
+  rankings: null,
   bankCash: 0,
   bankInPlay: 0,
   toast: null,
@@ -341,6 +354,20 @@ export async function refresh() {
   }
 }
 
+/** Classifiche complete: si chiedono solo mentre il tab è aperto (il server le tiene in cache pochi secondi). */
+let loadingRankings = false
+export async function loadRankings() {
+  if (loadingRankings || !getToken()) return
+  loadingRankings = true
+  try {
+    set({ rankings: await api<Rankings>('/rankings') })
+  } catch {
+    /* resta l'ultima versione ricevuta */
+  } finally {
+    loadingRankings = false
+  }
+}
+
 /** Esegue un'azione sul server e aggiorna lo stato; ritorna l'esito per la UI. */
 async function run(fn: () => Promise<unknown>, success?: string): Promise<Result> {
   try {
@@ -375,7 +402,7 @@ export const actions = {
 
   leaveTeam() {
     setToken(null)
-    set({ team: null, teamId: null, markets: [], ledger: [], leaderboard: [], balance: 0, bankruptUntil: null })
+    set({ team: null, teamId: null, markets: [], ledger: [], leaderboard: [], rankings: null, balance: 0, bankruptUntil: null })
   },
 
   setTab(tab: GameState['tab']) {

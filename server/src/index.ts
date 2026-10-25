@@ -69,6 +69,30 @@ app.get('/api/state', async (req, reply) => {
   if (t) return rpc(reply, 'mb_get_state', { p_token: t })
 })
 
+// Classifiche: identiche per tutte le squadre, quindi una sola lettura dal database ogni pochi secondi.
+// Con la cache servita solo a chi ha già mostrato un token valido (un UUID qualunque non basta).
+const RANKINGS_TTL_MS = 8_000
+const KNOWN_TOKEN_TTL_MS = 60_000
+let rankings: { at: number; data: unknown } | null = null
+const knownTokens = new Map<string, number>()
+
+app.get('/api/rankings', async (req, reply) => {
+  const t = token(req, reply)
+  if (!t) return
+  const now = Date.now()
+  if (rankings && now - rankings.at < RANKINGS_TTL_MS && (knownTokens.get(t) ?? 0) > now) return rankings.data
+  const { data, error } = await db.rpc('mb_get_rankings', { p_token: t })
+  if (error) {
+    const e = toApiError(error)
+    if (e.status === 500) app.log.error({ fn: 'mb_get_rankings', error }, 'rpc failed')
+    return reply.code(e.status).send({ error: e.code, message: e.message })
+  }
+  rankings = { at: now, data }
+  knownTokens.set(t, now + KNOWN_TOKEN_TTL_MS)
+  if (knownTokens.size > 500) for (const [k, exp] of knownTokens) if (exp < now) knownTokens.delete(k)
+  return data
+})
+
 app.post('/api/markets', async (req, reply) => {
   const t = token(req, reply)
   if (!t) return

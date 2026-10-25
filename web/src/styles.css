@@ -81,7 +81,17 @@ h1,h2,h3,p{margin:0}
 .row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row .nm em{font-style:normal;font-size:11px;color:var(--lime);letter-spacing:.1em;margin-left:6px}
 .row .val{font:700 20px var(--f-disp);font-variant-numeric:tabular-nums}
-.row.top1 .pos{color:var(--lime)}
+.row.top1 .pos,.row.top3 .pos{color:var(--lime)}
+.row.top3 .nm{font-weight:700}
+.bankbal{font-size:12px;color:var(--muted);margin-top:8px}
+.bankbal b{font-weight:600;font-variant-numeric:tabular-nums}
+.rkchips{display:flex;gap:8px;margin-top:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.rkchips::-webkit-scrollbar{display:none}
+.rkchips .chip{flex:0 0 auto;font-size:14px}
+.row .val{text-align:right;white-space:nowrap}
+.rkme{position:sticky;bottom:calc(66px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;margin-top:12px;padding:12px 14px;background:var(--surface2);border:1px solid var(--lime);border-radius:14px;z-index:5}
+.rkme .pos{font:700 18px var(--f-disp);color:var(--lime)}
+.rkme .val{font:700 20px var(--f-disp);font-variant-numeric:tabular-nums;white-space:nowrap}
 .stat{display:flex;justify-content:space-between;align-items:baseline;background:var(--surface);border-radius:14px;padding:14px 16px;margin-top:12px}
 .stat span{color:var(--muted);font-size:13px}
 .stat b{font:700 30px/1 var(--f-disp);font-variant-numeric:tabular-nums}
@@ -144,6 +154,8 @@ textarea{resize:none;min-height:76px}
 .sum div{display:flex;justify-content:space-between}
 .sum dt{color:var(--muted)} .sum dd{margin:0;font:700 20px var(--f-disp);font-variant-numeric:tabular-nums}
 .sum .big dd{color:var(--lime);font-size:26px}
+.maxhint{display:block;background:none;border:0;padding:6px 2px;min-height:32px;font-size:12px;letter-spacing:.04em;color:var(--muted);opacity:.8;cursor:pointer}
+.maxhint.bad{color:var(--bad);opacity:1}
 .err{color:var(--bad);font-size:13px;min-height:18px;margin-top:8px}
 #must{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;justify-content:center;gap:14px;padding:24px max(20px,env(safe-area-inset-right,0px)) 24px max(20px,env(safe-area-inset-left,0px))}
 #must .box{max-width:480px;width:100%;margin:0 auto}

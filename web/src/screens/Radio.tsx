@@ -1,4 +1,4 @@
-import { ago } from '../lib/format'
+import { ago, fmt } from '../lib/format'
 import { useGame, type NewsKind } from '../store/game'
 
 const BADGE: Record<NewsKind, [string, string]> = {
@@ -14,6 +14,7 @@ export function Radio() {
   return (
     <>
       <div className="top"><div className="logo">RADIOCORSA</div></div>
+      <p className="bankbal">Saldo del Banco (indicativo): <b className={s.bankCash < 0 ? 'neg' : ''}>{fmt(s.bankCash)}</b></p>
       <div style={{ marginTop: 12 }}>
         {s.news.length === 0 && <p className="empty">Ancora nessuna notizia. Il Banco si farà sentire.</p>}
         {s.news.map((n) => (
