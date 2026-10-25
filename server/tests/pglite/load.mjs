@@ -3,7 +3,7 @@
 import { PGlite } from '@electric-sql/pglite'
 import { readFileSync, readdirSync } from 'node:fs'
 const D = new URL('../../db/', import.meta.url)
-export async function boot(upTo = 12){
+export async function boot(upTo = 13){
   const db=new PGlite()
   await db.exec(`create role service_role; create role anon; create role authenticated;`)
   const files=readdirSync(D).filter(f=>/^0\d\d_.*\.sql$/.test(f)).sort()

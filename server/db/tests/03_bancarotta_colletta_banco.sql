@@ -25,9 +25,10 @@ begin
   assert (select rounds from mazzobet.collection_chains where session_id = s_id) = 2, 'due giri; al terzo restano 2 paganti e la catena si ferma';
   assert (select r.payers from mazzobet.collection_rounds r join mazzobet.collection_chains c on c.id = r.chain_id where c.session_id = s_id and r.round_no = 1) = 5, 'giro 1: A, B, C, D, E';
   assert (select r.payers from mazzobet.collection_rounds r join mazzobet.collection_chains c on c.id = r.chain_id where c.session_id = s_id and r.round_no = 2) = 3, 'giro 2: C, D, E (valvola rispettata)';
-  assert (select balance from mazzobet.session_teams where session_id = s_id and team_id = 2) = -5,  'A: 20 − 25 = −5';
+  assert (select balance from mazzobet.session_teams where session_id = s_id and team_id = 2) = 0,  'A: versa solo i suoi 20 (mai in negativo)';
   assert (select balance from mazzobet.session_teams where session_id = s_id and team_id = 3) = 5,   'B: 30 − 25 = 5';
-  assert (select balance from mazzobet.session_teams where session_id = s_id and team_id = 4) = -10, 'C: 40 − 25 − 25 = −10';
+  assert (select balance from mazzobet.session_teams where session_id = s_id and team_id = 4) = 0, 'C: 40 − 25 = 15, poi versa i 15 che ha';
+  assert not exists (select 1 from mazzobet.session_teams where session_id = s_id and balance < 0), 'la colletta non porta nessuno sotto zero';
   assert (select balance from mazzobet.session_teams where session_id = s_id and team_id = 5) = 150, 'D: 200 − 25 − 25';
   assert (select balance from mazzobet.session_teams where session_id = s_id and team_id = 6) = 250, 'E: 300 − 25 − 25';
   assert (select count(*) from mazzobet.bankruptcy_events where session_id = s_id and chain_id is not null) = 4, 'fallite: X, A, B, C';

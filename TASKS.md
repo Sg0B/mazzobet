@@ -50,7 +50,7 @@ Online su **https://mazzobet.sourlemon.cloud** (repository privato `Sg0B/mazzobe
 
 - [x] Aiuto «MAX» sulle quote, classifiche (migration 012 **applicata**) e saldo del Banco in RadioCorsa: online.
 - [ ] **Banco di Regia** (`/regia`, `docs/accesso-regia.md`): scritto e provato in locale. Da fare: (1) via libera e applicazione della **migration 011** su Supabase (prima, poi il VPS); (2) impostare `ADMIN_CODE` nel `.env` del VPS e ricreare il contenitore; (3) prova da telefono vero.
-- [ ] **PIN delle squadre** (prompt accesso §1): dopo la Regia (migration 013 se serve); «Resetta squadra» cancellerà anche il PIN.
+- [ ] **PIN delle squadre** (prompt accesso §1): dopo la Regia (migration 014 se serve); «Resetta squadra» cancellerà anche il PIN.
 - [ ] **Notifiche push** (prompt notifiche): dopo il PIN. Leggere precedenza e finestra di esito dal DB, non da variabili d'ambiente.
-- [ ] Colletta limitata al saldo disponibile (1.2) e Banco ordinario con estrazione pesata (1.3), da fare con la prossima simulazione.
+- [ ] Colletta limitata al saldo (1.2) e Banco con estrazione pesata (1.3): scritte in `server/db/013_colletta_banco_pesato.sql`, provate su Postgres in memoria, **da applicare a giochi_ufficio dopo l'OK**. Poi una simulazione per misurare le squadre mai colpite.
 - [ ] Prima di simulazioni e test SQL: il Banco parte solo dopo `banco_inizio` (vedi la guida della Regia).
