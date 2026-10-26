@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { cur, fmt } from '../lib/format'
-import { actions, committed, useGame, type Side } from '../store/game'
+import { actions, committed, toResolve, useGame, type Side } from '../store/game'
 import { Countdown } from '../components/Countdown'
 import { MarketCard } from '../components/MarketCard'
 import { InstallHint } from '../components/InstallHint'
+import { Alerts } from '../components/Alerts'
 
 export function Home({ onBet, onCreate }: { onBet: (id: number, side: Side) => void; onCreate: () => void }) {
   const s = useGame()
@@ -14,6 +15,7 @@ export function Home({ onBet, onCreate }: { onBet: (id: number, side: Side) => v
     return () => clearInterval(t)
   }, [])
 
+  const others = toResolve(s)
   const latest = s.news.slice(0, 4)
   const shown = latest.length ? latest[i % latest.length] : undefined
   const open = s.markets.filter((m) => m.status === 'open').sort((a, b) => a.expiresAt - b.expiresAt)
@@ -32,6 +34,14 @@ export function Home({ onBet, onCreate }: { onBet: (id: number, side: Side) => v
         <span className="teamchip">{s.team}</span>
       </div>
       <InstallHint />
+      <Alerts />
+      {others.length > 0 && (
+        <button className="radio" onClick={() => actions.setTab('bets')} style={{ textAlign: 'left' }}>
+          <p className="t" style={{ marginTop: 0 }}>
+            {others.length === 1 ? 'C’è 1 scommessa senza esito' : `Ci sono ${others.length} scommesse senza esito`}: esitala e incassi un compenso.
+          </p>
+        </button>
+      )}
       <div className="bal">
         <div className="l">Saldo disponibile</div>
         <div className="v">{fmt(s.balance)} <small>{Math.abs(s.balance) === 1 ? 'Carletto' : 'Carletti'}</small></div>

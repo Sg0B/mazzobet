@@ -31,7 +31,7 @@ export function InstallHint() {
     <div className="radio" role="note" style={{ textAlign: 'left' }}>
       <p style={{ WebkitLineClamp: 'unset', display: 'block', color: 'var(--fg)' }}>
         <b>Mettila sulla Home.</b>{' '}
-        {ios ? 'In Safari tocca Condividi, poi «Aggiungi alla schermata Home»: si apre a tutto schermo.' : 'Si apre a tutto schermo, come un’app.'}
+        {ios ? 'In Safari tocca Condividi → «Aggiungi alla schermata Home», poi riapri MazzoBet dall’icona e attiva gli avvisi: su iPhone funzionano solo così.' : 'Si apre a tutto schermo, come un’app.'}
       </p>
       {ev && <button className="cta sm" onClick={() => { void ev.prompt(); close() }}>AGGIUNGI A HOME</button>}
       <button className="ghost" onClick={close}>Non ora</button>

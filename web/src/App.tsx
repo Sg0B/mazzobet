@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { actions, useGame, type Side } from './store/game'
+import { actions, mustResolve, toResolve, useGame, type Side } from './store/game'
+import { registerWorker, resyncPush } from './lib/push'
 import { PinSetup } from './components/PinSetup'
 import { BottomNav } from './components/BottomNav'
 import { BetSheet } from './components/BetSheet'
@@ -27,6 +28,27 @@ function Game() {
   const [sheet, setSheet] = useState<SheetState>(null)
   const close = () => setSheet(null)
   const [pinAsk, setPinAsk] = useState(false)
+
+  // Avvisi: service worker, tocco sulla notifica (app chiusa: ?m=… nell'indirizzo; app aperta: messaggio) e fallback senza permesso
+  // (numero nel titolo della scheda, vibrazione quando ne arriva una nuova).
+  const count = s.team ? mustResolve(s).length + toResolve(s).length : 0
+  const [seen, setSeen] = useState(0)
+  useEffect(() => {
+    registerWorker()
+    if (new URLSearchParams(window.location.search).has('m')) {
+      actions.setTab('bets')
+      window.history.replaceState(null, '', '/')
+    }
+    const onMsg = (e: MessageEvent) => { if (e.data?.type === 'mazzobet-open') actions.setTab('bets') }
+    navigator.serviceWorker?.addEventListener('message', onMsg)
+    return () => navigator.serviceWorker?.removeEventListener('message', onMsg)
+  }, [])
+  useEffect(() => { if (s.teamId) void resyncPush() }, [s.teamId])
+  useEffect(() => {
+    document.title = count > 0 ? `(${count}) MazzoBet` : 'MazzoBet'
+    if (count > seen) { try { navigator.vibrate?.(200) } catch { /* ignora */ } }
+    setSeen(count)
+  }, [count])   // eslint-disable-line react-hooks/exhaustive-deps
 
   // Squadra entrata prima dei PIN: al primo caricamento chiede di impostarlo (una volta per apertura dell'app).
   useEffect(() => {

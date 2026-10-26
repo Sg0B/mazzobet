@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js'
 import { toApiError } from './errors.js'
 import { readCatalog, validateCatalog } from './catalog.js'
 import { PIN_FORMAT, checkPin, hashPin } from './pin.js'
+import { configurePush, sendItem, type PushItem } from './push.js'
 
 const url = process.env.SUPABASE_URL
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -140,6 +141,39 @@ app.post('/api/pin', async (req, reply) => {
   if (error) { const e = toApiError(error); return reply.code(e.status).send({ error: e.code, message: e.message }) }
   if (!set) return reply.code(409).send({ error: 'pin_taken', message: 'Questa squadra ha già un PIN.' })
   return { ok: true }
+})
+
+// ---- Notifiche push (solo due tipi, vedi docs/notifiche.md). Chiavi VAPID solo nel .env del server.
+const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY ?? ''
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY ?? ''
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT ?? ''
+const PUSH_ON = process.env.PUSH_ENABLED !== 'false' && !!VAPID_PUBLIC && !!VAPID_PRIVATE && VAPID_SUBJECT.startsWith('mailto:')
+const PUSH_COOLDOWN = Number(process.env.PUSH_B_PER_TEAM_COOLDOWN_SEC ?? 120)
+if (PUSH_ON) configurePush({ publicKey: VAPID_PUBLIC, privateKey: VAPID_PRIVATE, subject: VAPID_SUBJECT })
+
+app.get('/api/push/key', async () => (PUSH_ON ? { enabled: true, key: VAPID_PUBLIC } : { enabled: false }))
+
+app.post('/api/push/subscribe', async (req, reply) => {
+  const t = token(req, reply)
+  if (!t) return
+  if (!PUSH_ON) return reply.code(503).send({ error: 'push_disabled', message: 'Gli avvisi non sono attivi sul server.' })
+  const sub = ((req.body ?? {}) as { subscription?: { endpoint?: unknown; keys?: { p256dh?: unknown; auth?: unknown } } }).subscription
+  if (typeof sub?.endpoint !== 'string' || typeof sub.keys?.p256dh !== 'string' || typeof sub.keys.auth !== 'string') {
+    return reply.code(400).send({ error: 'bad_param', message: 'Iscrizione non valida.' })
+  }
+  await rpc(reply, 'mb_push_subscribe', {
+    p_token: t, p_endpoint: sub.endpoint, p_p256dh: sub.keys.p256dh, p_auth: sub.keys.auth, p_user_agent: req.headers['user-agent'] ?? null,
+  })
+  if (!reply.sent) return { ok: true }
+})
+
+app.post('/api/push/unsubscribe', async (req, reply) => {
+  const t = token(req, reply)
+  if (!t) return
+  const endpoint = ((req.body ?? {}) as { endpoint?: unknown }).endpoint
+  if (typeof endpoint !== 'string') return reply.code(400).send({ error: 'bad_param', message: 'Iscrizione non valida.' })
+  await rpc(reply, 'mb_push_unsubscribe', { p_token: t, p_endpoint: endpoint })
+  if (!reply.sent) return { ok: true }
 })
 
 app.get('/api/state', async (req, reply) => {
@@ -345,5 +379,30 @@ const tick = async () => {
 }
 setInterval(tick, 5000)
 void tick()
+
+// Worker delle notifiche: chi avvisare lo decide il database (orari e stato letti da lì); un errore qui non tocca mai il gioco.
+let pushBusy = false
+const pushTick = async () => {
+  if (pushBusy) return
+  pushBusy = true
+  try {
+    const { data, error } = await db.rpc('mb_push_due', { p_cooldown_sec: PUSH_COOLDOWN })
+    if (error) return app.log.error({ error }, 'push_due failed')
+    const ok: number[] = []
+    const dead: number[] = []
+    for (const it of (data ?? []) as PushItem[]) {
+      const r = await sendItem(it, (o, m) => app.log.warn(o, m))
+      ok.push(...r.ok)
+      dead.push(...r.dead)
+    }
+    if (ok.length || dead.length) await db.rpc('mb_push_mark', { p_ok: ok, p_dead: dead })
+  } catch (e) {
+    app.log.error({ e }, 'push tick failed')
+  } finally {
+    pushBusy = false
+  }
+}
+if (PUSH_ON) setInterval(pushTick, 5000)
+else app.log.info('Notifiche push spente (PUSH_ENABLED=false o chiavi VAPID mancanti).')
 
 await app.listen({ port: Number(process.env.PORT ?? 3000), host: '0.0.0.0' })

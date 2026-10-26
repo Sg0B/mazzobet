@@ -8,7 +8,7 @@
 2. **Provare `/tv` su una TV vera** (leggibilità da lontano, dimensione del testo, browser della smart TV o HDMI).
 3. **Nuova simulazione** (24 squadre, 60′ ×6): misurare le squadre mai colpite con l'estrazione pesata e decidere il **saldo iniziale** (oggi 1.000, ora parametro in Regia). Prima: `banco_inizio` nel passato, poi ripristinarlo (vedi guida Regia).
 4. **PIN delle squadre** (prompt accesso §1): scritto e provato in locale (`server/db/015_pin.sql`, `server/tests/pglite/pin.mjs`). Migration 015 applicata a `giochi_ufficio` (26/10/2026). **Manca:** commit, deploy sul VPS e prova su telefoni veri.
-5. **Notifiche push** (prompt notifiche): leggere precedenza e finestra di esito dal database, non da variabili d'ambiente; disattivare le iscrizioni al reset squadra.
+5. **Notifiche push** (prompt notifiche): scritte e provate in locale (`server/db/016_push.sql`, `server/tests/pglite/push*.mjs`, guida `docs/notifiche.md`). Migration 016 applicata a `giochi_ufficio` (27/10/2026). **Manca:** generare le chiavi VAPID e metterle nel `.env` del VPS, deploy e prova su telefoni veri (schermo bloccato, tocco, iPhone dalla Home, Android).
 6. **Prova generale con persone vere** (sezione 4) e unione di `regole-v06` a `main`.
 
 ## 1. Decisioni

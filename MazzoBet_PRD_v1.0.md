@@ -639,7 +639,7 @@ Compenso C al creatore anche se esita la Regia (subito, senza contestazione). Sa
 | Colletta limitata al saldo, Banco pesato (migration 013) | migration applicata; nessun cambiamento sul VPS |
 | Schermo `/tv` e annuncio (migration 014) | migration applicata e codice nel repository; **da aggiornare sul VPS** e da provare su una TV vera |
 | PIN delle squadre (migration 015) | scritto e provato in locale; **migration non applicata**, da distribuire e provare sui telefoni |
-| Notifiche push | non iniziato |
+| Notifiche push (migration 016) | scritte e provate in locale; migration applicata il 27/10/2026, chiavi VAPID da generare, da provare sui telefoni (vedi `docs/notifiche.md`) |
 
 Migration in `server/db/`: 001–010 (storico), 011 Regia, 012 classifiche, 013 colletta e Banco pesato, 014 TV. Applicate tutte a `giochi_ufficio`. Prove senza toccare il database vero: `server/tests/pglite/` (Postgres in memoria: `db-tests.mjs`, `regia.mjs`, `tv.mjs`, `banco-pesato.mjs`).
 
