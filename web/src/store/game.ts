@@ -111,6 +111,9 @@ export interface TeamInfo {
   id: number
   name: string
   entered: boolean
+  hasPin: boolean
+  /** Secondi di blocco rimasti (5 PIN sbagliati di fila), 0 se libera. */
+  lockedSecs: number
 }
 
 export interface GameState {
@@ -138,7 +141,7 @@ export interface GameState {
   toast: string | null
 }
 
-export type Result = { ok: true } | { ok: false; error: string }
+export type Result = { ok: true } | { ok: false; error: string; lockedSecs?: number }
 const ok: Result = { ok: true }
 const fail = (e: unknown): Result => ({
   ok: false,
@@ -393,15 +396,17 @@ export const actions = {
     return api<TeamInfo[]>('/teams')
   },
 
-  async enterTeam(teamId: number): Promise<Result> {
+  async enterTeam(teamId: number, pin?: string): Promise<Result> {
     try {
-      const r = await api<{ token: string }>('/enter', { body: { teamId, token: getToken() } })
+      const r = await api<{ token: string }>('/enter', { body: { teamId, token: getToken(), pin } })
       setToken(r.token)
       set({ tab: 'home' })
       await refresh()
       return ok
     } catch (e) {
-      return fail(e)
+      const r = fail(e)
+      if (e instanceof ApiError && e.code === 'pin_locked' && !r.ok) r.lockedSecs = Number(e.lockedSecs) || 60
+      return r
     }
   },
 

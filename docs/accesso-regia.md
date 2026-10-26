@@ -2,7 +2,7 @@
 
 Pagina di servizio per chi conduce la serata: **https://mazzobet.sourlemon.cloud/regia**. Non compare da nessuna parte nell'app dei giocatori. Funziona da telefono.
 
-> Questa è la parte «Regia» del prompt accesso/Regia. L'accesso delle squadre con il PIN (§1 del prompt) non è ancora fatto: oggi chiunque può scegliere qualsiasi squadra libera. Quando arriverà, «Resetta squadra» cancellerà anche il PIN.
+> Questa è la parte «Regia» del prompt accesso/Regia. L'accesso delle squadre con il PIN è descritto più sotto («PIN delle squadre»).
 
 ## Impostare il codice (`ADMIN_CODE`)
 
@@ -42,7 +42,7 @@ Se il codice non è impostato o è troppo corto, la Regia risponde «non configu
 
 ### Reset di una squadra
 
-Scollega **tutti i dispositivi** di quella squadra e la rende di nuovo libera. **Saldo, storico, puntate e scommesse create restano.** Chi la sceglie di nuovo ritrova tutto, comprese le scommesse ancora in corso.
+Scollega **tutti i dispositivi** di quella squadra, **cancella il suo PIN** e la rende di nuovo libera. **Saldo, storico, puntate e scommesse create restano.** Chi la sceglie di nuovo ritrova tutto, comprese le scommesse ancora in corso.
 
 ### Reset totale (serata nuova)
 
@@ -88,10 +88,20 @@ node server/tests/pglite/regia.mjs
 node server/tests/pglite/db-tests.mjs
 ```
 
-Caricano lo schema reale (migration 001–014) in un Postgres in memoria: non toccano nessun database vero. `regia.mjs` prova orario del Banco, scadenze, esito dalla Regia, rimborsi, rettifiche, reset e permessi.
+Caricano lo schema reale (migration 001–015) in un Postgres in memoria: non toccano nessun database vero. `regia.mjs` prova orario del Banco, scadenze, esito dalla Regia, rimborsi, rettifiche, reset e permessi.
+
+## PIN delle squadre
+
+- La prima volta che una squadra viene scelta, chi entra imposta un **PIN di 4 cifre** (due volte). Da quel momento la squadra compare «già in gioco» per gli altri.
+- Il PIN è salvato solo come **hash scrypt con sale** (calcolato dal server), mai in chiaro. Il telefono resta riconosciuto fino a fine serata (token): il PIN si chiede solo su un telefono nuovo o dopo «Esci». Più telefoni per la stessa squadra con lo stesso PIN sono consentiti.
+- **5 PIN sbagliati di fila → squadra bloccata per 1 minuto** (messaggio con i secondi rimasti; l'evento finisce nel Log). Un PIN giusto azzera il conteggio.
+- **Un giocatore perde il PIN:** Regia → Squadre → **Resetta**. Saldo e storico restano; la squadra torna libera e chi la sceglie imposta un PIN nuovo (attenzione: chiunque la scelga per primo, quindi fallo con il giocatore davanti).
+- Le squadre già entrate prima della migration 015 non hanno PIN: il primo che le sceglie dopo l'aggiornamento lo imposta.
+- Prova: `node server/tests/pglite/pin.mjs` (avvia il server vero con un finto Supabase che inoltra a Postgres in memoria).
 
 ## Limiti noti
 
 - Il codice resta nel browser (localStorage) di chi lo inserisce, e viaggia in HTTPS a ogni richiesta.
 - Non c'è un elenco delle sessioni attive né un modo di «disconnettere» un singolo telefono della Regia: per tutti, si cambia il codice.
-- Finché non ci sono i PIN, «Resetta squadra» scollega i telefoni ma chiunque può rientrare in quella squadra.
+- Il PIN non è un segreto forte: chi ha in mano il telefono già sbloccato di un collega ha già il suo token. Vale per questo gioco, non per altro.
+- Il blocco dopo 5 PIN sbagliati è **per squadra**: chi sbaglia apposta può bloccare una squadra per un minuto, ripetutamente. Il dispositivo già riconosciuto non viene fermato.

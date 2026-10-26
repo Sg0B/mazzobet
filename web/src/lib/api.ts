@@ -21,6 +21,7 @@ export class ApiError extends Error {
     public status: number,
     public code: string,
     message: string,
+    public lockedSecs = 0,
   ) {
     super(message)
   }
@@ -42,6 +43,6 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
     throw new ApiError(0, 'network', 'Connessione assente. Riprova.')
   }
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new ApiError(res.status, data.error ?? 'error', data.message ?? 'Errore. Riprova.')
+  if (!res.ok) throw new ApiError(res.status, data.error ?? 'error', data.message ?? 'Errore. Riprova.', data.lockedSecs ?? 0)
   return data as T
 }

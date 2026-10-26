@@ -7,6 +7,7 @@ import fastifyStatic from '@fastify/static'
 import { createClient } from '@supabase/supabase-js'
 import { toApiError } from './errors.js'
 import { readCatalog, validateCatalog } from './catalog.js'
+import { PIN_FORMAT, checkPin, hashPin } from './pin.js'
 
 const url = process.env.SUPABASE_URL
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -59,11 +60,56 @@ app.get('/api/health', async () => ({ ok: true }))
 app.get('/api/teams', async (_req, reply) => rpc(reply, 'mb_list_teams'))
 
 app.post('/api/enter', async (req, reply) => {
-  const b = (req.body ?? {}) as { teamId?: unknown; token?: unknown }
+  const b = (req.body ?? {}) as { teamId?: unknown; token?: unknown; pin?: unknown }
   const teamId = int(b.teamId)
   if (teamId === null) return reply.code(400).send({ error: 'unknown_team', message: 'Squadra sconosciuta.' })
   const prev = typeof b.token === 'string' && UUID.test(b.token) ? b.token : null
-  return rpc(reply, 'mb_enter_team', { p_team: teamId, p_token: prev, p_user_agent: req.headers['user-agent'] ?? null })
+  const pin = typeof b.pin === 'string' && PIN_FORMAT.test(b.pin) ? b.pin : null
+  const enter = () =>
+    rpc(reply, 'mb_enter_team', { p_team: teamId, p_token: prev, p_user_agent: req.headers['user-agent'] ?? null })
+  const locked = (secs: number) =>
+    reply.code(429).send({ error: 'pin_locked', lockedSecs: secs, message: `Troppi tentativi: riprova tra ${secs} secondi.` })
+
+  const { data: st, error } = await db.rpc('mb_pin_status', { p_team: teamId, p_token: prev })
+  if (error) {
+    const e = toApiError(error)
+    if (e.status === 500) app.log.error({ fn: 'mb_pin_status', error }, 'rpc failed')
+    return reply.code(e.status).send({ error: e.code, message: e.message })
+  }
+  // Dispositivo già riconosciuto per questa squadra: nessun PIN.
+  if (st.known) return enter()
+  if (st.lockedSecs > 0) return locked(st.lockedSecs)
+
+  if (!pin) {
+    return reply.code(400).send({ error: 'pin_required', message: 'Servono 4 cifre per il PIN.' })
+  }
+  if (!st.hasPin) {
+    // Squadra libera (o già in gara ma senza PIN): chi entra imposta il PIN.
+    const { hash, salt } = hashPin(pin)
+    const { data: set, error: e2 } = await db.rpc('mb_pin_set', { p_team: teamId, p_hash: hash, p_salt: salt })
+    if (e2) {
+      const e = toApiError(e2)
+      return reply.code(e.status).send({ error: e.code, message: e.message })
+    }
+    if (!set) {
+      return reply.code(409).send({ error: 'pin_taken', message: 'Un attimo fa qualcuno ha scelto questa squadra. Se è la tua, inserisci il PIN.' })
+    }
+    return enter()
+  }
+  if (checkPin(pin, st.hash, st.salt)) {
+    await db.rpc('mb_pin_ok', { p_team: teamId })
+    return enter()
+  }
+  const { data: f, error: e3 } = await db.rpc('mb_pin_fail', { p_team: teamId })
+  if (e3) {
+    const e = toApiError(e3)
+    return reply.code(e.status).send({ error: e.code, message: e.message })
+  }
+  if (f.lockedSecs > 0) return locked(f.lockedSecs)
+  return reply.code(403).send({
+    error: 'pin_wrong', left: f.left,
+    message: `PIN sbagliato. ${f.left === 1 ? 'Ti resta 1 tentativo' : `Ti restano ${f.left} tentativi`}.`,
+  })
 })
 
 app.get('/api/state', async (req, reply) => {
