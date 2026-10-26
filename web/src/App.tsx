@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { useGame, type Side } from './store/game'
+import { useEffect, useState } from 'react'
+import { actions, useGame, type Side } from './store/game'
+import { PinSetup } from './components/PinSetup'
 import { BottomNav } from './components/BottomNav'
 import { BetSheet } from './components/BetSheet'
 import { CreateSheet } from './components/CreateSheet'
@@ -25,6 +26,15 @@ function Game() {
   const s = useGame()
   const [sheet, setSheet] = useState<SheetState>(null)
   const close = () => setSheet(null)
+  const [pinAsk, setPinAsk] = useState(false)
+
+  // Squadra entrata prima dei PIN: al primo caricamento chiede di impostarlo (una volta per apertura dell'app).
+  useEffect(() => {
+    if (!s.teamId) { setPinAsk(false); return }
+    let live = true
+    void actions.needsPin(s.teamId).then((n) => { if (live) setPinAsk(n) })
+    return () => { live = false }
+  }, [s.teamId])
 
   if (!s.ready) return <div id="app"><p className="empty">Carico…</p></div>
 
@@ -47,6 +57,7 @@ function Game() {
       <BottomNav />
       {sheet?.type === 'bet' && <BetSheet marketId={sheet.id} side={sheet.side} onClose={close} />}
       {sheet?.type === 'create' && <CreateSheet onClose={close} />}
+      {pinAsk && s.teamId !== null && <PinSetup teamId={s.teamId} team={s.team} onDone={() => setPinAsk(false)} />}
       <MustResolve />
       <Toast />
     </>

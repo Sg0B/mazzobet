@@ -410,6 +410,24 @@ export const actions = {
     }
   },
 
+  /** Una squadra entrata prima dei PIN non ne ha uno: il telefono riconosciuto può impostarlo. */
+  async needsPin(teamId: number): Promise<boolean> {
+    try {
+      return !(await api<{ hasPin: boolean }>(`/pin?teamId=${teamId}`)).hasPin
+    } catch {
+      return false
+    }
+  },
+
+  async setOwnPin(teamId: number, pin: string): Promise<Result> {
+    try {
+      await api('/pin', { body: { teamId, pin } })
+      return ok
+    } catch (e) {
+      return fail(e)
+    }
+  },
+
   leaveTeam() {
     setToken(null)
     set({ team: null, teamId: null, markets: [], ledger: [], leaderboard: [], rankings: null, balance: 0, bankruptUntil: null })

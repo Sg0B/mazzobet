@@ -112,6 +112,36 @@ app.post('/api/enter', async (req, reply) => {
   })
 })
 
+// Squadre entrate prima dei PIN: il telefono già riconosciuto può impostarlo da qui (GET: serve?, POST: imposta).
+// Il token dice di quale squadra è il telefono: il server lo verifica prima di fidarsi di teamId.
+async function ownPin(req: FastifyRequest, reply: FastifyReply, teamId: number | null) {
+  const t = token(req, reply)
+  if (!t) return null
+  if (teamId === null) { reply.code(400).send({ error: 'unknown_team', message: 'Squadra sconosciuta.' }); return null }
+  const { data, error } = await db.rpc('mb_pin_status', { p_team: teamId, p_token: t })
+  if (error) { const e = toApiError(error); reply.code(e.status).send({ error: e.code, message: e.message }); return null }
+  if (!data.known) { reply.code(401).send({ error: 'unauthorized', message: 'Sessione non valida: scegli di nuovo la squadra.' }); return null }
+  return data as { hasPin: boolean }
+}
+
+app.get('/api/pin', async (req, reply) => {
+  const st = await ownPin(req, reply, int(Number((req.query as { teamId?: string }).teamId)))
+  if (st) return { hasPin: st.hasPin }
+})
+
+app.post('/api/pin', async (req, reply) => {
+  const b = (req.body ?? {}) as { teamId?: unknown; pin?: unknown }
+  const st = await ownPin(req, reply, int(b.teamId))
+  if (!st) return
+  if (st.hasPin) return reply.code(409).send({ error: 'pin_taken', message: 'Questa squadra ha già un PIN.' })
+  if (typeof b.pin !== 'string' || !PIN_FORMAT.test(b.pin)) return reply.code(400).send({ error: 'pin_required', message: 'Servono 4 cifre per il PIN.' })
+  const { hash, salt } = hashPin(b.pin)
+  const { data: set, error } = await db.rpc('mb_pin_set', { p_team: b.teamId, p_hash: hash, p_salt: salt })
+  if (error) { const e = toApiError(error); return reply.code(e.status).send({ error: e.code, message: e.message }) }
+  if (!set) return reply.code(409).send({ error: 'pin_taken', message: 'Questa squadra ha già un PIN.' })
+  return { ok: true }
+})
+
 app.get('/api/state', async (req, reply) => {
   const t = token(req, reply)
   if (t) return rpc(reply, 'mb_get_state', { p_token: t })

@@ -106,11 +106,33 @@ try {
   r = await enter(7, '2468')
   ok(r.s === 200 && (await q(`select count(*)::int n from mazzobet.team_pins where team_id = 7`))[0].n === 1, 'chi entra imposta il PIN')
 
+  console.log('# telefono già riconosciuto su squadra senza PIN')
+  const legacy = (await q(`select public.mb_enter_team(8::smallint) as r`))[0].r
+  const api = (path, token, body) => fetch(B + path, { method: body ? 'POST' : 'GET', headers: { 'content-type': 'application/json', 'x-device-token': token }, body: body ? JSON.stringify(body) : undefined }).then(async (x) => ({ s: x.status, b: await x.json() }))
+  r = await api('/pin?teamId=8', legacy.token)
+  ok(r.s === 200 && r.b.hasPin === false, 'il telefono riconosciuto scopre che manca il PIN')
+  r = await api('/pin?teamId=9', legacy.token)
+  ok(r.s === 401, "il token di una squadra non parla per un'altra squadra")
+  r = await api('/pin', legacy.token, { teamId: 8, pin: '12' })
+  ok(r.s === 400, 'PIN malformato rifiutato')
+  r = await api('/pin', legacy.token, { teamId: 8, pin: '1357' })
+  ok(r.s === 200, 'imposta il PIN dal telefono già dentro')
+  r = await api('/pin', legacy.token, { teamId: 8, pin: '2222' })
+  ok(r.s === 409, 'non si può sovrascrivere un PIN esistente')
+  r = await api('/pin?teamId=8', legacy.token)
+  ok(r.b.hasPin === true, 'ora la squadra ha il PIN')
+  r = await enter(8, '2222')
+  ok(r.s === 403 && r.b.error === 'pin_wrong', 'un altro telefono ora deve conoscere il PIN')
+  r = await enter(8, '1357')
+  ok(r.s === 200, 'e con il PIN giusto entra')
+
   console.log('# permessi')
   const g = await q(`select has_function_privilege('anon', 'public.mb_pin_status(smallint, uuid)', 'execute') a, has_function_privilege('service_role', 'public.mb_pin_status(smallint, uuid)', 'execute') s`)
   ok(!g[0].a && g[0].s, 'le funzioni PIN sono chiamabili solo dal server')
 } finally {
   spawn('taskkill', ['/pid', String(srv.pid), '/T', '/F'], { stdio: 'ignore' })
+  // il server figlio può restare in ascolto: lo fermo anche per porta (Windows)
+  spawn('powershell', ['-NoProfile', '-Command', "Get-NetTCPConnection -LocalPort 3399 -State Listen -ErrorAction SilentlyContinue | % { Stop-Process -Id $_.OwningProcess -Force }"], { stdio: 'ignore' })
   shim.close()
 }
 console.log(fails ? `\n${fails} FALLITI` : '\ntutto ok')
