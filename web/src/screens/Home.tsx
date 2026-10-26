@@ -3,6 +3,7 @@ import { cur, fmt } from '../lib/format'
 import { actions, committed, useGame, type Side } from '../store/game'
 import { Countdown } from '../components/Countdown'
 import { MarketCard } from '../components/MarketCard'
+import { InstallHint } from '../components/InstallHint'
 
 export function Home({ onBet, onCreate }: { onBet: (id: number, side: Side) => void; onCreate: () => void }) {
   const s = useGame()
@@ -30,6 +31,7 @@ export function Home({ onBet, onCreate }: { onBet: (id: number, side: Side) => v
         <div className="logo">MAZZO<b>BET</b></div>
         <span className="teamchip">{s.team}</span>
       </div>
+      <InstallHint />
       <div className="bal">
         <div className="l">Saldo disponibile</div>
         <div className="v">{fmt(s.balance)} <small>{Math.abs(s.balance) === 1 ? 'Carletto' : 'Carletti'}</small></div>
