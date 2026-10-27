@@ -32,6 +32,7 @@ curl https://mazzobet.sourlemon.cloud/api/health # risposta: {"ok":true}
 
 - **Serata:** prima di giocare apri la serata nell'editor SQL di Supabase con `server/db/ops/05_nuova_serata.sql` (la fine serata è alle 03:00 di Roma). Si chiude con `03_chiudi_serata.sql`.
 - **Database:** è lo stesso progetto Supabase degli altri giochi (schema separato, non tocca le loro tabelle). Il PRD chiede test e produzione separati: valuta un progetto a parte.
+- **Notifiche push:** nel `.env` del VPS stanno anche `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT=mailto:…` e `PUSH_ENABLED` (la chiave privata non va mai in chat né su GitHub). Come generarle e come spegnerle: `docs/notifiche.md`. Senza chiavi le notifiche restano spente.
 - **Chiave segreta:** vive solo nel `.env` del VPS e in `server/.env` sul PC. Se mai venisse mostrata in chiaro, va rigenerata da Supabase.
 - **Accesso SSH usato per la messa online:** chiave dedicata (commento `claude-mazzobet-20261023`) in `/root/.ssh/authorized_keys`. Si revoca cancellando quella riga.
 - **DNS:** record A `mazzobet` → `72.62.181.36` nella zona di `sourlemon.cloud`. Alcuni provider (e le reti con filtri) impiegano un po' a vedere i nomi nuovi.

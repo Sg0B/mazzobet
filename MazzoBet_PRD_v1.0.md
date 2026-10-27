@@ -613,7 +613,7 @@ Repository Git (`main` = stato della v0.8; lavoro sul ramo `regole-v06`, da unir
 2. **Banco ordinario con estrazione pesata (§9.1, decisione 1.3):** i destinatari di bonus e malus si estraggono con peso `1/(1 + interventi già ricevuti nella serata)`, bonus e malus contati allo stesso modo. **Correzione di un difetto:** la versione precedente ordinava una sola volta l'intero elenco e quindi colpiva sempre le squadre con id più basso. Prova su 24 squadre e 6 interventi (40 ripetizioni): squadre mai colpite 21,1 → 13,5; massimo di colpi a una squadra 6 → 3. Migration 013.
 3. **Orario di apertura del Banco (§9):** il parametro `banco_inizio` (default **13/11/2026 ore 20:00**, ora italiana) impedisce a Banco, bonus, malus, sponsor e piogge di partire prima, anche con più di 5 squadre. Colletta per bancarotta e riammissione funzionano sempre. All'apertura RadioCorsa pubblica un annuncio, ma solo se la serata è iniziata prima. Migration 011.
 4. **Banco di Regia (`/regia`, nuovo §13-bis):** pagina di servizio, non linkata dall'app, protetta da un **codice unico** (`ADMIN_CODE`, solo nel `.env` del server; il server rifiuta codici sotto 8 caratteri e quello di esempio). Nessuna sessione né scadenza; il codice è verificato dal server a ogni azione; dopo 10 errori in un minuto l'indirizzo è fermato per il resto del minuto. Ogni azione finisce nel Log. Funzioni:
-   - **Reset squadra:** scollega i dispositivi; saldo e storico restano. Cancella anche il PIN (migration 015).
+   - **Reset squadra:** scollega i dispositivi; saldo e storico restano. Con i PIN cancellerà anche il PIN.
    - **Reset totale = serata nuova:** chiude la serata (puntate in corso rimborsate, costo di creazione no) e ne apre una pulita; richiede di scrivere `RESET`. Di default riporta `banco_inizio` al 13/11 alle 20:00.
    - **Parametri senza deploy:** saldo iniziale (vale solo per chi entra dopo), saldo di riammissione, tempo totale per esitare, precedenza del creatore, importi minimo e massimo del Banco, colletta per giro. Con limiti di validità.
    - **Banco:** «Avvia Banco adesso», orario di apertura, pausa e ripresa.
@@ -638,8 +638,8 @@ Compenso C al creatore anche se esita la Regia (subito, senza contestazione). Sa
 | Banco di Regia (migration 011) | migration applicata; online dopo aver impostato `ADMIN_CODE` sul VPS |
 | Colletta limitata al saldo, Banco pesato (migration 013) | migration applicata; nessun cambiamento sul VPS |
 | Schermo `/tv` e annuncio (migration 014) | migration applicata e codice nel repository; **da aggiornare sul VPS** e da provare su una TV vera |
-| PIN delle squadre (migration 015) | scritto e provato in locale; **migration non applicata**, da distribuire e provare sui telefoni |
-| Notifiche push (migration 016) | scritte e provate in locale; migration applicata il 27/10/2026, chiavi VAPID da generare, da provare sui telefoni (vedi `docs/notifiche.md`) |
+| PIN delle squadre | non iniziato |
+| Notifiche push | non iniziato |
 
 Migration in `server/db/`: 001–010 (storico), 011 Regia, 012 classifiche, 013 colletta e Banco pesato, 014 TV. Applicate tutte a `giochi_ufficio`. Prove senza toccare il database vero: `server/tests/pglite/` (Postgres in memoria: `db-tests.mjs`, `regia.mjs`, `tv.mjs`, `banco-pesato.mjs`).
 

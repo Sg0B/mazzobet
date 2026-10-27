@@ -88,7 +88,7 @@ node server/tests/pglite/regia.mjs
 node server/tests/pglite/db-tests.mjs
 ```
 
-Caricano lo schema reale (migration 001–015) in un Postgres in memoria: non toccano nessun database vero. `regia.mjs` prova orario del Banco, scadenze, esito dalla Regia, rimborsi, rettifiche, reset e permessi.
+Caricano lo schema reale (migration 001–016) in un Postgres in memoria: non toccano nessun database vero. `regia.mjs` prova orario del Banco, scadenze, esito dalla Regia, rimborsi, rettifiche, reset e permessi; `pin.mjs` il PIN delle squadre; `push.mjs` e `push-server.mjs` le notifiche (vedi `docs/notifiche.md`).
 
 ## PIN delle squadre
 

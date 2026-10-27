@@ -1,15 +1,15 @@
 # MazzoBet — cose da fare e decisioni da prendere
 
-**Aggiornato:** 26 ottobre 2026 · **Dove siamo:** online https://mazzobet.sourlemon.cloud (ramo Git `regole-v06`, repository privato `Sg0B/mazzobet`). Fatti: regole v0.6, aiuto MAX sulle quote, classifiche, **Banco di Regia** (`/regia`), colletta limitata al saldo, Banco con estrazione pesata, **schermo della sala** (`/tv`). Migration 001–014 applicate a `giochi_ufficio`. Il PRD è alla **v1.0** (`MazzoBet_PRD_v1.0.md`, Appendice F). Per ripartire leggi questo file, poi l'Appendice F del PRD, `docs/accesso-regia.md` e `docs/schermo-tv.md`.
+**Aggiornato:** 27 ottobre 2026 · **Dove siamo:** online https://mazzobet.sourlemon.cloud (ramo Git `regole-v06`, repository privato `Sg0B/mazzobet`). Fatti: regole v0.6, aiuto MAX sulle quote, classifiche, **Banco di Regia** (`/regia`), colletta limitata al saldo, Banco con estrazione pesata, **schermo della sala** (`/tv`, provato su TV), **PIN delle squadre**, **«Aggiungi a Home»** (provato su iPhone), **notifiche push** (accese sul server). Migration 001–016 applicate a `giochi_ufficio`. Il PRD è alla **v1.1** (`MazzoBet_PRD_v1.1.md`, Appendici F e G). Per ripartire leggi questo file, poi le Appendici F e G del PRD, `docs/accesso-regia.md`, `docs/schermo-tv.md` e `docs/notifiche.md`.
 
 ## 0. Prossimi passi, in ordine
 
-1. **Sul VPS:** aggiornare il codice (`sh deploy/aggiorna.sh`) e impostare `ADMIN_CODE` nel `.env` (almeno 12 caratteri, mai in chat), poi ricreare il contenitore. Comandi in `docs/accesso-regia.md`. *(La Regia è già stata provata dall'utente online; la `/tv` e la scheda «Schermo» arrivano con l'aggiornamento.)*
-2. **Provare `/tv` su una TV vera** (leggibilità da lontano, dimensione del testo, browser della smart TV o HDMI).
-3. **Nuova simulazione** (24 squadre, 60′ ×6): misurare le squadre mai colpite con l'estrazione pesata e decidere il **saldo iniziale** (oggi 1.000, ora parametro in Regia). Prima: `banco_inizio` nel passato, poi ripristinarlo (vedi guida Regia).
-4. **PIN delle squadre** (prompt accesso §1): scritto e provato in locale (`server/db/015_pin.sql`, `server/tests/pglite/pin.mjs`). Migration 015 applicata a `giochi_ufficio` (26/10/2026). **Manca:** commit, deploy sul VPS e prova su telefoni veri.
-5. **Notifiche push** (prompt notifiche): scritte e provate in locale (`server/db/016_push.sql`, `server/tests/pglite/push*.mjs`, guida `docs/notifiche.md`). Migration 016 applicata a `giochi_ufficio` (27/10/2026). **Manca:** generare le chiavi VAPID e metterle nel `.env` del VPS, deploy e prova su telefoni veri (schermo bloccato, tocco, iPhone dalla Home, Android).
-6. **Prova generale con persone vere** (sezione 4) e unione di `regole-v06` a `main`.
+1. **Provare le notifiche push su telefoni veri** (guida `docs/notifiche.md`): attivazione dalla card in Home, notifica A al creatore e notifica B ai non puntatori con schermo bloccato, tocco con app chiusa e aperta, iPhone dalla Home e Android. *(Utente: 28/10 sera.)* Se qualcosa non arriva: log del VPS (`docker logs --tail 50 mazzobet`).
+2. **Provare «Aggiungi a Home» su Android** (icona maskable separata; su iPhone è già a posto).
+3. **Nuova simulazione** (24 squadre, 60′ ×6): misurare le squadre mai colpite con l'estrazione pesata e decidere il **saldo iniziale** (oggi 1.000, parametro in Regia). Prima: `banco_inizio` nel passato, poi ripristinarlo (vedi guida Regia).
+4. **Prova generale con persone vere** (sezione 4), poi unione di `regole-v06` a `main` e VPS su `main`.
+
+Fatti e verificati: Regia, `/tv` (provata su TV), PIN (online, provato su iPhone), «Aggiungi a Home» (iPhone), chiavi VAPID nel `.env` del VPS e notifiche accese (verificate nei log e da `/api/push/key`).
 
 ## 1. Decisioni
 
@@ -32,7 +32,7 @@ Online su **https://mazzobet.sourlemon.cloud** (contenitore `mazzobet` dietro Ca
 
 - [x] SSH con chiave dedicata, repository privato, chiave di deploy di sola lettura, cartella `/home/lemon/mazzobet`, `.env`, contenitore, DNS, blocco di Caddy.
 - [x] Aggiornamenti del 25/10 (quote, classifiche) online.
-- [ ] **Aggiornamento con Regia/colletta/TV** e `ADMIN_CODE` nel `.env` (vedi sezione 0).
+- [x] Aggiornamenti del 26–27/10: Regia, colletta, TV, PIN, «Aggiungi a Home», notifiche push; `ADMIN_CODE` e chiavi VAPID nel `.env`.
 - [ ] **Aprire la serata** il giorno stesso: oggi nel database c'è «Prova famiglia» (8 squadre di prova). Per ripartire pulito basta **Reset totale** dalla Regia (parola `RESET`); in alternativa `server/db/ops/05_nuova_serata.sql`.
 - [ ] **Revocare la chiave SSH** di lavoro (riga `claude-mazzobet-20261023` in `/root/.ssh/authorized_keys`) quando non serve più.
 - [ ] **Backup** del database prima della serata; nessun backup automatico né monitoraggio oggi.
@@ -63,12 +63,20 @@ Online su **https://mazzobet.sourlemon.cloud** (contenitore `mazzobet` dietro Ca
 - [x] **Schermo della sala** (migration 014, `/tv`, guida `docs/schermo-tv.md`) con annuncio dalla Regia.
 - [x] PRD v1.0 con Appendice F; test su Postgres in memoria in `server/tests/pglite/` (44 controlli Regia, 4 suite SQL, TV, confronto Banco).
 
+## 6. Fatto il 26 e 27 ottobre 2026
+
+- [x] **PIN delle squadre** (migration 015): PIN a 4 cifre con hash scrypt, blocco di 1 minuto dopo 5 errori, telefono riconosciuto senza PIN, riquadro «Imposta il PIN» per le squadre già in gara, «Resetta squadra» cancella anche il PIN. Provato dall'utente su iPhone.
+- [x] **«Aggiungi a Home»:** manifest, icone dal logo (normali e maskable), riquadro in Home. Provato su iPhone.
+- [x] **Notifiche push** (migration 016, guida `docs/notifiche.md`): avviso A al creatore e B ai non puntatori, tempi dal database, una volta sola, fallback sempre attivi. Chiavi VAPID nel `.env` del VPS.
+- [x] Test: `pin.mjs`, `push.mjs`, `push-server.mjs` in `server/tests/pglite/`.
+- [x] PRD v1.1 con Appendice G; la v1.0 resta come storico.
+
 ## Come si lavora (promemoria)
 
 - Avvio locale: `npm --prefix server run dev` (carica `server/.env` con la chiave **vera**: per prove usa un finto Supabase come in `server/tests/pglite/`) e `npm --prefix web run dev` (app su `http://localhost:5173`; `/regia` e `/tv` sono pagine dello stesso frontend).
-- Prove senza toccare il database vero: `npm i --no-save @electric-sql/pglite`, poi `node server/tests/pglite/db-tests.mjs` (suite SQL), `regia.mjs`, `tv.mjs`, `banco-pesato.mjs`.
+- Prove senza toccare il database vero: `npm i --no-save @electric-sql/pglite`, poi `node server/tests/pglite/db-tests.mjs` (suite SQL), `regia.mjs`, `tv.mjs`, `banco-pesato.mjs`, `pin.mjs`, `push.mjs`, `push-server.mjs` (gli ultimi due avviano il server vero con un finto Supabase; chiudono da soli i processi che lanciano).
 - Test SQL sul database vero: file di `server/db/tests/` nell'editor SQL di Supabase (serata attiva e vuota, `banco_inizio` nel passato); `TEST_OK …` = ok. Concorrenza: `node server/tests/concorrenza.mjs` con il server acceso.
 - Simulazione: serata pulita, `update mazzobet.game_sessions set time_scale = 6 where status = 'active'`, poi `node server/sim/sim.mjs --teams 24 --sim-minutes 60 --scale 6 --seed 7`; non modificare il server durante la prova. Metriche: `server/sim/metriche.sql`.
 - Migration: file numerati in `server/db/`, applicate a mano a `giochi_ufficio` (via editor SQL o strumento Supabase) **solo dopo l'OK**; l'intestazione del file dice se è applicata.
-- Snippet operativi: `server/db/ops/`. Registro delle modifiche rispetto al PRD: PRD v1.0, Appendice F, e la memoria del progetto.
-- Pubblicazione: `git -c credential.helper= -c credential.helper='!gh auth git-credential' push origin regole-v06` (account Sg0B).
+- Snippet operativi: `server/db/ops/`. Registro delle modifiche rispetto al PRD: PRD v1.1, Appendici F e G, e la memoria del progetto.
+- Pubblicazione: `git push origin regole-v06` (account Sg0B; dopo `gh auth setup-git` Git usa il login di `gh`. In caso di errore 403 «denied to …» le credenziali salvate di Windows sono di un altro account).
