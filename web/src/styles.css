@@ -291,7 +291,7 @@ textarea{resize:none;min-height:76px}
 .pcs-logo .sq{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
 .pcs-logo .sq i{font:800 30px/1 var(--f-disp);font-style:normal;text-align:center;color:#fff;background:var(--pcs);border-radius:2px;padding:6px 0 5px}
 .pcs-logo .sq i.dk{background:var(--pcs-dk)}
-.pcs-logo .pbar{background:var(--pcs-dk);color:#fff;font:700 10.5px/1 var(--f-body);letter-spacing:.2em;text-align:center;padding:5px 0 4px;border-radius:2px;white-space:nowrap}
+.pcs-logo .pbar{background:var(--pcs-dk);color:#fff;font:700 9px/1 var(--f-body);letter-spacing:.12em;text-align:center;padding:5px 0 4px;overflow:hidden;border-radius:2px;white-space:nowrap}
 .pcs-logo.mini{width:34px;gap:0}
 .pcs-logo.mini .sq{gap:1px}
 .pcs-logo.mini .sq i{font-size:10px;padding:2px 0 1px;border-radius:1px}
