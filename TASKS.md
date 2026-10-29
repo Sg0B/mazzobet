@@ -1,9 +1,10 @@
 # MazzoBet — cose da fare e decisioni da prendere
 
-**Aggiornato:** 27 ottobre 2026 · **Dove siamo:** online https://mazzobet.sourlemon.cloud (ramo Git `regole-v06`, repository privato `Sg0B/mazzobet`). Fatti: regole v0.6, aiuto MAX sulle quote, classifiche, **Banco di Regia** (`/regia`), colletta limitata al saldo, Banco con estrazione pesata, **schermo della sala** (`/tv`, provato su TV), **PIN delle squadre**, **«Aggiungi a Home»** (provato su iPhone), **notifiche push** (accese sul server). Migration 001–016 applicate a `giochi_ufficio`. Il PRD è alla **v1.1** (`MazzoBet_PRD_v1.1.md`, Appendici F e G). Per ripartire leggi questo file, poi le Appendici F e G del PRD, `docs/accesso-regia.md`, `docs/schermo-tv.md` e `docs/notifiche.md`.
+**Aggiornato:** 30 ottobre 2026 · **Dove siamo:** online https://mazzobet.sourlemon.cloud (ramo Git `regole-v06`, repository privato `Sg0B/mazzobet`). Fatti: regole v0.6, classifiche, Banco di Regia, schermo `/tv`, PIN, «Aggiungi a Home», notifiche push e **la corsa simulata «La Teramana»** (migration 017–020 già applicate a `giochi_ufficio`, codice committato in locale ma **non ancora sul VPS né pubblicato su GitHub**). Il PRD è alla **v1.2** (`MazzoBet_PRD_v1.2.md`, Appendice H). Per ripartire leggi questo file, poi le Appendici F, G e H del PRD, `docs/piano-corsa-simulata.md` e `docs/notifiche.md`.
 
 ## 0. Prossimi passi, in ordine
 
+0. **Corsa simulata:** (a) `git push origin regole-v06` e **deploy sul VPS** con `sh deploy/aggiorna.sh` (le migration 017–020 sono già nel database: prima il database, poi il server; nei log deve comparire il caricamento della corsa e nessun errore); (b) **serata di prova con gli amici** (Regia → Corsa → Avvia corsa; guardare pagina Corsa, scommesse in alto, notifiche C/D/E a schermo bloccato, tempi stretti di B08–B10, `/tv`); (c) dopo la prova, valutare l'economia (il Banco con puntate casuali chiude in perdita: vedi PRD H.3) e il saldo iniziale. Prove locali: `node server/tests/pglite/corsa.mjs` (102 controlli) e `corsa-simulazione.mjs`.
 1. **Provare le notifiche push su telefoni veri** (guida `docs/notifiche.md`): attivazione dalla card in Home, notifica A al creatore e notifica B ai non puntatori con schermo bloccato, tocco con app chiusa e aperta, iPhone dalla Home e Android. *(Utente: 28/10 sera.)* Se qualcosa non arriva: log del VPS (`docker logs --tail 50 mazzobet`).
 2. **Provare «Aggiungi a Home» su Android** (icona maskable separata; su iPhone è già a posto).
 3. **Nuova simulazione** (24 squadre, 60′ ×6): misurare le squadre mai colpite con l'estrazione pesata e decidere il **saldo iniziale** (oggi 1.000, parametro in Regia). Prima: `banco_inizio` nel passato, poi ripristinarlo (vedi guida Regia).
@@ -70,6 +71,14 @@ Online su **https://mazzobet.sourlemon.cloud** (contenitore `mazzobet` dietro Ca
 - [x] **Notifiche push** (migration 016, guida `docs/notifiche.md`): avviso A al creatore e B ai non puntatori, tempi dal database, una volta sola, fallback sempre attivi. Chiavi VAPID nel `.env` del VPS.
 - [x] Test: `pin.mjs`, `push.mjs`, `push-server.mjs` in `server/tests/pglite/`.
 - [x] PRD v1.1 con Appendice G; la v1.0 resta come storico.
+
+## 7. Fatto il 29 e 30 ottobre 2026 — corsa simulata
+
+- [x] **Fase 1, dati e motore** (migration 017–018, `server/src/race.ts`, caricamento controllato dei due JSON, orologio sul database, pausa, chiusura serata/reset).
+- [x] **Fase 2, app** (migration 019): pagina Corsa «Pro Carletto Stats», scommesse fissate in alto in rosso PCS, voce nel menu, scheda Corsa in Regia, scena sulla TV, `/api/race`.
+- [x] **Fase 3, notifiche** (migration 020): C aperta, D sta per chiudere, E hai vinto.
+- [x] **Fase 4 (parte locale):** `corsa-simulazione.mjs`, PRD v1.2 con Appendice H.
+- [ ] Deploy sul VPS e prova con gli amici (sezione 0).
 
 ## Come si lavora (promemoria)
 
