@@ -3,21 +3,52 @@ import webpush from 'web-push'
 export interface PushSub { id: number; endpoint: string; p256dh: string; auth: string }
 export interface PushItem {
   teamId: number
-  kind: 'A' | 'B'
+  kind: 'A' | 'B' | 'C' | 'D' | 'E'
   n: number
   marketNo: number
   marketId: number
   fee?: number
+  /** Corsa simulata: sigla della scommessa (B01…), domanda (solo C singola), minuti alla chiusura (D), vincita totale (E). */
+  raceId?: string
+  question?: string
+  minutes?: number
+  amount?: number
   subs: PushSub[] | null
 }
 
-/** Testi dei due soli tipi di notifica. Mai l'esito, mai le quote. Il tag fa sostituire la notifica precedente invece di accumularla. */
+/** Testi dei tipi di notifica (A, B e, per la corsa, C, D, E). Mai l'esito, mai le quote. Il tag fa sostituire la notifica precedente invece di accumularla. */
 export function payloadFor(it: PushItem) {
   if (it.kind === 'A') {
     return {
       title: 'Da esitare',
       body: it.n > 1 ? `Hai ${it.n} scommesse da esitare.` : `La scommessa n. ${it.marketNo} è scaduta. Esitala ora.`,
       tag: 'mazzobet-da-esitare',
+      url: `/?m=${it.marketId}`,
+    }
+  }
+  if (it.kind === 'C') {
+    return {
+      title: it.n > 1 ? 'Scommesse della corsa' : 'Scommessa della corsa',
+      body: it.n > 1 ? `Ci sono ${it.n} nuove scommesse sulla corsa. Punta prima che chiudano.` : (it.question ?? 'Nuova scommessa sulla corsa.'),
+      tag: 'mazzobet-corsa-aperta',
+      url: `/?m=${it.marketId}`,
+    }
+  }
+  if (it.kind === 'D') {
+    const min = it.minutes ?? 2
+    const when = `${min} ${min === 1 ? 'minuto' : 'minuti'}`
+    return {
+      title: 'Sta per chiudere',
+      body: it.n > 1 ? `${it.n} scommesse della corsa chiudono tra ${when}.` : `La scommessa ${it.raceId ?? ''} della corsa chiude tra ${when}.`.replace('  ', ' '),
+      tag: 'mazzobet-corsa-chiude',
+      url: `/?m=${it.marketId}`,
+    }
+  }
+  if (it.kind === 'E') {
+    return {
+      title: 'Hai vinto!',
+      body: `Vincita sulla corsa: +${it.amount ?? 0} Carletti.`,
+      tag: 'mazzobet-corsa-vinto',
       url: `/?m=${it.marketId}`,
     }
   }

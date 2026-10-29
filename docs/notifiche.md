@@ -1,11 +1,23 @@
 # Notifiche push
 
-Solo **due tipi** di avviso, per una sola serata. Il gioco resta giocabile al 100% anche se nessuno li attiva.
+Per le scommesse normali solo **due tipi** di avviso (A e B), più **tre per la corsa simulata** (C, D, E, sotto). Il gioco resta giocabile al 100% anche se nessuno li attiva.
 
 | Tipo | A chi | Quando | Testo |
 | --- | --- | --- | --- |
 | **A, «Da esitare»** | Al creatore | La sua scommessa **con puntate** è scaduta. Senza puntate non parte nulla. | «La scommessa n. 12 è scaduta. Esitala ora.» Se ne ha più d'una da esitare: «Hai 3 scommesse da esitare.» |
 | **B, «Scommessa senza esito»** | A chi **non** ha puntato, non è il creatore e non è in bancarotta | Finita la precedenza del creatore, e finché dura la finestra di esito | «Nessuno ha esitato la n. 12. Esitala e prendi fino a 5 Carletti.» Se sono più d'una: «Ci sono 3 scommesse da esitare.» |
+
+### Corsa simulata «La Teramana» (migration 020)
+
+Solo per le 10 scommesse della corsa e solo mentre la corsa è in movimento (nessun avviso in pausa, prima della partenza o a corsa interrotta). Si inviano a chi è in gara, ha attivato gli avvisi e **non ha già puntato** su quella scommessa (E va a chi ha vinto).
+
+| Tipo | Quando | Testo |
+| --- | --- | --- |
+| **C, «Scommessa della corsa»** | La scommessa si apre | La domanda della scommessa. Se se ne aprono più insieme (B03+B04, le finali B08–B10): «Ci sono 3 nuove scommesse sulla corsa. Punta prima che chiudano.» Una sola notifica per squadra. |
+| **D, «Sta per chiudere»** | **2 minuti** prima della chiusura; **1 minuto** per le finali B08–B10 (restano aperte solo 3 minuti) | «La scommessa B01 della corsa chiude tra 2 minuti.» Più scommesse insieme: «3 scommesse della corsa chiudono tra 1 minuto.» |
+| **E, «Hai vinto!»** | La scommessa è stata esitata dalla cronaca e la squadra ha vinto | «Vincita sulla corsa: +175 Carletti.» (somma se le vincite escono insieme) |
+
+Come per A e B: una volta sola per (scommessa, squadra, tipo), prenotata in `push_log` prima dell'invio; niente esiti e niente quote nel testo; `tag` che sostituisce la notifica precedente dello stesso tipo. I minuti di anticipo (120 s, 60 s per B08–B10) sono nella migration; per cambiarli si riscrive `mb_push_due`. Le notifiche C, D, E non hanno il limite «una ogni 2 minuti» delle B.
 
 Nessuna notifica rivela l'esito o le quote. Il compenso «fino a Y» è lo stesso che l'app mostra per chi esita al posto del creatore.
 
@@ -67,5 +79,6 @@ Dopo ogni modifica: `docker compose -f deploy/docker-compose.yml up -d` per ricr
 ## Prove
 
 - `node server/tests/pglite/push.mjs`: logica nel database (chi riceve, quando, una volta sola, bancarotta, raggruppamento, limite per squadra, esito, Regia, finestra scaduta, reset squadra, permessi).
+- `node server/tests/pglite/corsa.mjs`: comprende anche C, D, E (apertura, raggruppamento delle finali, anticipo di 2 e 1 minuto, una volta sola, vincita, silenzio in pausa).
 - `node server/tests/pglite/push-server.mjs`: server vero con finto Supabase e finto servizio push HTTPS (invio reale con firma VAPID, 410, riavvio senza doppioni, `PUSH_ENABLED=false`).
 - **Da provare sui telefoni:** ricezione a schermo bloccato, tocco sulla notifica con app chiusa e aperta, installazione da Home su iPhone, Android (Chrome).

@@ -15,7 +15,7 @@ t('i due file sono validi', built.payload !== null && built.problems.length === 
 const payload = built.payload
 
 async function fresh(nTeams = 6) {
-  const db = await boot(19)
+  const db = await boot(20)
   const q = async (sql, p) => (await db.query(sql, p)).rows
   const one = async (sql, p) => (await q(sql, p))[0]
   const rpc = async (fn, args = []) => { const ph = args.map((_, i) => '$' + (i + 1)).join(','); return (await one(`select public.${fn}(${ph}) as r`, args)).r }
@@ -280,6 +280,51 @@ console.log('# Chiusura serata e Reset totale con la corsa in corso')
   t('Reset totale: nuova serata con corsa da avviare', (await rpc('mb_admin_race_state')).status === 'not_started')
   const st = await rpc('mb_admin_race_state')
   t('nuova serata senza scommesse della corsa', st.markets.length === 0)
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+console.log('# Notifiche della corsa (migration 020): C aperta, D sta per chiudere, E vinto')
+{
+  const { q, rpc, tok, jump, mk, bet } = await fresh(4)
+  for (let i = 1; i <= 4; i++) await rpc('mb_push_subscribe', [tok[i], 'https://push.test/' + i, 'p', 'a', 'ua'])
+  const due = () => rpc('mb_push_due', [120])
+  const of = (r, team, kind) => r.find((x) => x.teamId === team && x.kind === kind)
+  await rpc('mb_race_load', [JSON.stringify(payload)])
+  t('prima della partenza nessuna notifica', (await due()).length === 0)
+  await rpc('mb_admin_race_start')
+  let r = await due()
+  t('C: B01 aperta, avviso a tutte le 4 squadre, con la domanda', [1, 2, 3, 4].every((i) => of(r, i, 'C')?.n === 1 && of(r, i, 'C').raceId === 'B01' && of(r, i, 'C').question.includes('Subaru')))
+  t('C: una volta sola', (await due()).length === 0)
+  await bet(1, await mk('B01'), 'yes', 100)
+  // 2 minuti prima della chiusura di B01 (2010 s): da 1890 s
+  await jump(1880)
+  t('D: non ancora a 1880 s', (await due()).length === 0)
+  await jump(1895)
+  r = await due()
+  t('D: a 1895 s avviso a chi non ha puntato (2,3,4) e non alla 1, 2 minuti', !of(r, 1, 'D') && [2, 3, 4].every((i) => of(r, i, 'D')?.minutes === 2 && of(r, i, 'D').raceId === 'B01'))
+  t('D: una volta sola', (await due()).length === 0)
+  // B02 si apre a 2100 s, chiude a 3390
+  await jump(2110)
+  r = await due()
+  t('C per B02 a tutte', [1, 2, 3, 4].every((i) => of(r, i, 'C')?.raceId === 'B02'))
+  // B01 (SÌ, quota 1,75) è già stata esitata dalla cronaca: la squadra 1 ha vinto 175 su 100
+  t('E: la squadra 1 è avvisata della vincita (175), le altre no, senza esiti nel testo', r.filter((x) => x.kind === 'E').length === 1 && of(r, 1, 'E')?.amount === 175 && of(r, 1, 'E').n === 1)
+  await jump(3000)
+  t('E: una volta sola', !(await due()).some((x) => x.kind === 'E'))
+  // finali: B08-B10 si aprono a 10560 (tre insieme = una sola C), D a 1 minuto dalla chiusura (10740 → da 10680)
+  await jump(10570)
+  r = await due()
+  t('C: tre finali aperte insieme = una sola notifica per squadra, n = 3', [1, 2, 3, 4].every((i) => of(r, i, 'C')?.n === 3 && r.filter((x) => x.teamId === i && x.kind === 'C').length === 1))
+  await jump(10640)
+  t('D finali: non prima di 1 minuto dalla chiusura', !(await due()).some((x) => x.kind === 'D'))
+  await jump(10690)
+  r = await due()
+  t('D finali: a 10690 s, n = 3, minuti = 1', [1, 2, 3, 4].every((i) => of(r, i, 'D')?.n === 3 && of(r, i, 'D').minutes === 1))
+  const s = JSON.stringify(r)
+  t('nessun esito nelle notifiche', !s.includes('winning') && !s.includes('outcome'))
+  // pausa: niente avvisi mentre la corsa è ferma
+  await rpc('mb_admin_race_pause', [true])
+  t('in pausa nessun avviso nuovo', (await due()).length === 0)
 }
 
 console.log(`\n${ko === 0 ? 'TUTTO OK' : 'CI SONO ERRORI'}: ${ok} controlli passati, ${ko} falliti`)
