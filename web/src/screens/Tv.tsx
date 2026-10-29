@@ -87,6 +87,8 @@ export function TvScreen() {
   const [idx, setIdx] = useState(0)
   const [event, setEvent] = useState<{ kind: string; title: string; text: string } | null>(null)
   const seen = useRef<number | null>(null)
+  const raceSeen = useRef<string | null>(null)
+  const [raceHold, setRaceHold] = useState(0)
   const queue = useRef<{ kind: string; title: string; text: string }[]>([])
   useWakeLock()
 
@@ -113,6 +115,14 @@ export function TvScreen() {
     const t = setTimeout(() => { const next = queue.current.shift(); if (next) setEvent(next) }, 300)
     return () => clearTimeout(t)
   }, [event, tick])
+
+  // Notizia nuova della corsa (non la prima lettura): la scena della corsa resta in primo piano per un giro.
+  useEffect(() => {
+    const top = data?.race?.feed?.[0]?.id ?? null
+    if (top === null) return
+    if (raceSeen.current !== null && raceSeen.current !== top) setRaceHold(Date.now() + offset.current + SCENE_MS)
+    raceSeen.current = top
+  }, [data])
 
   const scenes = useMemo<SceneId[]>(() => {
     if (!data?.rankings) return []
@@ -143,7 +153,8 @@ export function TvScreen() {
 
   if (!data) return <div className="tv" onClick={toggleFs}><p className="tv-wait">{offline ? 'Connessione assente… riprovo.' : 'Carico…'}</p></div>
 
-  const scene = scenes.length ? scenes[idx % scenes.length] : null
+  // Ogni notizia nuova della corsa riporta lo schermo sulla scena della corsa per un giro; poi riprende la rotazione.
+  const scene = scenes.includes('corsa') && nowMs < raceHold ? 'corsa' : scenes.length ? scenes[idx % scenes.length] : null
   const closed = data.session?.status === 'closed'
   const ann = data.announcement && Date.parse(data.announcement.until) > nowMs ? data.announcement : null
 

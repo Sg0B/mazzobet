@@ -43,7 +43,7 @@ export function MarketCard({ m, onBet }: { m: Market; onBet: (id: number, side: 
       </div>
       <h3>{m.text}</h3>
       {race ? (
-        <div className="by">Corsa simulata · scommessa {race.id}<br />Il Banco paga sempre</div>
+        <div className="by">Corsa simulata · scommessa {race.id}</div>
       ) : (
         <div className="by">Scommessa n. {m.num} · di {m.by}<br />Chiude alle {hhmm(m.expiresAt)}</div>
       )}

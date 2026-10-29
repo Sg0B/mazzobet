@@ -378,20 +378,23 @@ try {
 
 // La Teramana: i due file vengono controllati e caricati prima di ogni avvio. Se non sono validi si tiene quanto già
 // nel database e la corsa non parte (gli errori e le segnalazioni sono nei log); il resto del gioco non si ferma.
-// Dopo il via della corsa il database rifiuta ogni cambio alla definizione.
-try {
-  const { timeline, banco } = readRace()
-  const race = buildRace(timeline, banco)
-  for (const w of race.warnings) app.log.warn(`corsa: ${w}`)
-  if (!race.payload) app.log.error({ problems: race.problems }, 'corsa NON valida: non caricata')
-  else {
+// Mentre una corsa è in corso (o in pausa) il database rifiuta ogni cambio alla definizione; quando non c'è nessuna corsa in corso
+// il server la ricarica ogni minuto, così un file corretto entra senza riavviare e dopo un Reset totale vale subito.
+const loadRace = async (first: boolean) => {
+  try {
+    const { timeline, banco } = readRace()
+    const race = buildRace(timeline, banco)
+    if (first) for (const w of race.warnings) app.log.warn(`corsa: ${w}`)
+    if (!race.payload) { if (first) app.log.error({ problems: race.problems }, 'corsa NON valida: non caricata'); return }
     const { data, error } = await db.rpc('mb_race_load', { p: race.payload })
     if (error) app.log.error({ error }, 'caricamento corsa fallito')
-    else app.log.info({ load: data }, 'corsa caricata')
+    else if (first) app.log.info({ load: data }, 'corsa caricata')
+  } catch (e) {
+    app.log.error({ e }, 'file della corsa non leggibili')
   }
-} catch (e) {
-  app.log.error({ e }, 'file della corsa non leggibili')
 }
+await loadRace(true)
+let lastRaceLoad = Date.now()
 
 // Frontend compilato (produzione, un'unica istanza dietro Caddy).
 const staticDir = resolve(process.env.STATIC_DIR ?? '../web/dist')
@@ -420,6 +423,7 @@ const raceLoop = async () => {
   } catch (e) {
     app.log.error({ e }, 'race tick failed')
   }
+  if (running === 0 && Date.now() - lastRaceLoad > 60_000) { lastRaceLoad = Date.now(); await loadRace(false) }
   setTimeout(raceLoop, running > 0 ? 1000 : 5000)   // a corsa ferma basta un controllo ogni 5 secondi
 }
 void raceLoop()

@@ -15,7 +15,7 @@ t('i due file sono validi', built.payload !== null && built.problems.length === 
 const payload = built.payload
 
 async function fresh(nTeams = 6) {
-  const db = await boot(20)
+  const db = await boot(21)
   const q = async (sql, p) => (await db.query(sql, p)).rows
   const one = async (sql, p) => (await q(sql, p))[0]
   const rpc = async (fn, args = []) => { const ph = args.map((_, i) => '$' + (i + 1)).join(','); return (await one(`select public.${fn}(${ph}) as r`, args)).r }
@@ -56,10 +56,15 @@ console.log('# Caricamento e prima della partenza')
   t('dopo la partenza la definizione non si cambia', r3.skipped === true)
   const st2 = await rpc('mb_race_state', [tok[1]])
   t('alla partenza esce solo la notizia di via', st2.status === 'running' && st2.feed.length === 1 && st2.feed[0].id === 'PCS001')
-  t('alla partenza si apre solo B01', st2.markets.length === 1 && st2.markets[0].raceId === 'B01' && st2.markets[0].yesOdds === 175 && st2.markets[0].noOdds === 205)
-  const s = JSON.stringify(st2)
+  t('alla partenza non si apre ancora nessuna scommessa (B01 si apre al minuto 26)', st2.markets.length === 0)
+  await q(`update mazzobet.race_runs set started_at = now() - interval '1559 seconds' where session_id = ${ACT}`); await rpc('mb_race_tick')
+  t('+25:59 B01 non è ancora aperta', (await rpc('mb_race_state', [tok[1]])).markets.length === 0)
+  await q(`update mazzobet.race_runs set started_at = now() - interval '1560 seconds' where session_id = ${ACT}`); await rpc('mb_race_tick')
+  const st3 = await rpc('mb_race_state', [tok[1]])
+  t('+26:00 si apre solo B01, quote 1,75 / 2,05', st3.markets.length === 1 && st3.markets[0].raceId === 'B01' && st3.markets[0].yesOdds === 175 && st3.markets[0].noOdds === 205)
+  const s = JSON.stringify(st3)
   t('nessun esito né notizia futura nello stato per i telefoni',
-    !s.includes('winning') && !s.includes('VINCE LA TERAMANA') && !s.includes('Pennello') && !s.includes('B08') && !s.includes('settlement') && st2.markets[0].outcome === null)
+    !s.includes('winning') && !s.includes('VINCE LA TERAMANA') && !s.includes('Pennello') && !s.includes('B08') && !s.includes('settlement') && st3.markets[0].outcome === null)
   const gs = JSON.stringify(await rpc('mb_get_state', [tok[1]]))
   t('mb_get_state non contiene esiti né notizie future', !gs.includes('winning') && !gs.includes('VINCE LA TERAMANA'))
   t('un esito non esce nemmeno dalla Regia', !JSON.stringify(await rpc('mb_admin_race_state')).includes('winning'))
@@ -71,6 +76,7 @@ console.log('# Scenario completo: B01 → B02 → B07 → B03/B04 → B05 → pa
   const { q, one, rpc, fails, tok, jump, bal, mk, bet, feedIds } = await fresh()
   await rpc('mb_race_load', [JSON.stringify(payload)])
   await rpc('mb_admin_race_start')
+  await jump(1560)
 
   // --- B01: puntate, chiusura a +33:30, risultato a +34:00
   let b01 = await mk('B01')
@@ -233,12 +239,12 @@ console.log('# Stato per app, Regia e TV (migration 019)')
   const g1 = await rpc('mb_get_state', [tok[1]])
   t('caricata ma non partita: orologio a zero', g1.race.loaded === true && g1.race.status === 'not_started' && g1.race.elapsed === 0 && Number(g1.race.distanceKm) === 136.2)
   await rpc('mb_admin_race_start')
-  await jump(100)
+  await jump(1600)
   await bet(1, await mk('B01'), 'yes', 100)
   const g2 = await rpc('mb_get_state', [tok[1]])
   const rm = g2.markets.find((m) => m.raceId === 'B01')
   t('la scommessa della corsa compare in mb_get_state senza creatore', !!rm && rm.by === null && rm.byTeamId === null && rm.closesAt > rm.opensAt && rm.my.side === 'yes')
-  t('orologio che corre nello stato', g2.race.status === 'running' && g2.race.elapsed >= 99 && g2.race.elapsed < 110)
+  t('orologio che corre nello stato', g2.race.status === 'running' && g2.race.elapsed >= 1599 && g2.race.elapsed < 1610)
   const tv = await rpc('mb_get_tv')
   t('TV: scommessa della corsa tra le aperte, notizie uscite, nessun futuro',
     tv.open.some((m) => m.race === true && m.by === 'La Teramana') && tv.race.feed.length >= 1 && !JSON.stringify(tv).includes('winning') && !JSON.stringify(tv).includes('VINCE LA TERAMANA'))
@@ -255,7 +261,7 @@ console.log('# Chiusura serata e Reset totale con la corsa in corso')
   const { q, one, rpc, tok, jump, bal, mk, bet } = await fresh()
   await rpc('mb_race_load', [JSON.stringify(payload)])
   await rpc('mb_admin_race_start')
-  await jump(100)
+  await jump(1600)
   await bet(1, await mk('B01'), 'yes', 300)
   t('puntata registrata', (await bal(1)) === 700)
   await rpc('mb_admin_close_session')
@@ -263,6 +269,7 @@ console.log('# Chiusura serata e Reset totale con la corsa in corso')
   await rpc('mb_tick')
   t('chiusura serata: corsa interrotta, puntata rimborsata, serata chiusa',
     (await one(`select status from mazzobet.race_runs`)).status === 'aborted' && Number((await one(`select balance from mazzobet.session_teams where team_id = 1`)).balance) === 1000)
+  t('a corsa interrotta la definizione si può ricaricare (migration 021)', (await rpc('mb_race_load', [JSON.stringify(payload)])).skipped === false)
   t('serata chiusa', (await one(`select status from mazzobet.game_sessions order by created_at desc limit 1`)).status === 'closed')
 
   // Reset totale a corsa in corso
@@ -270,7 +277,8 @@ console.log('# Chiusura serata e Reset totale con la corsa in corso')
   const t2 = {}
   for (let i = 1; i <= 3; i++) t2[i] = (await rpc('mb_enter_team', [i, null, 'ua'])).token
   await rpc('mb_admin_race_start')
-  await jump(200)
+  t('corsa in corso: la definizione non si ricarica', (await rpc('mb_race_load', [JSON.stringify(payload)])).skipped === true)
+  await jump(1600)
   const m = await mk('B01')
   await rpc('mb_place_bet', [t2[1], m.id, 'no', 250])
   const oldSession = (await one(`select id from mazzobet.game_sessions where status='active'`)).id
@@ -292,6 +300,8 @@ console.log('# Notifiche della corsa (migration 020): C aperta, D sta per chiude
   await rpc('mb_race_load', [JSON.stringify(payload)])
   t('prima della partenza nessuna notifica', (await due()).length === 0)
   await rpc('mb_admin_race_start')
+  t('alla partenza nessun avviso (nessuna scommessa aperta)', (await due()).length === 0)
+  await jump(1560)
   let r = await due()
   t('C: B01 aperta, avviso a tutte le 4 squadre, con la domanda', [1, 2, 3, 4].every((i) => of(r, i, 'C')?.n === 1 && of(r, i, 'C').raceId === 'B01' && of(r, i, 'C').question.includes('Subaru')))
   t('C: una volta sola', (await due()).length === 0)

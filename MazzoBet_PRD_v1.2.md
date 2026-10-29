@@ -709,6 +709,9 @@ Piano di lavoro e motivazioni: `docs/piano-corsa-simulata.md`. Dati: `server/dat
 37. **B07, soglia del NO:** il «NO» scatta alla prima notizia con km corrente oltre 107 (PCS050); il caricamento controlla che sia proprio quella dichiarata dal palinsesto.
 38. **Velocità media approssimata:** km dell'ultima notizia diviso il suo orario di gara; non è un dato dei file.
 39. **Prove rapide solo per i test:** nessun comando di velocità in Regia; i test spostano la partenza nel passato.
+40. **B01 si apre al minuto 26 (1560 s), non al minuto 0** — modifica richiesta dall'utente il 30/10/2026 dopo la prima prova; chiude sempre a 33:30. Cambiata nei due file `la_teramana_banco.json` (cartella `corsa simulata/` e `server/data/`); il documento `La_Teramana_Palinsesto_Banco_MASTER_v1.0.md` non è stato aggiornato.
+41. **Ricarica della definizione (migration 021):** il database la rifiuta solo mentre una corsa è in corso o in pausa; il server la ricarica ogni minuto quando nessuna corsa è in corso, così un file corretto entra dopo un Reset totale senza riavviare.
+42. **Scheda della scommessa della corsa:** tolta la scritta «Il Banco paga sempre». **TV:** ogni notizia nuova riporta lo schermo sulla scena della corsa per un giro.
 
 ### H.3 Stato e ancora aperto (30/10/2026)
 
