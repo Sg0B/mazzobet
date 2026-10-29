@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from 'react'
 import { cur, fmt, odds } from '../lib/format'
 import { payout } from '../lib/rules'
-import { actions, toResolve, useGame, type LedgerKind, type Market } from '../store/game'
+import { actions, toResolve, useGame, type LedgerKind, type Market, type Side } from '../store/game'
 import { Countdown } from '../components/Countdown'
+import { MarketCard } from '../components/MarketCard'
 
 const LEDGER_LABEL: Record<LedgerKind, string> = {
   start: 'INGRESSO',
@@ -32,6 +33,8 @@ function betStatus(m: Market, now: number): { label: string; cls: string; note: 
       ? { label: 'VINTA', cls: 'ok', note: <>+{cur(my.payout ?? 0)}.{flipped}{appeal}</> }
       : { label: 'PERSA', cls: 'ko', note: <>−{cur(my.amount)}.{flipped}{appeal}</> }
   }
+  if (m.status === 'closed' && m.race?.awaiting) return { label: 'IN ATTESA DI CONFERMA', cls: '', note: 'Notizia provvisoria uscita: manca la conferma ufficiale.' }
+  if (m.status === 'closed' && m.race) return { label: 'IN ATTESA DI ESITO', cls: '', note: 'Puntate chiuse: l’esito esce con la cronaca.' }
   if (m.status === 'closed') return { label: 'IN ATTESA DI ESITO', cls: '', note: 'Puntate chiuse.' }
   return { label: 'IN CORSO', cls: '', note: `Incasso potenziale ${cur(payout(my.amount, my.side === 'yes' ? m.yes : m.no))}.` }
 }
@@ -69,9 +72,11 @@ function EsitaOra({ id }: { id: number }) {
   )
 }
 
-export function Bets() {
+export function Bets({ onBet }: { onBet: (id: number, side: Side) => void }) {
   const s = useGame()
-  const mine = s.markets.filter((m) => m.my).sort((a, b) => b.num - a.num)
+  // le scommesse della corsa stanno fissate in alto, poi le altre dalla più recente
+  const mine = s.markets.filter((m) => m.my).sort((a, b) => Number(!!b.race) - Number(!!a.race) || b.num - a.num)
+  const liveRace = s.markets.filter((m) => m.race && m.status === 'open').sort((a, b) => a.race!.closesAt - b.race!.closesAt)
   const made = s.markets.filter((m) => m.by === s.team).sort((a, b) => b.num - a.num)
   const todo = toResolve(s)
   const frozen = s.sessionStatus === 'closed'
@@ -79,6 +84,13 @@ export function Bets() {
   return (
     <>
       <div className="top"><div className="logo">SCOMMESSE</div></div>
+
+      {liveRace.length > 0 && (
+        <>
+          <h2 className="sec rsec"><span className="dot" />La Teramana · in diretta</h2>
+          {liveRace.map((m) => <MarketCard key={m.id} m={m} onBet={onBet} />)}
+        </>
+      )}
 
       <h2 className="sec">Da esitare</h2>
       {todo.length ? todo.map((m) => (
@@ -109,7 +121,7 @@ export function Bets() {
               <span className="cd num" style={{ fontSize: 16 }}>{m.my!.side === 'yes' ? 'SÌ' : 'NO'} · {cur(m.my!.amount)}</span>
             </div>
             <p className="q">{m.text}</p>
-            <p className="m">Scommessa n. {m.num} · quota {odds(m.my!.side === 'yes' ? m.yes : m.no)}. {st.note}</p>
+            <p className="m">{m.race ? `La Teramana, scommessa ${m.race.id}` : `Scommessa n. ${m.num}`} · quota {odds(m.my!.side === 'yes' ? m.yes : m.no)}. {st.note}</p>
           </div>
         )
       }) : <p className="empty">Non hai ancora puntato.</p>}

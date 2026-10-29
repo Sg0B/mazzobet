@@ -18,6 +18,8 @@ interface Tv {
   waiting?: { no: number; question: string; by: string; resolveBy: string; yesPool: number; noPool: number }[]
   results?: { no: number; question: string; by: string; outcome: 'yes' | 'no'; flipped: boolean; byAdmin: boolean; yesPool: number; noPool: number; best: { name: string; payout: number } | null }[]
   news?: { id: number; at: string; kind: string; title: string; text: string }[]
+  race?: { loaded: boolean; name?: string; distanceKm?: number; durationSeconds?: number; status?: string; elapsed?: number
+           feed?: { id: string; at: number; km: number; kmEvent: boolean; type: string; text: string }[] }
   bank?: { cash: number; inPlay: number; open: boolean; events: { id: number; at: string; kind: 'bonus' | 'malus' | 'sponsor'; amount: number; teams: string[] }[] }
 }
 
@@ -77,7 +79,7 @@ function Qr({ url }: { url: string }) {
   return <div className="tv-qr" aria-label={`Codice QR per entrare: ${url}`} dangerouslySetInnerHTML={{ __html: svg }} />
 }
 
-type SceneId = 'patrimonio' | 'pronostici' | 'altre' | 'aperte' | 'esiti' | 'banco'
+type SceneId = 'corsa' | 'patrimonio' | 'pronostici' | 'altre' | 'aperte' | 'esiti' | 'banco'
 
 export function TvScreen() {
   const { data, offline, offset } = useTv()
@@ -116,10 +118,13 @@ export function TvScreen() {
     if (!data?.rankings) return []
     const r = data.rankings
     const s: SceneId[] = []
+    const live = data.race?.loaded && ['running', 'paused', 'finished'].includes(data.race.status ?? '')
+    if (live) s.push('corsa')
     if (r.patrimonio.length) s.push('patrimonio')
     if (r.pronostici.some((x) => x.pos !== null)) s.push('pronostici')
     if (r.striscia.some((x) => (x.best ?? 0) > 0) || r.puntate.some((x) => (x.value ?? 0) > 0) || r.bancarotte.length) s.push('altre')
     if (data.open?.length || data.waiting?.length) s.push('aperte')
+    if (live && s.length > 3) s.push('corsa')
     if (data.results?.length) s.push('esiti')
     if (r.patrimonio.length) s.push('banco')
     return s
@@ -155,6 +160,7 @@ export function TvScreen() {
 
       <main className="tv-main" key={scene ?? 'vuota'}>
         {scene === null && <Waiting url={url} />}
+        {scene === 'corsa' && <Corsa data={data} now={nowMs} />}
         {scene === 'patrimonio' && <Patrimonio data={data} />}
         {scene === 'pronostici' && <Pronostici data={data} />}
         {scene === 'altre' && <Altre data={data} />}
@@ -218,6 +224,34 @@ function Board({ title, note, rows }: { title: string; note?: string; rows: { ke
         ))}
       </ol>
       {note && <p className="tv-note">{note}</p>}
+    </section>
+  )
+}
+
+/** Cronaca della corsa sullo schermo: situazione di gara e le ultime notizie uscite. */
+function Corsa({ data, now }: { data: Tv; now: number }) {
+  const r = data.race!
+  const feed = (r.feed ?? []).slice(0, 5)
+  const dist = r.distanceKm ?? 0
+  const run = r.status === 'running'
+  const elapsed = Math.min(r.durationSeconds ?? 0, (r.elapsed ?? 0) + (run ? Math.max(0, now - Date.parse(data.now)) / 1000 : 0))
+  const lastKm = (r.feed ?? []).find((e) => !e.kmEvent)?.km ?? 0
+  const left = r.status === 'finished' ? 0 : Math.max(0, dist - lastKm)
+  const t = Math.floor(elapsed)
+  const clock = `${Math.floor(t / 3600)}:${String(Math.floor((t % 3600) / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
+  const f = (n: number) => (Math.round(n * 10) / 10).toString().replace('.', ',')
+  return (
+    <section className="tv-scene tv-race">
+      <h1>{r.name} · {r.status === 'paused' ? 'corsa sospesa' : r.status === 'finished' ? 'corsa conclusa' : 'in diretta'}</h1>
+      <div className="tv-rhead">
+        <span><b className="num">{f(left)}</b><i>km mancanti</i></span>
+        <span><b className="num">{clock}</b><i>tempo di gara</i></span>
+      </div>
+      <ol className="tv-rfeed">
+        {feed.map((e) => (
+          <li key={e.id}><span className="num">{dist - e.km <= 0.05 ? 'F' : f(dist - e.km)}</span><p>{e.text}</p></li>
+        ))}
+      </ol>
     </section>
   )
 }

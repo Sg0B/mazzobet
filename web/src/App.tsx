@@ -9,6 +9,7 @@ import { MustResolve } from './components/MustResolve'
 import { Toast } from './components/Toast'
 import { Bets } from './screens/Bets'
 import { Home } from './screens/Home'
+import { Race } from './screens/Race'
 import { Radio } from './screens/Radio'
 import { Rank } from './screens/Rank'
 import { Regia } from './screens/Regia'
@@ -73,8 +74,9 @@ function Game() {
       <div id="app">
         {s.tab === 'home' && <Home onBet={(id, side) => setSheet({ type: 'bet', id, side })} onCreate={() => setSheet({ type: 'create' })} />}
         {s.tab === 'rank' && <Rank />}
-        {s.tab === 'bets' && <Bets />}
+        {s.tab === 'bets' && <Bets onBet={(id, side) => setSheet({ type: 'bet', id, side })} />}
         {s.tab === 'radio' && <Radio />}
+        {s.tab === 'race' && <Race />}
       </div>
       <BottomNav />
       {sheet?.type === 'bet' && <BetSheet marketId={sheet.id} side={sheet.side} onClose={close} />}

@@ -67,7 +67,35 @@ export interface Market {
   /** Esitata dalla Regia: definitiva, senza contestazione. */
   byAdmin: boolean
   my: Bet | null
+  /** Scommessa della corsa simulata (nessun creatore): orari in secondi di gara. */
+  race?: { id: string; opensAt: number; closesAt: number; awaiting: boolean }
 }
+
+/** Orologio di gara ricevuto dal server; il tempo corrente si ricalcola con raceElapsed(). */
+export interface RaceClock {
+  loaded: boolean
+  name: string
+  edition: number
+  distanceKm: number
+  durationSeconds: number
+  status: 'not_started' | 'running' | 'paused' | 'finished' | 'aborted'
+  elapsed: number
+  /** Ora del server (ms) a cui si riferisce elapsed. */
+  at: number
+}
+export interface RaceEvent {
+  id: string
+  at: number
+  km: number
+  kmEvent: boolean
+  kmApprox: boolean
+  type: string
+  text: string
+}
+
+/** Secondi di gara adesso (si ferma in pausa, a fine corsa e se interrotta). */
+export const raceElapsed = (c: RaceClock | null, now = serverNow()) =>
+  !c || !c.loaded ? 0 : c.status === 'running' ? Math.min(c.durationSeconds, c.elapsed + Math.max(0, now - c.at) / 1000) : c.elapsed
 
 export type NewsKind = 'bonus' | 'malus' | 'giuria' | 'bank' | 'sponsor'
 export interface News {
@@ -123,7 +151,7 @@ export interface GameState {
   team: string | null
   teamId: number | null
   config: Config
-  tab: 'home' | 'rank' | 'bets' | 'radio'
+  tab: 'home' | 'rank' | 'bets' | 'radio' | 'race'
   balance: number
   bankruptUntil: number | null
   readmissions: number
@@ -136,6 +164,9 @@ export interface GameState {
   ledger: LedgerEntry[]
   leaderboard: LeaderRow[]
   rankings: Rankings | null
+  /** Orologio della corsa simulata (arriva con lo stato) e cronaca (si chiede solo nella pagina Corsa). */
+  race: RaceClock | null
+  raceFeed: RaceEvent[]
   bankCash: number
   bankInPlay: number
   toast: string | null
@@ -166,6 +197,8 @@ let state: GameState = {
   ledger: [],
   leaderboard: [],
   rankings: null,
+  race: null,
+  raceFeed: [],
   bankCash: 0,
   bankInPlay: 0,
   toast: null,
@@ -193,7 +226,7 @@ export const committed = (s: GameState) =>
   s.markets.filter((m) => m.my && (m.status === 'open' || m.status === 'closed')).reduce((a, m) => a + m.my!.amount, 0)
 /** Scommesse da esitare in cui posso rispondere: non ho puntato, e la precedenza del creatore è finita. */
 export const toResolve = (s: GameState) =>
-  s.markets.filter((m) => m.status === 'closed' && !m.outcome && !m.my && m.by !== s.team && (m.creatorOnlyUntil ?? 0) <= s.now)
+  s.markets.filter((m) => !m.race && m.status === 'closed' && !m.outcome && !m.my && m.by !== s.team && (m.creatorOnlyUntil ?? 0) <= s.now)
 /** Obbligo bloccante: mie scommesse (con puntate) scadute e non ancora esitate. */
 export const mustResolve = (s: GameState) => s.markets.filter((m) => m.by === s.team && m.status === 'closed' && !m.outcome)
 
@@ -216,7 +249,11 @@ interface ServerMarket {
   id: number
   no: number
   question: string
-  by: string
+  by: string | null
+  raceId: string | null
+  awaiting: boolean
+  opensAt: number | null
+  closesAt: number | null
   yesOdds: number
   noOdds: number
   createdAt: string
@@ -243,6 +280,7 @@ interface ServerState {
   config: Config
   me: { teamId: number; name: string; balance: number; status: string; bankruptUntil: string | null; readmissions: number; correct: number }
   markets: ServerMarket[]
+  race: Omit<RaceClock, 'at'>
   ledger: { id: number; at: string; kind: string; marketNo: number | null; amount: number }[]
   news: { id: number; at: string; kind: NewsKind; title: string; text: string }[]
   leaderboard: LeaderRow[]
@@ -280,7 +318,8 @@ function mapMarket(m: ServerMarket): Market {
     id: m.id,
     num: m.no,
     text: m.question,
-    by: m.by,
+    by: m.by ?? 'La Teramana',
+    race: m.raceId ? { id: m.raceId, opensAt: Number(m.opensAt), closesAt: Number(m.closesAt), awaiting: !!m.awaiting } : undefined,
     yes: m.yesOdds,
     no: m.noOdds,
     createdAt: new Date(m.createdAt).getTime(),
@@ -308,8 +347,9 @@ function announceChanges(prev: Market[], next: Market[]) {
   for (const m of next) {
     const before = prev.find((p) => p.id === m.id)
     if (!before || !m.my || before.status === m.status) continue
-    if (m.status === 'void') toast(`Scommessa n. ${m.num} annullata: puntata rimborsata`)
-    else if (m.status === 'done' && before.status !== 'done') toast(m.my.result === 'win' ? `Scommessa n. ${m.num} vinta: +${cur(m.my.payout ?? 0)}` : `Scommessa n. ${m.num} persa`)
+    const label = m.race ? `Corsa, scommessa ${m.race.id}` : `Scommessa n. ${m.num}`
+    if (m.status === 'void') toast(`${label} annullata: puntata rimborsata`)
+    else if (m.status === 'done' && before.status !== 'done') toast(m.my.result === 'win' ? `${label} vinta: +${cur(m.my.payout ?? 0)}` : `${label} persa`)
   }
 }
 
@@ -347,6 +387,7 @@ export async function refresh() {
       endsAt: new Date(s.session.endsAt).getTime(),
       sessionStatus: s.session.status,
       markets,
+      race: s.race.loaded ? { ...s.race, at: serverNow() } : null,
       ledger: s.ledger.map((l) => ({ id: l.id, at: new Date(l.at).getTime(), kind: LEDGER_KIND[l.kind] ?? 'banco', label: ledgerLabel(l.kind, l.marketNo), amount: Number(l.amount) })),
       leaderboard: s.leaderboard.map((r) => ({ ...r, balance: Number(r.balance) })),
       bankCash: Number(s.bank.cash),
@@ -373,6 +414,24 @@ export async function loadRankings() {
     /* resta l'ultima versione ricevuta */
   } finally {
     loadingRankings = false
+  }
+}
+
+/** Cronaca della corsa: si chiede solo mentre la pagina Corsa è aperta. */
+let loadingRace = false
+export async function loadRace() {
+  if (loadingRace || !getToken()) return
+  loadingRace = true
+  try {
+    const r = await api<{ loaded: boolean; now: string; feed?: RaceEvent[] } & Omit<RaceClock, 'at' | 'loaded'>>('/race')
+    set({
+      raceFeed: r.feed ?? [],
+      race: r.loaded ? { loaded: true, name: r.name, edition: r.edition, distanceKm: Number(r.distanceKm), durationSeconds: r.durationSeconds, status: r.status, elapsed: r.elapsed, at: new Date(r.now).getTime() } : null,
+    })
+  } catch {
+    /* resta l'ultima versione ricevuta */
+  } finally {
+    loadingRace = false
   }
 }
 
@@ -430,7 +489,7 @@ export const actions = {
 
   leaveTeam() {
     setToken(null)
-    set({ team: null, teamId: null, markets: [], ledger: [], leaderboard: [], rankings: null, balance: 0, bankruptUntil: null })
+    set({ team: null, teamId: null, markets: [], ledger: [], leaderboard: [], rankings: null, race: null, raceFeed: [], balance: 0, bankruptUntil: null })
   },
 
   setTab(tab: GameState['tab']) {

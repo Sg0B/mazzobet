@@ -130,7 +130,7 @@ h1,h2,h3,p{margin:0}
 
 /* nav */
 #nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);z-index:40;padding-bottom:env(safe-area-inset-bottom,0px)}
-#nav div{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+#nav div{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
 #nav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;min-height:58px;color:var(--muted);font:600 11px/1 var(--f-body);position:relative}
 #nav button.on{color:var(--lime)}
 #nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -284,3 +284,61 @@ textarea{resize:none;min-height:76px}
 .tv-evk{font:800 1.4em var(--f-disp);letter-spacing:.2em;color:var(--lime);border:.1em solid var(--lime);border-radius:.3em;padding:.2em .8em}
 .tv-event h2{font:800 4.2em/1.05 var(--f-disp);letter-spacing:.04em;text-transform:uppercase;text-wrap:balance}
 .tv-event p{font:500 1.9em/1.3 var(--f-body);max-width:30em;color:var(--fg);text-wrap:balance}
+
+/* ---------- Corsa simulata: «Pro Carletto Stats» (stile PCS, scuro) ---------- */
+:root{--pcs:#E5575B;--pcs-dk:#3A4A40;--pcs-blue:#6FB9F2}
+.pcs-logo{display:inline-flex;flex-direction:column;gap:3px;width:128px}
+.pcs-logo .sq{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+.pcs-logo .sq i{font:800 30px/1 var(--f-disp);font-style:normal;text-align:center;color:#fff;background:var(--pcs);border-radius:2px;padding:6px 0 5px}
+.pcs-logo .sq i.dk{background:var(--pcs-dk)}
+.pcs-logo .pbar{background:var(--pcs-dk);color:#fff;font:700 10.5px/1 var(--f-body);letter-spacing:.2em;text-align:center;padding:5px 0 4px;border-radius:2px;white-space:nowrap}
+.pcs-logo.mini{width:34px;gap:0}
+.pcs-logo.mini .sq{gap:1px}
+.pcs-logo.mini .sq i{font-size:10px;padding:2px 0 1px;border-radius:1px}
+
+.racepage .rstate{font:700 12px/1 var(--f-disp);letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:6px 10px}
+.racepage .rstate.running{border-color:var(--pcs);color:var(--pcs)}
+.racepage .rstate.paused{border-color:var(--warn);color:var(--warn)}
+.rname{font:800 26px/1.1 var(--f-disp);letter-spacing:.03em;text-transform:uppercase;margin:14px 0 0}
+.rname small{display:block;font:500 13px var(--f-body);letter-spacing:0;text-transform:none;color:var(--muted);margin-top:3px}
+.rhead{display:grid;grid-template-columns:repeat(3,1fr);margin-top:12px;background:var(--surface2);border-radius:12px;padding:12px 6px;text-align:center}
+.rhead div+div{border-left:1px solid var(--line)}
+.rhead .v{display:block;font:800 28px/1 var(--f-disp)}
+.rhead .l{display:block;font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:.04em}
+.rnote{margin-top:10px;font-size:13px;color:var(--warn)}
+.rnote.ok{color:var(--muted)}
+.rsec .dot{background:var(--pcs)!important}
+.rfeed{list-style:none;margin:0;padding:0 0 0 2px;position:relative;background:var(--surface2);border-radius:12px}
+.rfeed li{display:flex;gap:10px;padding:13px 12px 13px 10px;border-bottom:1px solid var(--line);position:relative}
+.rfeed li:last-child{border-bottom:0}
+.rfeed .km{flex:0 0 38px;height:38px;border:2px solid var(--muted);border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 13px/1 var(--f-body);color:var(--fg);background:var(--surface2);z-index:1}
+.rfeed .tx{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:flex-start;gap:4px 8px}
+.rfeed .tx p{flex:1 1 180px;font-size:15px;line-height:1.35;padding-top:7px}
+.rfeed .tx small{flex:0 0 100%;font-size:11px;color:var(--muted)}
+.rfeed .ico{flex:0 0 22px;width:22px;height:22px;margin-top:6px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rfeed .ico.final{fill:var(--pcs);stroke:var(--pcs)}
+.rfeed .ico.out,.rfeed .ico.warn{stroke:var(--pcs)}
+.rfeed .ico.attack{stroke:var(--pcs-blue)}
+.rfeed .ico.flag{stroke:var(--fg)}
+.rfeed li.big p{font-weight:700}
+.tm{font-weight:600;color:var(--pcs-blue)}
+.tm.me{color:var(--lime)}
+
+/* scommesse della corsa: stessa scheda, rosso PCS al posto del lime */
+.card.race{border:1px solid var(--pcs)}
+.card.race .tag{border-color:var(--pcs);color:var(--pcs);display:inline-flex;align-items:center;gap:7px}
+.card.race .odd .q{color:var(--pcs)}
+.card.race .odd.picked{border-color:var(--pcs)}
+.card.race .bar i{background:var(--pcs)}
+.card.race .cd .pause{font:700 14px var(--f-body);color:var(--warn)}
+
+/* TV: scena della corsa */
+.tv-race h1{color:var(--pcs)}
+.tv-rhead{display:flex;gap:3em;margin:.2em 0 .6em}
+.tv-rhead span{display:flex;flex-direction:column}
+.tv-rhead b{font:800 3.2em/1 var(--f-disp)}
+.tv-rhead i{font-style:normal;color:var(--muted);font-size:1em}
+.tv-rfeed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.5em;flex:1;min-height:0;overflow:hidden}
+.tv-rfeed li{display:flex;gap:1em;align-items:flex-start;background:var(--surface2);border-radius:.5em;padding:.5em 1em}
+.tv-rfeed li span{flex:0 0 2.6em;height:2.6em;border:.12em solid var(--muted);border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 1em var(--f-body)}
+.tv-rfeed li p{font-size:1.5em;line-height:1.25;margin:0}

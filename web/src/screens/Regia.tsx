@@ -30,8 +30,13 @@ async function call<T>(path: string, body?: unknown, code = getCode()): Promise<
 
 interface Team { id: number; name: string; entered: boolean; balance: number | null; status: string | null; devices: number }
 interface MarketRow {
-  id: number; no: number; question: string; by: string; status: 'open' | 'closed' | 'resolved' | 'void' | 'empty'
+  id: number; no: number; question: string; by: string; raceId: string | null; status: 'open' | 'closed' | 'resolved' | 'void' | 'empty'
   outcome: 'yes' | 'no' | null; flipped: boolean; byAdmin: boolean; expiresAt: string; yesPool: number; noPool: number
+}
+interface RaceAdmin {
+  loaded: boolean; name?: string; distanceKm?: number; durationSeconds?: number
+  status?: 'not_started' | 'running' | 'paused' | 'finished' | 'aborted'
+  elapsed?: number; published?: number; totalEvents?: number; bets?: number
 }
 interface LogRow { id: number; at: string; action: string; detail: Record<string, unknown>; marketNo: number | null; team: string | null }
 interface State {
@@ -39,6 +44,7 @@ interface State {
   sessions: { session: string; status: string; bankPaused: boolean; nextBank: string | null; nextSponsor: string | null; endsAt: string; teams: number; openMarkets: number; awaitingResult: number; inAppealWindow: number; bankCash: number }[]
   session: { id: string; name: string; status: string; endsAt: string; bankPaused: boolean; bankNextAt: string | null; sponsorNextAt: string | null } | null
   tvMessage: { text: string; until: string } | null
+  race: RaceAdmin
   bankStart: string
   bankOpen: boolean
   params: Record<string, number>
@@ -66,9 +72,9 @@ const ACTION: Record<string, string> = {
 }
 const STATUS: Record<string, string> = { open: 'APERTA', closed: 'DA ESITARE', resolved: 'ESITATA', void: 'ANNULLATA', empty: 'SENZA PUNTATE' }
 
-type Tab = 'serata' | 'banco' | 'squadre' | 'scommesse' | 'schermo' | 'parametri' | 'log'
+type Tab = 'serata' | 'corsa' | 'banco' | 'squadre' | 'scommesse' | 'schermo' | 'parametri' | 'log'
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'serata', label: 'Serata' }, { id: 'banco', label: 'Banco' }, { id: 'squadre', label: 'Squadre' },
+  { id: 'serata', label: 'Serata' }, { id: 'corsa', label: 'Corsa' }, { id: 'banco', label: 'Banco' }, { id: 'squadre', label: 'Squadre' },
   { id: 'scommesse', label: 'Scommesse' }, { id: 'schermo', label: 'Schermo' }, { id: 'parametri', label: 'Parametri' }, { id: 'log', label: 'Log' },
 ]
 
@@ -185,6 +191,7 @@ export function Regia() {
       {(msg || err) && <p className="err" role="status">{msg || err}</p>}
 
       {tab === 'serata' && <Serata st={st} cur={cur} act={act} busy={busy} />}
+      {tab === 'corsa' && <Corsa st={st} act={act} busy={busy} />}
       {tab === 'banco' && <Banco st={st} act={act} busy={busy} />}
       {tab === 'squadre' && <Squadre st={st} act={act} busy={busy} />}
       {tab === 'scommesse' && <Scommesse st={st} act={act} busy={busy} />}
@@ -325,13 +332,13 @@ function Scommesse({ st, act, busy }: P) {
   const rest = st.markets.filter((m) => m.status !== 'open' && m.status !== 'closed')
   const row = (m: MarketRow) => (
     <div className="rteam" key={m.id}>
-      <div className="rh"><span className="nm">n. {m.no} · {m.by}</span><span className="pill">{STATUS[m.status]}{m.outcome ? ` ${m.outcome === 'yes' ? 'SÌ' : 'NO'}` : ''}</span></div>
+      <div className="rh"><span className="nm">{m.raceId ? `Corsa ${m.raceId}` : `n. ${m.no} · ${m.by}`}</span><span className="pill">{STATUS[m.status]}{m.outcome ? ` ${m.outcome === 'yes' ? 'SÌ' : 'NO'}` : ''}</span></div>
       <div className="rq">{m.question}</div>
       <div className="rs">Puntate: SÌ {fmt(Number(m.yesPool))} · NO {fmt(Number(m.noPool))}{m.byAdmin && ' · Esitata dalla Regia'}</div>
       {(m.status === 'open' || m.status === 'closed') && (
         <div className="btns">
-          <button className="sm" disabled={busy} onClick={() => void act(`markets/${m.id}/resolve`, { outcome: 'yes' }, `Scommessa n. ${m.no} esitata SÌ.`, `Esitare la n. ${m.no} come SÌ? È definitivo.`)}>Esita SÌ</button>
-          <button className="sm" disabled={busy} onClick={() => void act(`markets/${m.id}/resolve`, { outcome: 'no' }, `Scommessa n. ${m.no} esitata NO.`, `Esitare la n. ${m.no} come NO? È definitivo.`)}>Esita NO</button>
+          {!m.raceId && <button className="sm" disabled={busy} onClick={() => void act(`markets/${m.id}/resolve`, { outcome: 'yes' }, `Scommessa n. ${m.no} esitata SÌ.`, `Esitare la n. ${m.no} come SÌ? È definitivo.`)}>Esita SÌ</button>}
+          {!m.raceId && <button className="sm" disabled={busy} onClick={() => void act(`markets/${m.id}/resolve`, { outcome: 'no' }, `Scommessa n. ${m.no} esitata NO.`, `Esitare la n. ${m.no} come NO? È definitivo.`)}>Esita NO</button>}
           <button className="sm" disabled={busy} onClick={() => void act(`markets/${m.id}/void`, {}, `Scommessa n. ${m.no} annullata e rimborsata.`, `Annullare la n. ${m.no} e rimborsare le puntate? Il costo di creazione non si restituisce.`)}>Annulla con rimborso</button>
         </div>
       )}
@@ -343,6 +350,55 @@ function Scommesse({ st, act, busy }: P) {
       <div className="tbl">{live.length ? live.map(row) : <p className="empty" style={{ padding: 14 }}>Nessuna scommessa aperta o da esitare.</p>}</div>
       <h2 className="sec">Chiuse</h2>
       <div className="tbl">{rest.length ? rest.map(row) : <p className="empty" style={{ padding: 14 }}>Nessuna.</p>}</div>
+    </>
+  )
+}
+
+const RACE_STATUS: Record<string, string> = {
+  not_started: 'NON PARTITA', running: 'IN CORSO', paused: 'IN PAUSA', finished: 'CONCLUSA', aborted: 'INTERROTTA',
+}
+const clock = (sec: number) => {
+  const t = Math.max(0, Math.floor(sec))
+  return `${Math.floor(t / 3600)}:${String(Math.floor((t % 3600) / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
+}
+
+function Corsa({ st, act, busy }: P) {
+  const r = st.race
+  const active = !!st.session && st.session.status === 'active'
+  if (!r.loaded) return <p className="note">Nessuna corsa caricata sul server: controlla i file in server/data.</p>
+  const status = r.status ?? 'not_started'
+  const bets = st.markets.filter((m) => m.raceId)
+  return (
+    <>
+      <div className="rteam">
+        <div className="rh"><span className="nm">{r.name}</span><span className="pill">{RACE_STATUS[status]}</span></div>
+        <div className="rs">
+          Tempo di gara {clock(r.elapsed ?? 0)} su {clock(r.durationSeconds ?? 0)} · notizie uscite {r.published ?? 0} su {r.totalEvents ?? 0} · puntate raccolte {r.bets ?? 0}
+        </div>
+        <div className="btns">
+          {status === 'not_started' && (
+            <button className="sm" disabled={busy || !active} onClick={() => void act('race-start', {}, 'Corsa partita.', 'Far partire la corsa adesso? Si può fare una sola volta a serata e le notizie escono in tempo reale.')}>AVVIA CORSA</button>
+          )}
+          {status === 'running' && (
+            <button className="sm" disabled={busy} onClick={() => void act('race-pause', { paused: true }, 'Corsa in pausa.', 'Mettere in pausa la corsa? Il tempo e le scommesse si fermano.')}>Pausa</button>
+          )}
+          {status === 'paused' && (
+            <button className="sm" disabled={busy} onClick={() => void act('race-pause', { paused: false }, 'Corsa ripresa.')}>Riprendi</button>
+          )}
+        </div>
+        {status === 'not_started' && !active && <div className="rs">Serve una serata attiva per avviare la corsa.</div>}
+        {status === 'aborted' && <div className="rs">Interrotta dalla chiusura della serata o dal reset: le puntate non decise sono state rimborsate.</div>}
+      </div>
+      <h2 className="sec">Scommesse della corsa</h2>
+      <div className="tbl">
+        {bets.length ? bets.map((m) => (
+          <div className="rteam" key={m.id}>
+            <div className="rh"><span className="nm">{m.raceId}</span><span className="pill">{STATUS[m.status]}{m.outcome ? ` ${m.outcome === 'yes' ? 'SÌ' : 'NO'}` : ''}</span></div>
+            <div className="rq">{m.question}</div>
+            <div className="rs">Puntate: SÌ {fmt(Number(m.yesPool))} · NO {fmt(Number(m.noPool))}</div>
+          </div>
+        )) : <p className="empty" style={{ padding: 14 }}>Nessuna scommessa ancora aperta.</p>}
+      </div>
     </>
   )
 }

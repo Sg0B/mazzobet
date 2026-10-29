@@ -18,7 +18,7 @@ export function Home({ onBet, onCreate }: { onBet: (id: number, side: Side) => v
   const others = toResolve(s)
   const latest = s.news.slice(0, 4)
   const shown = latest.length ? latest[i % latest.length] : undefined
-  const open = s.markets.filter((m) => m.status === 'open').sort((a, b) => a.expiresAt - b.expiresAt)
+  const open = s.markets.filter((m) => m.status === 'open').sort((a, b) => Number(!!b.race) - Number(!!a.race) || a.expiresAt - b.expiresAt)
   const mineOpen = s.markets.filter((m) => m.my && (m.status === 'open' || m.status === 'closed')).length
   const bankrupt = s.bankruptUntil !== null
   const lockOver = bankrupt && s.now >= s.bankruptUntil!

@@ -182,6 +182,12 @@ app.get('/api/state', async (req, reply) => {
   if (t) return rpc(reply, 'mb_get_state', { p_token: t })
 })
 
+// Cronaca della corsa: solo le notizie già uscite (la funzione non ha accesso a quelle future né agli esiti).
+app.get('/api/race', async (req, reply) => {
+  const t = token(req, reply)
+  if (t) return rpc(reply, 'mb_race_state', { p_token: t })
+})
+
 // Classifiche: identiche per tutte le squadre, quindi una sola lettura dal database ogni pochi secondi.
 // Con la cache servita solo a chi ha già mostrato un token valido (un UUID qualunque non basta).
 const RANKINGS_TTL_MS = 8_000

@@ -1,7 +1,8 @@
-import { cur, hhmm, odds, MIN } from '../lib/format'
+import { cur, hhmm, odds, mmss, MIN } from '../lib/format'
 import { payout } from '../lib/rules'
-import { isMine, useGame, type Market, type Side } from '../store/game'
+import { isMine, raceElapsed, useGame, type Market, type Side } from '../store/game'
 import { Countdown } from './Countdown'
+import { PcsLogo } from './PcsLogo'
 
 const SHORT_MAX_MIN = 30 // fino a questa durata la scommessa è «LIVE»
 
@@ -15,6 +16,11 @@ export function MarketCard({ m, onBet }: { m: Market; onBet: (id: number, side: 
   const total = m.yesPool + m.noPool
   const yesPct = total ? Math.round((m.yesPool / total) * 100) : 0
 
+  const race = m.race
+  const rc = race ? s.race : null
+  const toClose = race && rc ? race.closesAt - raceElapsed(rc, s.now) : 0
+  const paused = !!race && rc?.status === 'paused'
+
   const odd = (side: Side, label: string, cents: number) => (
     <button className={`odd${m.my?.side === side ? ' picked' : ''}`} disabled={lock} onClick={() => onBet(m.id, side)} aria-label={`${label} a quota ${odds(cents)}`}>
       <span className="lbl">{label}</span>
@@ -23,16 +29,24 @@ export function MarketCard({ m, onBet }: { m: Market; onBet: (id: number, side: 
   )
 
   return (
-    <article className="card">
+    <article className={`card${race ? ' race' : ''}`}>
       <div className="card-top">
-        <span className={`tag${short ? ' live' : ''}`}>{short ? 'LIVE' : 'A SCADENZA'}</span>
+        {race ? (
+          <span className="tag"><PcsLogo mini />LA TERAMANA · IN DIRETTA</span>
+        ) : (
+          <span className={`tag${short ? ' live' : ''}`}>{short ? 'LIVE' : 'A SCADENZA'}</span>
+        )}
         <span className="cd">
           <small>chiude tra</small>
-          <Countdown until={m.expiresAt} />
+          {race ? (paused ? <span className="pause">in pausa</span> : <span className="num">{mmss(Math.max(0, toClose) * 1000)}</span>) : <Countdown until={m.expiresAt} />}
         </span>
       </div>
       <h3>{m.text}</h3>
-      <div className="by">Scommessa n. {m.num} · di {m.by}<br />Chiude alle {hhmm(m.expiresAt)}</div>
+      {race ? (
+        <div className="by">Corsa simulata · scommessa {race.id}<br />Il Banco paga sempre</div>
+      ) : (
+        <div className="by">Scommessa n. {m.num} · di {m.by}<br />Chiude alle {hhmm(m.expiresAt)}</div>
+      )}
       <div className="odds">
         {odd('yes', 'SÌ', m.yes)}
         {odd('no', 'NO', m.no)}

@@ -15,7 +15,7 @@ t('i due file sono validi', built.payload !== null && built.problems.length === 
 const payload = built.payload
 
 async function fresh(nTeams = 6) {
-  const db = await boot(18)
+  const db = await boot(19)
   const q = async (sql, p) => (await db.query(sql, p)).rows
   const one = async (sql, p) => (await q(sql, p))[0]
   const rpc = async (fn, args = []) => { const ph = args.map((_, i) => '$' + (i + 1)).join(','); return (await one(`select public.${fn}(${ph}) as r`, args)).r }
@@ -221,6 +221,32 @@ console.log('# B07: nessuna foratura valida → NO alla prima notizia oltre il k
   await jump(8221)
   const r = await mk('B07')
   t('+137:00 (PCS050, km 107,1) B07 liquidata NO', r.status === 'resolved' && r.outcome === 'no' && (await bal(2)) === 1000 - 100 + 220 && (await bal(1)) === 900)
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+console.log('# Stato per app, Regia e TV (migration 019)')
+{
+  const { rpc, tok, jump, mk, bet } = await fresh()
+  const g0 = await rpc('mb_get_state', [tok[1]])
+  t('prima del caricamento: race.loaded false', g0.race.loaded === false)
+  await rpc('mb_race_load', [JSON.stringify(payload)])
+  const g1 = await rpc('mb_get_state', [tok[1]])
+  t('caricata ma non partita: orologio a zero', g1.race.loaded === true && g1.race.status === 'not_started' && g1.race.elapsed === 0 && Number(g1.race.distanceKm) === 136.2)
+  await rpc('mb_admin_race_start')
+  await jump(100)
+  await bet(1, await mk('B01'), 'yes', 100)
+  const g2 = await rpc('mb_get_state', [tok[1]])
+  const rm = g2.markets.find((m) => m.raceId === 'B01')
+  t('la scommessa della corsa compare in mb_get_state senza creatore', !!rm && rm.by === null && rm.byTeamId === null && rm.closesAt > rm.opensAt && rm.my.side === 'yes')
+  t('orologio che corre nello stato', g2.race.status === 'running' && g2.race.elapsed >= 99 && g2.race.elapsed < 110)
+  const tv = await rpc('mb_get_tv')
+  t('TV: scommessa della corsa tra le aperte, notizie uscite, nessun futuro',
+    tv.open.some((m) => m.race === true && m.by === 'La Teramana') && tv.race.feed.length >= 1 && !JSON.stringify(tv).includes('winning') && !JSON.stringify(tv).includes('VINCE LA TERAMANA'))
+  const ad = await rpc('mb_admin_state')
+  t('Regia: orologio, notizie uscite, puntate', ad.race.status === 'running' && ad.race.published >= 1 && ad.race.totalEvents === 73 && ad.race.bets === 1
+    && ad.markets.some((m) => m.raceId === 'B01' && m.by === 'La Teramana'))
+  const gs = JSON.stringify(await rpc('mb_get_state', [tok[2]]))
+  t('mb_get_state non contiene esiti né notizie future', !gs.includes('winning') && !gs.includes('VINCE LA TERAMANA'))
 }
 
 // ---------------------------------------------------------------------------------------------------------------
