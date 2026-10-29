@@ -33,6 +33,11 @@ const ERRORS: Record<string, { status: number; message: string }> = {
   not_voidable: { status: 409, message: 'Questa scommessa non si può più annullare.' },
   reason_required: { status: 400, message: 'Scrivi il motivo (almeno 3 caratteri).' },
   reset_failed: { status: 500, message: 'Reset non riuscito: controlla lo stato della serata.' },
+  race_paused: { status: 409, message: 'La corsa è in pausa: le puntate riprendono alla ripartenza.' },
+  race_not_loaded: { status: 409, message: 'La corsa non è stata caricata dal server (controlla i due file e i log).' },
+  race_already_started: { status: 409, message: 'La corsa è già partita in questa serata.' },
+  race_not_running: { status: 409, message: 'La corsa non è in corso.' },
+  race_not_paused: { status: 409, message: 'La corsa non è in pausa.' },
   lock_active: { status: 409, message: 'Il blocco di 5 minuti non è ancora finito.' },
 }
 

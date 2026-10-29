@@ -9,6 +9,7 @@ import { toApiError } from './errors.js'
 import { readCatalog, validateCatalog } from './catalog.js'
 import { PIN_FORMAT, checkPin, hashPin } from './pin.js'
 import { configurePush, sendItem, type PushItem } from './push.js'
+import { buildRace, readRace } from './race.js'
 
 const url = process.env.SUPABASE_URL
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -316,6 +317,9 @@ const marketId = (req: FastifyRequest) => Number((req.params as { id: string }).
 app.get('/api/regia/state', async (req, reply) => {
   if (admin(req, reply)) return rpc(reply, 'mb_admin_state')
 })
+app.get('/api/regia/race', async (req, reply) => {
+  if (admin(req, reply)) return rpc(reply, 'mb_admin_race_state')
+})
 adminAct('reset-team', 'mb_admin_reset_team', (r) => { const t = int(body(r).teamId); return t === null ? null : { p_team: t } })
 adminAct('reset-all', 'mb_admin_reset_all', (r) => ({
   p_confirm: typeof body(r).confirm === 'string' ? body(r).confirm : null,
@@ -335,6 +339,8 @@ adminAct('tv-message', 'mb_admin_set_tv', (r) => {
   return typeof b.text === 'string' && m !== null ? { p_text: b.text, p_minutes: m } : null
 })
 adminAct('bank-now','mb_admin_bank_now', () => ({}))
+adminAct('race-start', 'mb_admin_race_start', () => ({}))
+adminAct('race-pause', 'mb_admin_race_pause', (r) => (typeof body(r).paused === 'boolean' ? { p_paused: body(r).paused } : null))
 adminAct('bank-pause', 'mb_admin_bank_pause', (r) => (typeof body(r).paused === 'boolean' ? { p_paused: body(r).paused } : null))
 adminAct('close-session', 'mb_admin_close_session', () => ({}))
 adminAct('force-finalize', 'mb_admin_force_finalize', () => ({}))
@@ -364,6 +370,23 @@ try {
   app.log.error({ e }, 'catalogo non leggibile')
 }
 
+// La Teramana: i due file vengono controllati e caricati prima di ogni avvio. Se non sono validi si tiene quanto già
+// nel database e la corsa non parte (gli errori e le segnalazioni sono nei log); il resto del gioco non si ferma.
+// Dopo il via della corsa il database rifiuta ogni cambio alla definizione.
+try {
+  const { timeline, banco } = readRace()
+  const race = buildRace(timeline, banco)
+  for (const w of race.warnings) app.log.warn(`corsa: ${w}`)
+  if (!race.payload) app.log.error({ problems: race.problems }, 'corsa NON valida: non caricata')
+  else {
+    const { data, error } = await db.rpc('mb_race_load', { p: race.payload })
+    if (error) app.log.error({ error }, 'caricamento corsa fallito')
+    else app.log.info({ load: data }, 'corsa caricata')
+  }
+} catch (e) {
+  app.log.error({ e }, 'file della corsa non leggibili')
+}
+
 // Frontend compilato (produzione, un'unica istanza dietro Caddy).
 const staticDir = resolve(process.env.STATIC_DIR ?? '../web/dist')
 if (existsSync(staticDir)) {
@@ -379,6 +402,21 @@ const tick = async () => {
 }
 setInterval(tick, 5000)
 void tick()
+
+// Corsa: un passo al secondo (notizie, aperture, chiusure, liquidazioni). Gli orari stanno nel database, non qui:
+// dopo un riavvio il primo passo recupera tutto, e mb_tick lo fa comunque ogni 5 secondi.
+const raceLoop = async () => {
+  let running = 0
+  try {
+    const { data, error } = await db.rpc('mb_race_tick')
+    if (error) app.log.error({ error }, 'race tick failed')
+    else running = Number(data) || 0
+  } catch (e) {
+    app.log.error({ e }, 'race tick failed')
+  }
+  setTimeout(raceLoop, running > 0 ? 1000 : 5000)   // a corsa ferma basta un controllo ogni 5 secondi
+}
+void raceLoop()
 
 // Worker delle notifiche: chi avvisare lo decide il database (orari e stato letti da lì); un errore qui non tocca mai il gioco.
 let pushBusy = false
