@@ -164,8 +164,8 @@ console.log('# Scenario completo: B01 → B02 → B07 → B03/B04 → B05 → pa
   t('+112:00 B05 liquidata SÌ', b05.outcome === 'yes' && (await bal(2)) === 940 - 60)
 
   // --- B06 fotofinish
-  await jump(6780); let b06 = await mk('B06')
-  t('+113:00 B06 aperta a 2,10/1,75', b06.status === 'open' && b06.yes_odds === 210 && b06.no_odds === 175)
+  await jump(8219); t('+136:59 B06 non ancora aperta', (await q(`select 1 from mazzobet.markets where race_market_id = 'B06'`)).length === 0); await jump(8220); let b06 = await mk('B06')
+  t('+137:00 B06 aperta a 2,10/1,75', b06.status === 'open' && b06.yes_odds === 210 && b06.no_odds === 175)
   const bal1 = await bal(1); const bal2 = await bal(2)
   await bet(1, b06, 'yes', 200); await bet(2, b06, 'no', 100)
   await jump(8489); t('+141:29 puntata ancora ammessa', (await bet(3, b06, 'yes', 10)).replay === false)
