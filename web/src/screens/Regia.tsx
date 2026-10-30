@@ -36,7 +36,7 @@ interface MarketRow {
 interface RaceAdmin {
   loaded: boolean; name?: string; distanceKm?: number; durationSeconds?: number
   status?: 'not_started' | 'running' | 'paused' | 'finished' | 'aborted'
-  elapsed?: number; published?: number; totalEvents?: number; bets?: number
+  elapsed?: number; speed?: number; durationMin?: number; published?: number; totalEvents?: number; bets?: number
 }
 interface LogRow { id: number; at: string; action: string; detail: Record<string, unknown>; marketNo: number | null; team: string | null }
 interface State {
@@ -69,6 +69,7 @@ const ACTION: Record<string, string> = {
   chiusura_serata: 'Chiusura serata', chiusura_forzata: 'Chiusura forzata', esito_regia: 'Esito dalla Regia',
   annulla_rimborso: 'Annulla con rimborso', rettifica_saldo: 'Rettifica saldo',
   annuncio_tv: 'Annuncio sulla TV', annuncio_tv_tolto: 'Annuncio TV tolto',
+  corsa_avvio: 'Corsa avviata', corsa_pausa: 'Corsa in pausa', corsa_ripresa: 'Corsa ripresa', corsa_durata: 'Durata della corsa',
 }
 const STATUS: Record<string, string> = { open: 'APERTA', closed: 'DA ESITARE', resolved: 'ESITATA', void: 'ANNULLATA', empty: 'SENZA PUNTATE' }
 
@@ -364,6 +365,7 @@ const clock = (sec: number) => {
 
 function Corsa({ st, act, busy }: P) {
   const r = st.race
+  const [mins, setMins] = useState('')
   const active = !!st.session && st.session.status === 'active'
   if (!r.loaded) return <p className="note">Nessuna corsa caricata sul server: controlla i file in server/data.</p>
   const status = r.status ?? 'not_started'
@@ -386,6 +388,18 @@ function Corsa({ st, act, busy }: P) {
             <button className="sm" disabled={busy} onClick={() => void act('race-pause', { paused: false }, 'Corsa ripresa.')}>Riprendi</button>
           )}
         </div>
+        <div className="rs">
+          Durata della corsa: <b>{r.durationMin ?? 180} minuti</b>{(r.durationMin ?? 180) < 180 ? ` (prova accelerata ×${Math.round(180 / (r.durationMin ?? 180) * 10) / 10})` : ' (tempo reale)'}
+          {status !== 'not_started' && r.speed && r.speed > 1 ? ` · in corso a ×${Math.round(r.speed * 10) / 10}` : ''}
+        </div>
+        {status === 'not_started' && (
+          <div className="rform">
+            <input inputMode="numeric" placeholder="Durata in minuti (da 5 a 180)" value={mins} onChange={(e) => setMins(e.target.value.replace(/D/g, ''))} />
+            <button className="sm" disabled={busy || !/^d+$/.test(mins) || Number(mins) < 5 || Number(mins) > 180 || Number(mins) === (r.durationMin ?? 180)}
+              onClick={async () => { if (await act('race-duration', { minutes: Number(mins) }, `Durata della corsa: ${mins} minuti.`)) setMins('') }}>Imposta durata</button>
+            <div className="rs">Vale solo prima di Avvia corsa. 180 = tempo normale; per esempio 18 minuti = 10 volte più veloce (notizie, aperture e chiusure comprese). Ricordati di rimettere 180 per la serata vera.</div>
+          </div>
+        )}
         {status === 'not_started' && !active && <div className="rs">Serve una serata attiva per avviare la corsa.</div>}
         {status === 'aborted' && <div className="rs">Interrotta dalla chiusura della serata o dal reset: le puntate non decise sono state rimborsate.</div>}
       </div>

@@ -17,7 +17,7 @@ Solo per le 10 scommesse della corsa e solo mentre la corsa è in movimento (nes
 | **D, «Sta per chiudere»** | **2 minuti** prima della chiusura; **1 minuto** per le finali B08–B10 (restano aperte solo 3 minuti) | «La scommessa B01 della corsa chiude tra 2 minuti.» Più scommesse insieme: «3 scommesse della corsa chiudono tra 1 minuto.» |
 | **E, «Hai vinto!»** | La scommessa è stata esitata dalla cronaca e la squadra ha vinto | «Vincita sulla corsa: +175 Carletti.» (somma se le vincite escono insieme) |
 
-Come per A e B: una volta sola per (scommessa, squadra, tipo), prenotata in `push_log` prima dell'invio; niente esiti e niente quote nel testo; `tag` che sostituisce la notifica precedente dello stesso tipo. I minuti di anticipo (120 s, 60 s per B08–B10) sono nella migration; per cambiarli si riscrive `mb_push_due`. Le notifiche C, D, E non hanno il limite «una ogni 2 minuti» delle B.
+Come per A e B: una volta sola per (scommessa, squadra, tipo), prenotata in `push_log` prima dell'invio; niente esiti e niente quote nel testo; `tag` che sostituisce la notifica precedente dello stesso tipo. I minuti di anticipo (120 s, 60 s per B08–B10) sono nella migration; per cambiarli si riscrive `mb_push_due`. Con la corsa accelerata dalla Regia (durata inferiore a 180 minuti) gli anticipi di D si accorciano nello stesso rapporto (2 minuti di tempo di gara a ×10 sono 12 secondi reali): per le prove vanno intesi così. Le notifiche C, D, E non hanno il limite «una ogni 2 minuti» delle B.
 
 Nessuna notifica rivela l'esito o le quote. Il compenso «fino a Y» è lo stesso che l'app mostra per chi esita al posto del creatore.
 

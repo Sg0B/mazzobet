@@ -18,7 +18,7 @@ interface Tv {
   waiting?: { no: number; question: string; by: string; resolveBy: string; yesPool: number; noPool: number }[]
   results?: { no: number; question: string; by: string; outcome: 'yes' | 'no'; flipped: boolean; byAdmin: boolean; yesPool: number; noPool: number; best: { name: string; payout: number } | null }[]
   news?: { id: number; at: string; kind: string; title: string; text: string }[]
-  race?: { loaded: boolean; name?: string; distanceKm?: number; durationSeconds?: number; status?: string; elapsed?: number
+  race?: { loaded: boolean; name?: string; distanceKm?: number; durationSeconds?: number; status?: string; elapsed?: number; speed?: number
            feed?: { id: string; at: number; km: number; kmEvent: boolean; type: string; text: string }[] }
   bank?: { cash: number; inPlay: number; open: boolean; events: { id: number; at: string; kind: 'bonus' | 'malus' | 'sponsor'; amount: number; teams: string[] }[] }
 }
@@ -245,7 +245,7 @@ function Corsa({ data, now }: { data: Tv; now: number }) {
   const feed = (r.feed ?? []).slice(0, 5)
   const dist = r.distanceKm ?? 0
   const run = r.status === 'running'
-  const elapsed = Math.min(r.durationSeconds ?? 0, (r.elapsed ?? 0) + (run ? Math.max(0, now - Date.parse(data.now)) / 1000 : 0))
+  const elapsed = Math.min(r.durationSeconds ?? 0, (r.elapsed ?? 0) + (run ? (Math.max(0, now - Date.parse(data.now)) / 1000) * (r.speed ?? 1) : 0))
   const lastKm = (r.feed ?? []).find((e) => !e.kmEvent)?.km ?? 0
   const left = r.status === 'finished' ? 0 : Math.max(0, dist - lastKm)
   const t = Math.floor(elapsed)

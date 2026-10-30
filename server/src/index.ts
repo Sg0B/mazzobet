@@ -346,6 +346,7 @@ adminAct('tv-message', 'mb_admin_set_tv', (r) => {
 })
 adminAct('bank-now','mb_admin_bank_now', () => ({}))
 adminAct('race-start', 'mb_admin_race_start', () => ({}))
+adminAct('race-duration', 'mb_admin_race_set_duration', (r) => { const m = int(body(r).minutes); return m === null ? null : { p_minutes: m } })
 adminAct('race-pause', 'mb_admin_race_pause', (r) => (typeof body(r).paused === 'boolean' ? { p_paused: body(r).paused } : null))
 adminAct('bank-pause', 'mb_admin_bank_pause', (r) => (typeof body(r).paused === 'boolean' ? { p_paused: body(r).paused } : null))
 adminAct('close-session', 'mb_admin_close_session', () => ({}))

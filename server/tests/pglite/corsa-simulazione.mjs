@@ -16,7 +16,7 @@ const winning = Object.fromEntries(banco.markets.map((m) => [m.id, m.winning_ans
 let seed = 20261030
 const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296 }
 
-const db = await boot(21)
+const db = await boot(22)
 const q = async (sql, p) => (await db.query(sql, p)).rows
 const one = async (sql, p) => (await q(sql, p))[0]
 const rpc = async (fn, args = []) => { const ph = args.map((_, i) => '$' + (i + 1)).join(','); return (await one(`select public.${fn}(${ph}) as r`, args)).r }

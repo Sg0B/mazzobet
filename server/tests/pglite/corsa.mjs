@@ -15,7 +15,7 @@ t('i due file sono validi', built.payload !== null && built.problems.length === 
 const payload = built.payload
 
 async function fresh(nTeams = 6) {
-  const db = await boot(21)
+  const db = await boot(22)
   const q = async (sql, p) => (await db.query(sql, p)).rows
   const one = async (sql, p) => (await q(sql, p))[0]
   const rpc = async (fn, args = []) => { const ph = args.map((_, i) => '$' + (i + 1)).join(','); return (await one(`select public.${fn}(${ph}) as r`, args)).r }
@@ -335,6 +335,34 @@ console.log('# Notifiche della corsa (migration 020): C aperta, D sta per chiude
   // pausa: niente avvisi mentre la corsa è ferma
   await rpc('mb_admin_race_pause', [true])
   t('in pausa nessun avviso nuovo', (await due()).length === 0)
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+console.log('# Durata della corsa scelta dalla Regia (migration 022)')
+{
+  const { q, one, rpc, fails, tok, bet, mk } = await fresh(4)
+  await rpc('mb_race_load', [JSON.stringify(payload)])
+  t('durata predefinita 180 minuti', (await rpc('mb_admin_state')).race.durationMin === 180)
+  t('durata fuori limiti rifiutata (4 e 181)', (await fails('mb_admin_race_set_duration', [4], 'bad_param')) && (await fails('mb_admin_race_set_duration', [181], 'bad_param')))
+  await rpc('mb_admin_race_set_duration', [18])
+  t('durata 18 minuti salvata', (await rpc('mb_admin_state')).race.durationMin === 18)
+  await rpc('mb_admin_race_start')
+  const run = await one(`select speed from mazzobet.race_runs where session_id = ${ACT}`)
+  t('al via la velocità è ×10', Number(run.speed) === 10)
+  t('dopo il via la durata non si cambia', await fails('mb_admin_race_set_duration', [60], 'race_already_started'))
+  // il tempo reale scorre dieci volte più piano di quello di gara: 157 s reali = ~1570 s di gara
+  const real = async (sec) => { await q(`update mazzobet.race_runs set started_at = now() - make_interval(secs => $1::double precision) where session_id = ${ACT}`, [sec]); await rpc('mb_race_tick') }
+  await real(155)
+  t('a 155 s reali (1550 di gara) B01 non è aperta', (await rpc('mb_race_state', [tok[1]])).markets.length === 0)
+  await real(157)
+  const st = await rpc('mb_race_state', [tok[1]])
+  t("a 157 s reali B01 è aperta e l'orologio dice ~1570 con velocità 10", st.markets.length === 1 && st.speed === 10 && st.elapsed > 1565 && st.elapsed < 1580)
+  await bet(1, await mk('B01'), 'yes', 100)
+  const m = await one(`select extract(epoch from scheduled_close_at - now()) as s from mazzobet.markets where race_market_id = 'B01' and session_id = ${ACT}`)
+  t('la chiusura prevista è in tempo reale: (2010−1570)/10 ≈ 44 s', Number(m.s) > 40 && Number(m.s) < 48)
+  await real(1081)
+  t('a 1081 s reali (18 minuti) la corsa è conclusa e tutte le scommesse decise', (await one(`select status from mazzobet.race_runs where session_id = ${ACT}`)).status === 'finished'
+    && (await one(`select count(*)::int n from mazzobet.markets where session_id = ${ACT} and race_market_id is not null and status in ('resolved','empty')`)).n === 10)
 }
 
 console.log(`\n${ko === 0 ? 'TUTTO OK' : 'CI SONO ERRORI'}: ${ok} controlli passati, ${ko} falliti`)

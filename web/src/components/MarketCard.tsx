@@ -18,7 +18,7 @@ export function MarketCard({ m, onBet }: { m: Market; onBet: (id: number, side: 
 
   const race = m.race
   const rc = race ? s.race : null
-  const toClose = race && rc ? race.closesAt - raceElapsed(rc, s.now) : 0
+  const toClose = race && rc ? (race.closesAt - raceElapsed(rc, s.now)) / (rc.speed || 1) : 0
   const paused = !!race && rc?.status === 'paused'
 
   const odd = (side: Side, label: string, cents: number) => (

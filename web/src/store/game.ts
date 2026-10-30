@@ -80,6 +80,8 @@ export interface RaceClock {
   durationSeconds: number
   status: 'not_started' | 'running' | 'paused' | 'finished' | 'aborted'
   elapsed: number
+  /** 1 = tempo reale; più di 1 = prova accelerata (la Regia ha scelto una durata più breve di 180 minuti). */
+  speed: number
   /** Ora del server (ms) a cui si riferisce elapsed. */
   at: number
 }
@@ -95,7 +97,7 @@ export interface RaceEvent {
 
 /** Secondi di gara adesso (si ferma in pausa, a fine corsa e se interrotta). */
 export const raceElapsed = (c: RaceClock | null, now = serverNow()) =>
-  !c || !c.loaded ? 0 : c.status === 'running' ? Math.min(c.durationSeconds, c.elapsed + Math.max(0, now - c.at) / 1000) : c.elapsed
+  !c || !c.loaded ? 0 : c.status === 'running' ? Math.min(c.durationSeconds, c.elapsed + (Math.max(0, now - c.at) / 1000) * (c.speed || 1)) : c.elapsed
 
 export type NewsKind = 'bonus' | 'malus' | 'giuria' | 'bank' | 'sponsor'
 export interface News {
@@ -426,7 +428,7 @@ export async function loadRace() {
     const r = await api<{ loaded: boolean; now: string; feed?: RaceEvent[] } & Omit<RaceClock, 'at' | 'loaded'>>('/race')
     set({
       raceFeed: r.feed ?? [],
-      race: r.loaded ? { loaded: true, name: r.name, edition: r.edition, distanceKm: Number(r.distanceKm), durationSeconds: r.durationSeconds, status: r.status, elapsed: r.elapsed, at: new Date(r.now).getTime() } : null,
+      race: r.loaded ? { loaded: true, name: r.name, edition: r.edition, distanceKm: Number(r.distanceKm), durationSeconds: r.durationSeconds, status: r.status, elapsed: r.elapsed, speed: Number(r.speed) || 1, at: new Date(r.now).getTime() } : null,
     })
   } catch {
     /* resta l'ultima versione ricevuta */

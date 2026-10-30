@@ -120,6 +120,7 @@ export function Race() {
         <div><span className="v num">{r.status === 'not_started' ? '0:00:00' : raceTime(elapsed)}</span><span className="l">tempo di gara</span></div>
         <div><span className="v num">{avg ? avg.toFixed(1).replace('.', ',') : '—'}</span><span className="l">km/h media</span></div>
       </div>
+      {r.speed > 1 && <p className="rnote">Prova accelerata ×{Math.round(r.speed * 10) / 10}: la corsa dura meno di 3 ore.</p>}
       {r.status === 'paused' && <p className="rnote">La corsa è sospesa: il tempo e le scommesse sono fermi.</p>}
       {r.status === 'aborted' && <p className="rnote">La corsa è stata interrotta. Le puntate non decise sono state rimborsate.</p>}
       {mine.length > 0 && <p className="rnote ok">Hai {mine.length} {mine.length === 1 ? 'puntata' : 'puntate'} in corso sulla corsa: le trovi in Scommesse.</p>}
