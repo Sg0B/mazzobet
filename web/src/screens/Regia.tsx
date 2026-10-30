@@ -394,8 +394,8 @@ function Corsa({ st, act, busy }: P) {
         </div>
         {status === 'not_started' && (
           <div className="rform">
-            <input inputMode="numeric" placeholder="Durata in minuti (da 5 a 180)" value={mins} onChange={(e) => setMins(e.target.value.replace(/D/g, ''))} />
-            <button className="sm" disabled={busy || !/^d+$/.test(mins) || Number(mins) < 5 || Number(mins) > 180 || Number(mins) === (r.durationMin ?? 180)}
+            <input inputMode="numeric" placeholder="Durata in minuti (da 5 a 180)" value={mins} onChange={(e) => setMins(e.target.value.replace(/[^0-9]/g, ''))} />
+            <button className="sm" disabled={busy || !/^[0-9]+$/.test(mins) || Number(mins) < 5 || Number(mins) > 180 || Number(mins) === (r.durationMin ?? 180)}
               onClick={async () => { if (await act('race-duration', { minutes: Number(mins) }, `Durata della corsa: ${mins} minuti.`)) setMins('') }}>Imposta durata</button>
             <div className="rs">Vale solo prima di Avvia corsa. 180 = tempo normale; per esempio 18 minuti = 10 volte più veloce (notizie, aperture e chiusure comprese). Ricordati di rimettere 180 per la serata vera.</div>
           </div>

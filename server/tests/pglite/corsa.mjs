@@ -15,7 +15,7 @@ t('i due file sono validi', built.payload !== null && built.problems.length === 
 const payload = built.payload
 
 async function fresh(nTeams = 6) {
-  const db = await boot(22)
+  const db = await boot(23)
   const q = async (sql, p) => (await db.query(sql, p)).rows
   const one = async (sql, p) => (await q(sql, p))[0]
   const rpc = async (fn, args = []) => { const ph = args.map((_, i) => '$' + (i + 1)).join(','); return (await one(`select public.${fn}(${ph}) as r`, args)).r }
@@ -285,6 +285,7 @@ console.log('# Chiusura serata e Reset totale con la corsa in corso')
   await rpc('mb_admin_reset_all', ['RESET', false])
   const oldBal = await one(`select balance from mazzobet.session_teams where session_id = $1 and team_id = 1`, [oldSession])
   t('Reset totale: puntata della corsa rimborsata', Number(oldBal.balance) === 1000)
+  t('Reset totale: la corsa della serata chiusa non blocca la ricarica (migration 023)', (await rpc('mb_race_load', [JSON.stringify(payload)])).skipped === false)
   t('Reset totale: nuova serata con corsa da avviare', (await rpc('mb_admin_race_state')).status === 'not_started')
   const st = await rpc('mb_admin_race_state')
   t('nuova serata senza scommesse della corsa', st.markets.length === 0)
