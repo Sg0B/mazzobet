@@ -1,3 +1,4 @@
+import { RACE_BADGE } from '../lib/raceTypes'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import qrcode from 'qrcode-generator'
 import { fmt, hhmm, mmss, odds } from '../lib/format'
@@ -260,7 +261,7 @@ function Corsa({ data, now }: { data: Tv; now: number }) {
       </div>
       <ol className="tv-rfeed">
         {feed.map((e) => (
-          <li key={e.id}><span className="num">{dist - e.km <= 0.05 ? 'F' : f(dist - e.km)}</span><p>{e.text}</p></li>
+          <li key={e.id}><span className="num">{dist - e.km <= 0.05 ? 'F' : f(dist - e.km)}</span><div>{RACE_BADGE[e.type] && <em className={`rbadge ${RACE_BADGE[e.type].cls}`}>{RACE_BADGE[e.type].label}</em>}<p>{e.text}</p></div></li>
         ))}
       </ol>
     </section>

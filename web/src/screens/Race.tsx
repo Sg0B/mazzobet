@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { actions, loadRace, raceElapsed, useGame, type RaceEvent } from '../store/game'
 import { PcsLogo } from '../components/PcsLogo'
+import { RACE_BADGE } from '../lib/raceTypes'
 
 const TOTAL_LABEL: Record<string, string> = {
   not_started: 'Non ancora partita',
@@ -33,14 +34,10 @@ export function avgSpeed(feed: RaceEvent[]): number | null {
   return e ? e.km / (e.at / 3600) : null
 }
 
-type Icon = 'flag' | 'final' | 'attack' | 'out' | 'warn' | 'data' | null
+type Icon = 'flag' | 'final' | null
 const iconFor = (e: RaceEvent, distance: number): Icon => {
-  if (e.type === 'RESULT' || e.type === 'OFFICIAL RESULT') return distance - e.km <= 0.05 ? 'flag' : 'data'
+  if (e.type === 'RESULT' || e.type === 'OFFICIAL RESULT') return distance - e.km <= 0.05 ? 'flag' : null
   if (e.type === 'START') return 'flag'
-  if (e.type === 'ATTACK') return 'attack'
-  if (e.type === 'WITHDRAWAL') return 'out'
-  if (e.type === 'INCIDENT' || e.type === 'MEDICAL UPDATE') return 'warn'
-  if (e.type === 'RACE DATA' || e.type === 'PCS STATS') return 'data'
   if (/ultimo chilometro/i.test(e.text)) return 'final'
   return null
 }
@@ -52,10 +49,6 @@ function EventIcon({ kind }: { kind: Icon }) {
     <svg className={`ico ${kind}`} {...common}>
       {kind === 'flag' && <path d="M5 3v18M5 4h14v9H5M9 4v9M13 4v9M17 4v9M5 8.5h14" />}
       {kind === 'final' && <path d="M3 5h18L12 20z" />}
-      {kind === 'attack' && <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />}
-      {kind === 'out' && <path d="M5 5l14 14M19 5L5 19" />}
-      {kind === 'warn' && <path d="M12 4l9 16H3zM12 10v4M12 17v.5" />}
-      {kind === 'data' && <path d="M4 5h16v14H4zM8 10h8M8 14h5" />}
     </svg>
   )
 }
@@ -135,6 +128,7 @@ export function Race() {
               <span className="km num" title={e.kmApprox ? 'km approssimativo' : undefined}>{toGo(r.distanceKm, e)}</span>
               <div className="tx">
                 <EventIcon kind={iconFor(e, r.distanceKm)} />
+                {RACE_BADGE[e.type] && <span className={`rbadge ${RACE_BADGE[e.type].cls}`}>{RACE_BADGE[e.type].label}</span>}
                 <p><Marked text={e.text} names={teams} me={s.team} /></p>
                 <small className="num">{raceTime(e.at)}</small>
               </div>
