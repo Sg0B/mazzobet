@@ -111,8 +111,14 @@ export function TvScreen() {
       queue.current = queue.current.slice(-4)
     }
   }, [data])
+  // Il comunicato resta a schermo per EVENT_MS: il timer dipende solo dal comunicato, non dal tick al secondo (lo riavvierebbe di continuo).
   useEffect(() => {
-    if (event) { const t = setTimeout(() => setEvent(null), EVENT_MS); return () => clearTimeout(t) }
+    if (!event) return
+    const t = setTimeout(() => setEvent(null), EVENT_MS)
+    return () => clearTimeout(t)
+  }, [event])
+  useEffect(() => {
+    if (event) return
     const t = setTimeout(() => { const next = queue.current.shift(); if (next) setEvent(next) }, 300)
     return () => clearTimeout(t)
   }, [event, tick])
