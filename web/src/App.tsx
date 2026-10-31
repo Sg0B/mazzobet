@@ -74,7 +74,7 @@ function Game() {
       <div id="app">
         {s.tab === 'home' && <Home onBet={(id, side) => setSheet({ type: 'bet', id, side })} onCreate={() => setSheet({ type: 'create' })} />}
         {s.tab === 'rank' && <Rank />}
-        {s.tab === 'bets' && <Bets onBet={(id, side) => setSheet({ type: 'bet', id, side })} />}
+        {s.tab === 'bets' && <Bets />}
         {s.tab === 'radio' && <Radio />}
         {s.tab === 'race' && <Race />}
       </div>

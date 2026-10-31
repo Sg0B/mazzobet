@@ -80,6 +80,14 @@ Online su **https://mazzobet.sourlemon.cloud** (contenitore `mazzobet` dietro Ca
 - [x] **Fase 4 (parte locale):** `corsa-simulazione.mjs`, PRD v1.2 con Appendice H.
 - [ ] Deploy sul VPS e prova con gli amici (sezione 0).
 
+### Corsa v2 — 31 ottobre 2026 (da applicare e pubblicare dopo il via libera)
+- [x] Nuovi testi: timeline v1.3 (79 notizie, 198 minuti) e palinsesto a 17 scommesse, convertiti con `node server/tools/importa-md.mjs <timeline.md> <palinsesto.md>` (riscrive i due JSON in `server/data` e la traiettoria dei km `web/src/lib/raceTrack.ts`; ferma tutto se un controllo fallisce).
+- [x] Due ritocchi editoriali approvati: B16 «Verranno avvistati **di nuovo** maiali…» (SÌ alla notizia delle 122:00) e notizia delle 196:00 «**Cinque** ragazzi…». B14 si liquida alla prima notizia oltre il km 90 (131:28), non a 135:00 senza notizia.
+- [x] Migration 024: durata normale 198 minuti (da 5 a 198; un vecchio 180 diventa 198) e categoria della scommessa nello stato dei telefoni.
+- [x] Smart Bet: carosello nel tab Corsa sopra la cronaca (swipe, frecce, pallini, tagli ₡50/100/250/ALL-IN, un solo tocco di conferma). Home resta con la vista classica; il tab Scommesse non ha più le schede Banco aperte, solo lo storico.
+- [x] Km e velocità media avanzano col tempo di gara anche senza notizie (traiettoria provvisoria dai km delle notizie; da sostituire con il CSV del gruppo quando c'è).
+- [ ] Da fare: CSV del gruppo e GPX per i km definitivi; eventuale annuncio RadioCorsa all'apertura di ogni scommessa; riallineare il testo del palinsesto (intestazione 180 minuti e regola dei 30 secondi sono vecchie).
+
 ## Come si lavora (promemoria)
 
 - Avvio locale: `npm --prefix server run dev` (carica `server/.env` con la chiave **vera**: per prove usa un finto Supabase come in `server/tests/pglite/`) e `npm --prefix web run dev` (app su `http://localhost:5173`; `/regia` e `/tv` sono pagine dello stesso frontend).

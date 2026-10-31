@@ -16,7 +16,7 @@ const winning = Object.fromEntries(banco.markets.map((m) => [m.id, m.winning_ans
 let seed = 20261030
 const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296 }
 
-const db = await boot(23)
+const db = await boot(24)
 const q = async (sql, p) => (await db.query(sql, p)).rows
 const one = async (sql, p) => (await q(sql, p))[0]
 const rpc = async (fn, args = []) => { const ph = args.map((_, i) => '$' + (i + 1)).join(','); return (await one(`select public.${fn}(${ph}) as r`, args)).r }
@@ -33,11 +33,17 @@ const jump = async (sec) => {
   await rpc('mb_race_tick')
 }
 
-console.log('# Una serata intera: 24 squadre, 180 minuti, passi di 10 secondi')
+const DUR = payload.race.duration_seconds
+console.log(`# Una serata intera: 24 squadre, ${DUR / 60} minuti, passi di 10 secondi`)
 let placed = 0, rejected = 0
 const seen = new Set()
-for (let sec = 0; sec <= 10800; sec += 10) {
+const openedAt = {}, resolvedAt = {}   // primo passo in cui ogni scommessa risulta aperta / liquidata
+for (let sec = 0; sec <= DUR; sec += 10) {
   await jump(sec)
+  for (const m of await q(`select race_market_id id, status from mazzobet.markets where session_id = ${ACT} and race_market_id is not null`)) {
+    openedAt[m.id] ??= sec
+    if (m.status === 'resolved' || m.status === 'empty') resolvedAt[m.id] ??= sec
+  }
   const st = await rpc('mb_race_state', [tok[1]])
   for (const m of st.markets.filter((x) => x.status === 'open')) {
     // ogni squadra decide una volta sola; la probabilità per passo fa arrivare le puntate sparse nel tempo
@@ -59,10 +65,17 @@ console.log(`  puntate piazzate: ${placed}, rifiutate: ${rejected}`)
 
 const run = await one(`select status from mazzobet.race_runs where session_id = ${ACT}`)
 t('corsa conclusa', run.status === 'finished', run.status)
-t('tutte le 73 notizie pubblicate', (await one(`select count(*)::int n from mazzobet.race_feed where session_id = ${ACT}`)).n === 73)
+t(`tutte le ${payload.events.length} notizie pubblicate`, (await one(`select count(*)::int n from mazzobet.race_feed where session_id = ${ACT}`)).n === payload.events.length)
 const markets = await q(`select race_market_id id, status, outcome, yes_pool, no_pool from mazzobet.markets where session_id = ${ACT} and race_market_id is not null order by race_market_id`)
-t('tutte le 10 scommesse esistono e sono concluse', markets.length === 10 && markets.every((m) => m.status === 'resolved' || m.status === 'empty'), JSON.stringify(markets.map((m) => m.id + m.status)))
+t(`tutte le ${payload.markets.length} scommesse esistono e sono concluse`, markets.length === payload.markets.length && markets.every((m) => m.status === 'resolved' || m.status === 'empty'), JSON.stringify(markets.map((m) => m.id + m.status)))
 t('esiti uguali a quelli del palinsesto', markets.filter((m) => m.status === 'resolved').every((m) => m.outcome === winning[m.id]), JSON.stringify(markets.map((m) => m.id + m.outcome)))
+
+// orari: ogni scommessa si apre entro 10 secondi dall'orario del palinsesto e si liquida nel passo della notizia che decide, mai prima
+const settleAt = (m) => payload.events.find((e) => e.id === (m.settlement.event_id ?? m.settlement.official_event_id ?? m.settlement.first_matching_event_id)).at_seconds
+t('ogni scommessa si apre all\'orario del palinsesto', payload.markets.every((m) => openedAt[m.id] >= m.opens_at && openedAt[m.id] - m.opens_at < 10),
+  JSON.stringify(payload.markets.filter((m) => !(openedAt[m.id] >= m.opens_at && openedAt[m.id] - m.opens_at < 10)).map((m) => [m.id, m.opens_at, openedAt[m.id]])))
+t('ogni scommessa si liquida nel passo della notizia che decide, mai prima', payload.markets.every((m) => resolvedAt[m.id] >= settleAt(m) && resolvedAt[m.id] - settleAt(m) < 10),
+  JSON.stringify(payload.markets.filter((m) => !(resolvedAt[m.id] >= settleAt(m) && resolvedAt[m.id] - settleAt(m) < 10)).map((m) => [m.id, settleAt(m), resolvedAt[m.id]])))
 
 const bets = await q(`select b.*, m.race_market_id rid, m.yes_odds, m.no_odds, m.outcome from mazzobet.bets b join mazzobet.markets m on m.id = b.market_id where m.session_id = ${ACT} and m.race_market_id is not null`)
 t('ogni puntata è decisa', bets.length === placed && bets.every((b) => b.result === 'win' || b.result === 'loss'))

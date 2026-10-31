@@ -6,60 +6,60 @@
     {
       "id": "B01",
       "category": "GPM San Giacomo, km 22",
-      "question": "Subaru B. Cycling Team arriverà davanti a Nerito Team al GPM di San Giacomo?",
-      "opens_at_seconds": 1560,
-      "closes_at_seconds": 2010,
+      "question": "Della Rovere Pro Cycling vincerà il GPM di San Giacomo?",
+      "opens_at_seconds": 1800,
+      "closes_at_seconds": 2100,
       "odds": {
         "SI": 1.75,
         "NO": 2.05
       },
-      "winning_answer": "SÌ",
+      "winning_answer": "NO",
       "settlement": {
         "mode": "on_published_result",
-        "event_id": "PCS009",
-        "at_seconds": 2040
+        "event_id": "PCS011",
+        "at_seconds": 2426
       }
     },
     {
       "id": "B02",
       "category": "TV Civitella del Tronto, km 43,5",
-      "question": "Pianograndecc arriverà davanti a I Cosacchi al TV di Civitella del Tronto?",
-      "opens_at_seconds": 2100,
-      "closes_at_seconds": 3390,
+      "question": "PianograndeCC arriverà davanti a I Cosacchi al T.V. di Civitella del Tronto?",
+      "opens_at_seconds": 3240,
+      "closes_at_seconds": 3540,
       "odds": {
-        "SI": 1.9,
+        "SI": 1.65,
         "NO": 1.9
       },
       "winning_answer": "NO",
       "settlement": {
         "mode": "on_published_result",
-        "event_id": "PCS016",
-        "at_seconds": 3420
+        "event_id": "PCS018",
+        "at_seconds": 3978
       }
     },
     {
       "id": "B03",
       "category": "GPM Castellalto, km 79,8",
-      "question": "VeloClub Mosciano arriverà davanti a Mercatone Uno al GPM di Castellalto?",
-      "opens_at_seconds": 5100,
-      "closes_at_seconds": 6150,
+      "question": "VeloClub Mosciano riuscirà a imporsi al GPM di Castellalto?",
+      "opens_at_seconds": 6720,
+      "closes_at_seconds": 7020,
       "odds": {
-        "SI": 1.85,
-        "NO": 1.95
+        "SI": 2.28,
+        "NO": 1.65
       },
       "winning_answer": "SÌ",
       "settlement": {
         "mode": "on_published_result",
-        "event_id": "PCS033",
-        "at_seconds": 6180
+        "event_id": "PCS036",
+        "at_seconds": 7125
       }
     },
     {
       "id": "B04",
-      "category": "GPM Castellalto, km 79,8",
-      "question": "Subaru B. Cycling Team vincerà anche il secondo GPM?",
-      "opens_at_seconds": 5100,
-      "closes_at_seconds": 6150,
+      "category": "Varie",
+      "question": "Team Festina con la droga raggiunge i due contrattaccanti?",
+      "opens_at_seconds": 5280,
+      "closes_at_seconds": 5580,
       "odds": {
         "SI": 3.2,
         "NO": 1.35
@@ -67,43 +67,43 @@
       "winning_answer": "NO",
       "settlement": {
         "mode": "on_published_result",
-        "event_id": "PCS033",
-        "at_seconds": 6180
+        "event_id": "PCS025",
+        "at_seconds": 5757
       }
     },
     {
       "id": "B05",
       "category": "TV Castelnuovo Vomano, km 88",
-      "question": "Team Sbronzi arriverà davanti a Sanfelice 2023 al TV di Castelnuovo Vomano?",
-      "opens_at_seconds": 6240,
-      "closes_at_seconds": 6690,
+      "question": "Il Gruppo riprenderà la fuga prima del TV di Castelnuovo Vomano?",
+      "opens_at_seconds": 7170,
+      "closes_at_seconds": 7470,
       "odds": {
-        "SI": 1.85,
-        "NO": 1.95
+        "SI": 1.95,
+        "NO": 1.55
       },
       "winning_answer": "SÌ",
       "settlement": {
         "mode": "on_published_result",
-        "event_id": "PCS039",
-        "at_seconds": 6720
+        "event_id": "PCS040",
+        "at_seconds": 7536
       }
     },
     {
       "id": "B06",
       "category": "TV Val Vomano, km 111,2",
-      "question": "Fave Marchisio arriverà davanti a Tubateam al TV di Val Vomano?",
-      "opens_at_seconds": 8220,
-      "closes_at_seconds": 8490,
+      "question": "Tubateam arriverà davanti a Fave Marchisio al TV di Val Vomano?",
+      "opens_at_seconds": 9300,
+      "closes_at_seconds": 9600,
       "odds": {
-        "SI": 2.1,
-        "NO": 1.75
+        "SI": 1.25,
+        "NO": 2.59
       },
-      "winning_answer": "SÌ",
+      "winning_answer": "NO",
       "settlement": {
         "mode": "official_result_after_provisional",
-        "provisional_event_id": "PCS053",
-        "official_event_id": "PCS064",
-        "at_seconds": 10260
+        "provisional_event_id": "PCS057",
+        "official_event_id": "PCS068",
+        "at_seconds": 11347
       }
     },
     {
@@ -111,7 +111,7 @@
       "category": "Evento meccanico, entro km 107",
       "question": "Almeno un corridore subirà una foratura entro il km 107?",
       "opens_at_seconds": 3600,
-      "closes_at_seconds": 4785,
+      "closes_at_seconds": 3900,
       "odds": {
         "SI": 3.5,
         "NO": 2.2
@@ -121,36 +121,36 @@
         "mode": "first_matching_event_or_deadline",
         "event_type": "INCIDENT",
         "match_rule": "foratura pubblicata dopo apertura e non oltre km 107",
-        "first_matching_event_id": "PCS021",
-        "yes_at_seconds": 4800,
-        "no_if_no_matching_event_by_km": 107.0,
-        "deadline_event_id": "PCS050",
-        "at_seconds": 4800
+        "first_matching_event_id": "PCS023",
+        "yes_at_seconds": 5169,
+        "no_if_no_matching_event_by_km": 107,
+        "deadline_event_id": "PCS054",
+        "at_seconds": 5169
       }
     },
     {
       "id": "B08",
       "category": "Vincitore finale",
-      "question": "Pennello Cinghiale vincerà la 58ª edizione de La Teramana?",
-      "opens_at_seconds": 10560,
-      "closes_at_seconds": 10740,
+      "question": "Pennello Cinghiale vincerà La Teramana?",
+      "opens_at_seconds": 11660,
+      "closes_at_seconds": 11840,
       "odds": {
-        "SI": 3.0,
+        "SI": 3,
         "NO": 1.4
       },
       "winning_answer": "SÌ",
       "settlement": {
         "mode": "on_published_result",
-        "event_id": "PCS073",
-        "at_seconds": 10800
+        "event_id": "PCS079",
+        "at_seconds": 11880
       }
     },
     {
       "id": "B09",
       "category": "Vincitore finale",
-      "question": "Pianograndecc vincerà la 58ª edizione de La Teramana?",
-      "opens_at_seconds": 10560,
-      "closes_at_seconds": 10740,
+      "question": "Pianograndecc vincerà La Teramana?",
+      "opens_at_seconds": 11660,
+      "closes_at_seconds": 11840,
       "odds": {
         "SI": 2.75,
         "NO": 1.5
@@ -158,16 +158,16 @@
       "winning_answer": "NO",
       "settlement": {
         "mode": "on_published_result",
-        "event_id": "PCS073",
-        "at_seconds": 10800
+        "event_id": "PCS079",
+        "at_seconds": 11880
       }
     },
     {
       "id": "B10",
       "category": "Vincitore finale",
-      "question": "Sanfelice 2023 vincerà la 58ª edizione de La Teramana?",
-      "opens_at_seconds": 10560,
-      "closes_at_seconds": 10740,
+      "question": "Sanfelice 2023 vincerà La Teramana?",
+      "opens_at_seconds": 11660,
+      "closes_at_seconds": 11840,
       "odds": {
         "SI": 2.4,
         "NO": 1.65
@@ -175,8 +175,127 @@
       "winning_answer": "NO",
       "settlement": {
         "mode": "on_published_result",
+        "event_id": "PCS079",
+        "at_seconds": 11880
+      }
+    },
+    {
+      "id": "B11",
+      "category": "Meteo San Giacomo",
+      "question": "Pioverà sul gruppo prima del GPM San Giacomo?",
+      "opens_at_seconds": 60,
+      "closes_at_seconds": 360,
+      "odds": {
+        "SI": 2.1,
+        "NO": 1.75
+      },
+      "winning_answer": "NO",
+      "settlement": {
+        "mode": "on_published_result",
+        "event_id": "PCS011",
+        "at_seconds": 2426
+      }
+    },
+    {
+      "id": "B12",
+      "category": "Prima fuga",
+      "question": "Team Patxi riuscirà ad attaccare prima del GPM?",
+      "opens_at_seconds": 960,
+      "closes_at_seconds": 1260,
+      "odds": {
+        "SI": 1.85,
+        "NO": 1.95
+      },
+      "winning_answer": "SÌ",
+      "settlement": {
+        "mode": "on_published_result",
+        "event_id": "PCS007",
+        "at_seconds": 1633
+      }
+    },
+    {
+      "id": "B13",
+      "category": "Vantaggio",
+      "question": "Il vantaggio dei due battistrada supererà i 90 secondi prima del TV di Civitella?",
+      "opens_at_seconds": 3000,
+      "closes_at_seconds": 3300,
+      "odds": {
+        "SI": 2.2,
+        "NO": 1.65
+      },
+      "winning_answer": "NO",
+      "settlement": {
+        "mode": "on_published_result",
+        "event_id": "PCS018",
+        "at_seconds": 3978
+      }
+    },
+    {
+      "id": "B14",
+      "category": "Recupero",
+      "question": "Annateresa riuscirà a rientrare nel gruppo principale prima del km 90?",
+      "opens_at_seconds": 6240,
+      "closes_at_seconds": 6540,
+      "odds": {
+        "SI": 1.9,
+        "NO": 1.9
+      },
+      "winning_answer": "NO",
+      "settlement": {
+        "mode": "on_published_result",
+        "event_id": "PCS045",
+        "at_seconds": 7888
+      }
+    },
+    {
+      "id": "B15",
+      "category": "Ritiro",
+      "question": "Almeno uno dei corridori coinvolti nella caduta sarà costretto al ritiro?",
+      "opens_at_seconds": 9480,
+      "closes_at_seconds": 9780,
+      "odds": {
+        "SI": 1.7,
+        "NO": 2.1
+      },
+      "winning_answer": "SÌ",
+      "settlement": {
+        "mode": "on_published_result",
+        "event_id": "PCS060",
+        "at_seconds": 10128
+      }
+    },
+    {
+      "id": "B16",
+      "category": "Pubblico",
+      "question": "Verranno avvistati di nuovo maiali tra i tifosi entro il km 85?",
+      "opens_at_seconds": 6420,
+      "closes_at_seconds": 6720,
+      "odds": {
+        "SI": 2.15,
+        "NO": 1.7
+      },
+      "winning_answer": "SÌ",
+      "settlement": {
+        "mode": "on_published_result",
+        "event_id": "PCS038",
+        "at_seconds": 7320
+      }
+    },
+    {
+      "id": "B17",
+      "category": "Pubblico",
+      "question": "Almeno 5 maiali riusciranno a correre accanto ai battistrada prima dell'ingresso a Torricella Sicura?",
+      "opens_at_seconds": 11415,
+      "closes_at_seconds": 11715,
+      "odds": {
+        "SI": 1.85,
+        "NO": 1.95
+      },
+      "winning_answer": "NO",
+      "settlement": {
+        "mode": "on_published_result",
         "event_id": "PCS073",
-        "at_seconds": 10800
+        "at_seconds": 11760
       }
     }
   ],

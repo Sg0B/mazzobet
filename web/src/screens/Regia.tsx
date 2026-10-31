@@ -389,15 +389,15 @@ function Corsa({ st, act, busy }: P) {
           )}
         </div>
         <div className="rs">
-          Durata della corsa: <b>{r.durationMin ?? 180} minuti</b>{(r.durationMin ?? 180) < 180 ? ` (prova accelerata ×${Math.round(180 / (r.durationMin ?? 180) * 10) / 10})` : ' (tempo reale)'}
+          Durata della corsa: <b>{r.durationMin ?? 198} minuti</b>{(r.durationMin ?? 198) < 198 ? ` (prova accelerata ×${Math.round(198 / (r.durationMin ?? 198) * 10) / 10})` : ' (tempo reale)'}
           {status !== 'not_started' && r.speed && r.speed > 1 ? ` · in corso a ×${Math.round(r.speed * 10) / 10}` : ''}
         </div>
         {status === 'not_started' && (
           <div className="rform">
-            <input inputMode="numeric" placeholder="Durata in minuti (da 5 a 180)" value={mins} onChange={(e) => setMins(e.target.value.replace(/[^0-9]/g, ''))} />
-            <button className="sm" disabled={busy || !/^[0-9]+$/.test(mins) || Number(mins) < 5 || Number(mins) > 180 || Number(mins) === (r.durationMin ?? 180)}
+            <input inputMode="numeric" placeholder="Durata in minuti (da 5 a 198)" value={mins} onChange={(e) => setMins(e.target.value.replace(/[^0-9]/g, ''))} />
+            <button className="sm" disabled={busy || !/^[0-9]+$/.test(mins) || Number(mins) < 5 || Number(mins) > 198 || Number(mins) === (r.durationMin ?? 198)}
               onClick={async () => { if (await act('race-duration', { minutes: Number(mins) }, `Durata della corsa: ${mins} minuti.`)) setMins('') }}>Imposta durata</button>
-            <div className="rs">Vale solo prima di Avvia corsa. 180 = tempo normale; per esempio 18 minuti = 10 volte più veloce (notizie, aperture e chiusure comprese). Ricordati di rimettere 180 per la serata vera.</div>
+            <div className="rs">Vale solo prima di Avvia corsa. 198 = tempo normale; per esempio 33 minuti = 6 volte più veloce (notizie, aperture e chiusure comprese). Ricordati di rimettere 198 per la serata vera.</div>
           </div>
         )}
         {status === 'not_started' && !active && <div className="rs">Serve una serata attiva per avviare la corsa.</div>}

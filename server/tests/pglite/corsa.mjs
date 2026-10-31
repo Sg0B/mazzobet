@@ -9,13 +9,13 @@ let ok = 0, ko = 0
 const t = (name, cond, extra = '') => { if (cond) { ok++; console.log('  ok  ', name) } else { ko++; console.log('  FAIL', name, extra) } }
 const ACT = `(select id from mazzobet.game_sessions where status='active')`
 
-const { timeline, banco } = readRace(fileURLToPath(new URL('../../data/', import.meta.url)))
+const { timeline, banco } = readRace(fileURLToPath(new URL('./fixtures/', import.meta.url)))
 const built = buildRace(timeline, banco)
 t('i due file sono validi', built.payload !== null && built.problems.length === 0, JSON.stringify(built.problems))
 const payload = built.payload
 
 async function fresh(nTeams = 6) {
-  const db = await boot(23)
+  const db = await boot(24)
   const q = async (sql, p) => (await db.query(sql, p)).rows
   const one = async (sql, p) => (await q(sql, p))[0]
   const rpc = async (fn, args = []) => { const ph = args.map((_, i) => '$' + (i + 1)).join(','); return (await one(`select public.${fn}(${ph}) as r`, args)).r }
@@ -67,6 +67,7 @@ console.log('# Caricamento e prima della partenza')
     !s.includes('winning') && !s.includes('VINCE LA TERAMANA') && !s.includes('Pennello') && !s.includes('B08') && !s.includes('settlement') && st3.markets[0].outcome === null)
   const gs = JSON.stringify(await rpc('mb_get_state', [tok[1]]))
   t('mb_get_state non contiene esiti né notizie future', !gs.includes('winning') && !gs.includes('VINCE LA TERAMANA'))
+  t('lo stato per i telefoni porta la categoria della scommessa (migration 024)', JSON.parse(gs).markets.find((m) => m.raceId === 'B01')?.category === 'GPM San Giacomo, km 22')
   t('un esito non esce nemmeno dalla Regia', !JSON.stringify(await rpc('mb_admin_race_state')).includes('winning'))
 }
 
@@ -343,8 +344,8 @@ console.log('# Durata della corsa scelta dalla Regia (migration 022)')
 {
   const { q, one, rpc, fails, tok, bet, mk } = await fresh(4)
   await rpc('mb_race_load', [JSON.stringify(payload)])
-  t('durata predefinita 180 minuti', (await rpc('mb_admin_state')).race.durationMin === 180)
-  t('durata fuori limiti rifiutata (4 e 181)', (await fails('mb_admin_race_set_duration', [4], 'bad_param')) && (await fails('mb_admin_race_set_duration', [181], 'bad_param')))
+  t('durata predefinita 198 minuti', (await rpc('mb_admin_state')).race.durationMin === 198)
+  t('durata fuori limiti rifiutata (4 e 199)', (await fails('mb_admin_race_set_duration', [4], 'bad_param')) && (await fails('mb_admin_race_set_duration', [199], 'bad_param')))
   await rpc('mb_admin_race_set_duration', [18])
   t('durata 18 minuti salvata', (await rpc('mb_admin_state')).race.durationMin === 18)
   await rpc('mb_admin_race_start')

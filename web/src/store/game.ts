@@ -69,6 +69,8 @@ export interface Market {
   my: Bet | null
   /** Scommessa della corsa simulata (nessun creatore): orari in secondi di gara. */
   race?: { id: string; opensAt: number; closesAt: number; awaiting: boolean }
+  /** Categoria della scommessa della corsa, es. «GPM San Giacomo, km 22». */
+  category?: string
 }
 
 /** Orologio di gara ricevuto dal server; il tempo corrente si ricalcola con raceElapsed(). */
@@ -80,7 +82,7 @@ export interface RaceClock {
   durationSeconds: number
   status: 'not_started' | 'running' | 'paused' | 'finished' | 'aborted'
   elapsed: number
-  /** 1 = tempo reale; più di 1 = prova accelerata (la Regia ha scelto una durata più breve di 180 minuti). */
+  /** 1 = tempo reale; più di 1 = prova accelerata (la Regia ha scelto una durata più breve del tempo normale). */
   speed: number
   /** Ora del server (ms) a cui si riferisce elapsed. */
   at: number
@@ -253,6 +255,7 @@ interface ServerMarket {
   question: string
   by: string | null
   raceId: string | null
+  category?: string | null
   awaiting: boolean
   opensAt: number | null
   closesAt: number | null
@@ -322,6 +325,7 @@ function mapMarket(m: ServerMarket): Market {
     text: m.question,
     by: m.by ?? 'La Teramana',
     race: m.raceId ? { id: m.raceId, opensAt: Number(m.opensAt), closesAt: Number(m.closesAt), awaiting: !!m.awaiting } : undefined,
+    category: m.category ?? undefined,
     yes: m.yesOdds,
     no: m.noOdds,
     createdAt: new Date(m.createdAt).getTime(),

@@ -1,4 +1,5 @@
 import { RACE_BADGE } from '../lib/raceTypes'
+import { kmAt } from '../lib/raceKm'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import qrcode from 'qrcode-generator'
 import { fmt, hhmm, mmss, odds } from '../lib/format'
@@ -253,8 +254,7 @@ function Corsa({ data, now }: { data: Tv; now: number }) {
   const dist = r.distanceKm ?? 0
   const run = r.status === 'running'
   const elapsed = Math.min(r.durationSeconds ?? 0, (r.elapsed ?? 0) + (run ? (Math.max(0, now - Date.parse(data.now)) / 1000) * (r.speed ?? 1) : 0))
-  const lastKm = (r.feed ?? []).find((e) => !e.kmEvent)?.km ?? 0
-  const left = r.status === 'finished' ? 0 : Math.max(0, dist - lastKm)
+  const left = r.status === 'finished' ? 0 : Math.max(0, dist - Math.min(dist, kmAt(elapsed)))
   const t = Math.floor(elapsed)
   const clock = `${Math.floor(t / 3600)}:${String(Math.floor((t % 3600) / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
   const f = (n: number) => (Math.round(n * 10) / 10).toString().replace('.', ',')

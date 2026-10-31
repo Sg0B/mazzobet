@@ -2,6 +2,8 @@ import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { actions, loadRace, raceElapsed, useGame, type RaceEvent } from '../store/game'
 import { PcsLogo } from '../components/PcsLogo'
 import { RACE_BADGE } from '../lib/raceTypes'
+import { kmAt } from '../lib/raceKm'
+import { SmartBet } from '../components/SmartBet'
 
 const TOTAL_LABEL: Record<string, string> = {
   not_started: 'Non ancora partita',
@@ -28,11 +30,8 @@ const toGo = (distance: number, e: RaceEvent) => {
   return left <= 0.05 ? 'F' : kmFmt(left)
 }
 
-/** Velocità media calcolata: km corrente dell'ultima notizia diviso il suo tempo di gara (approssimata). */
-export function avgSpeed(feed: RaceEvent[]): number | null {
-  const e = feed.find((x) => !x.kmEvent && x.km > 0 && x.at > 0)
-  return e ? e.km / (e.at / 3600) : null
-}
+/** Velocità media della corsa: km percorsi diviso ore di gara (stima dalla simulazione, non un dato misurato). */
+export const avgSpeed = (km: number, elapsed: number): number | null => (elapsed > 0 ? km / (elapsed / 3600) : null)
 
 type Icon = 'flag' | 'final' | null
 const iconFor = (e: RaceEvent, distance: number): Icon => {
@@ -95,9 +94,10 @@ export function Race() {
   }
 
   const elapsed = raceElapsed(r, s.now)
-  const lastKm = s.raceFeed.find((e) => !e.kmEvent)?.km ?? 0
-  const left = r.status === 'finished' ? 0 : Math.max(0, r.distanceKm - lastKm)
-  const avg = avgSpeed(s.raceFeed)
+  // i km avanzano col tempo di gara del server, anche senza notizie nuove; all'arrivo 0 km mancanti
+  const done = r.status === 'not_started' ? 0 : r.status === 'finished' ? r.distanceKm : Math.min(r.distanceKm, kmAt(elapsed))
+  const left = Math.max(0, r.distanceKm - done)
+  const avg = avgSpeed(done, elapsed)
   const mine = s.markets.filter((m) => m.race && m.my && (m.status === 'open' || m.status === 'closed'))
 
   return (
@@ -117,6 +117,8 @@ export function Race() {
       {r.status === 'paused' && <p className="rnote">La corsa è sospesa: il tempo e le scommesse sono fermi.</p>}
       {r.status === 'aborted' && <p className="rnote">La corsa è stata interrotta. Le puntate non decise sono state rimborsate.</p>}
       {mine.length > 0 && <p className="rnote ok">Hai {mine.length} {mine.length === 1 ? 'puntata' : 'puntate'} in corso sulla corsa: le trovi in Scommesse.</p>}
+
+      <SmartBet />
 
       <h2 className="sec rsec">Cronaca live</h2>
       {s.raceFeed.length === 0 ? (

@@ -1,9 +1,8 @@
 import { useState, type ReactNode } from 'react'
 import { cur, fmt, odds } from '../lib/format'
 import { payout } from '../lib/rules'
-import { actions, toResolve, useGame, type LedgerKind, type Market, type Side } from '../store/game'
+import { actions, toResolve, useGame, type LedgerKind, type Market } from '../store/game'
 import { Countdown } from '../components/Countdown'
-import { MarketCard } from '../components/MarketCard'
 
 const LEDGER_LABEL: Record<LedgerKind, string> = {
   start: 'INGRESSO',
@@ -72,11 +71,10 @@ function EsitaOra({ id }: { id: number }) {
   )
 }
 
-export function Bets({ onBet }: { onBet: (id: number, side: Side) => void }) {
+export function Bets() {
   const s = useGame()
-  // le scommesse della corsa stanno fissate in alto, poi le altre dalla più recente
+  // le scommesse della corsa aperte si puntano dal tab Corsa (Smart Bet) e dalla Home; qui resta solo lo storico, con quelle della corsa in alto
   const mine = s.markets.filter((m) => m.my).sort((a, b) => Number(!!b.race) - Number(!!a.race) || b.num - a.num)
-  const liveRace = s.markets.filter((m) => m.race && m.status === 'open').sort((a, b) => a.race!.closesAt - b.race!.closesAt)
   const made = s.markets.filter((m) => m.by === s.team).sort((a, b) => b.num - a.num)
   const todo = toResolve(s)
   const frozen = s.sessionStatus === 'closed'
@@ -84,13 +82,6 @@ export function Bets({ onBet }: { onBet: (id: number, side: Side) => void }) {
   return (
     <>
       <div className="top"><div className="logo">SCOMMESSE</div></div>
-
-      {liveRace.length > 0 && (
-        <>
-          <h2 className="sec rsec"><span className="dot" />La Teramana · in diretta</h2>
-          {liveRace.map((m) => <MarketCard key={m.id} m={m} onBet={onBet} />)}
-        </>
-      )}
 
       <h2 className="sec">Da esitare</h2>
       {todo.length ? todo.map((m) => (

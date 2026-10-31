@@ -352,3 +352,25 @@ textarea{resize:none;min-height:76px}
 .rbadge.dat{border-color:var(--muted);color:var(--muted)}
 .tv-rfeed li div{display:flex;flex-direction:column;align-items:flex-start;gap:.25em;min-width:0}
 .tv-rfeed .rbadge{font-size:.9em;margin-top:0}
+
+/* Smart Bet: carosello delle scommesse del Banco nel tab Corsa */
+.smart{margin:6px 0 18px}
+.smart-hd{display:flex;align-items:center;justify-content:space-between}
+.smart-n{font:700 14px/1 var(--f-disp);letter-spacing:.1em;color:var(--muted)}
+.smart-wrap{display:flex;align-items:stretch;gap:6px}
+.smart-track{flex:1;min-width:0;display:flex;align-items:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.smart-track::-webkit-scrollbar{display:none}
+.smart-card{flex:0 0 100%;scroll-snap-align:center;box-sizing:border-box;background:var(--surface);border:1px solid var(--pcs);border-radius:14px;padding:14px}
+.smart-card h3{margin:6px 0 0}
+.smart-cat{font:700 12px/1.2 var(--f-disp);letter-spacing:.1em;text-transform:uppercase;color:var(--pcs);margin-top:10px}
+.smart-bal{display:flex;justify-content:space-between;margin-top:12px;font-size:14px;color:var(--muted)}
+.smart-bal b{color:var(--fg)}
+.smart-sum{margin:10px 0 0;font-size:14px}
+.smart-done{margin:14px 0 4px;padding:12px;border-radius:10px;background:var(--surface2);border:1px solid var(--lime)}
+.smart-card .err{min-height:18px;margin:6px 0 0}
+.smart-card .chip[disabled]{opacity:.4}
+.smart-arrow{flex:0 0 30px;border:0;background:transparent;color:var(--fg);font:700 30px/1 var(--f-disp)}
+.smart-arrow[disabled]{opacity:.2}
+.smart-dots{display:flex;justify-content:center;gap:12px;margin-top:10px}
+.smart-dots button{width:12px;height:12px;padding:0;border-radius:50%;border:1px solid var(--muted);background:transparent}
+.smart-dots button.on{background:var(--pcs);border-color:var(--pcs)}
