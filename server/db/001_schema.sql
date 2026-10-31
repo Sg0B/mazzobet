@@ -15,7 +15,7 @@ insert into mazzobet.teams (id, name) values
   (9,'I Cosacchi'),(10,'Nerito Team'),(11,'Us Postal Service'),(12,'Team Patxi'),
   (13,'Annateresa'),(14,'Team Sbronzi'),(15,'Tubateam'),(16,'Pennello Cinghiale'),
   (17,'Della Rovere Pro Cycling'),(18,'Sanfelice 2023'),(19,'Gli Scalatori'),(20,'Fave Marchisio'),
-  (21,'Mercatone Uno'),(22,'Team Festina con la droga'),(23,'Subaru B. Cycling Team'),(24,'Pianograndecc');
+  (21,'Mercatone Uno'),(22,'Team Festina con la droga'),(23,'Subaru B. Cycling Team'),(24,'PianograndeCC');
 
 create table mazzobet.game_sessions (
   id             uuid primary key default gen_random_uuid(),

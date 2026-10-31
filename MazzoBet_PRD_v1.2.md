@@ -55,7 +55,7 @@ L'app deve reggere anche alcune centinaia di mercati (scenario estremo: circa 50
 21. Mercatone Uno
 22. Team Festina con la droga
 23. Subaru B. Cycling Team
-24. Pianograndecc
+24. PianograndeCC
 
 ### Accesso [APPROVATO]
 
@@ -688,7 +688,7 @@ Prove senza toccare il database vero (`server/tests/pglite/`): `pin.mjs` (36 con
 
 ## Appendice H — Delta v1.1 → v1.2: la corsa simulata «La Teramana» (30 ottobre 2026)
 
-Piano di lavoro e motivazioni: `docs/piano-corsa-simulata.md`. Dati: `server/data/la_teramana_timeline.json` (73 notizie) e `la_teramana_banco.json` (10 scommesse); file originali e documenti di istruzioni in `corsa simulata/`.
+Piano di lavoro e motivazioni: `docs/piano-corsa-simulata.md`. Dati: `server/data/la_teramana_timeline.json` e `la_teramana_banco.json` (dal 31/10/2026: **79 notizie, 17 scommesse, 198 minuti**, vedi H.1 voci 44–49; i numeri 73 notizie / 10 scommesse / 180 minuti nelle voci sotto descrivono la prima edizione); file originali e documenti di istruzioni in `corsa simulata/`.
 
 ### H.1 Modifiche normative
 
@@ -711,8 +711,15 @@ Piano di lavoro e motivazioni: `docs/piano-corsa-simulata.md`. Dati: `server/dat
 39. **Prove rapide solo per i test:** nessun comando di velocità in Regia; i test spostano la partenza nel passato.
 40. **B01 si apre al minuto 26 (1560 s), non al minuto 0** — modifica richiesta dall'utente il 30/10/2026 dopo la prima prova; chiude sempre a 33:30. Cambiata nei due file `la_teramana_banco.json` (cartella `corsa simulata/` e `server/data/`); il documento `La_Teramana_Palinsesto_Banco_MASTER_v1.0.md` non è stato aggiornato.
 41. **Ricarica della definizione (migration 021):** il database la rifiuta solo mentre una corsa è in corso o in pausa; il server la ricarica ogni minuto quando nessuna corsa è in corso, così un file corretto entra dopo un Reset totale senza riavviare.
-43. **Durata della corsa scelta dalla Regia (migration 022):** parametro «Durata della corsa» (da 5 a 180 minuti, default 180 = tempo reale) nella scheda Corsa della Regia, modificabile **solo prima di Avvia corsa**. Al via la velocità diventa 180 / durata (18 minuti = ×10): tempo di gara, aperture, chiusure, liquidazioni e notizie scorrono in proporzione; i conti alla rovescia sono in tempo reale. Sostituisce la scelta iniziale «prove veloci solo per i miei test». Il valore resta anche per le serate successive: la Regia lo evidenzia se non è 180 e va rimesso a 180 per la serata vera. Con la corsa accelerata gli anticipi delle notifiche D (2 min / 1 min di tempo di gara) diventano proporzionalmente più brevi in tempo reale.
+43. **Durata della corsa scelta dalla Regia (migration 022):** parametro «Durata della corsa» (da 5 a 180 minuti, default 180 = tempo reale; dal 31/10 da 5 a 198, default 198: voce 45) nella scheda Corsa della Regia, modificabile **solo prima di Avvia corsa**. Al via la velocità diventa 180 / durata (18 minuti = ×10): tempo di gara, aperture, chiusure, liquidazioni e notizie scorrono in proporzione; i conti alla rovescia sono in tempo reale. Sostituisce la scelta iniziale «prove veloci solo per i miei test». Il valore resta anche per le serate successive: la Regia lo evidenzia se non è 180 e va rimesso a 180 per la serata vera. Con la corsa accelerata gli anticipi delle notifiche D (2 min / 1 min di tempo di gara) diventano proporzionalmente più brevi in tempo reale.
 42. **Scheda della scommessa della corsa:** tolta la scritta «Il Banco paga sempre». **TV:** ogni notizia nuova riporta lo schermo sulla scena della corsa per un giro.
+
+44. **Edizione a 198 minuti (31/10/2026):** timeline v1.3 (79 notizie, partenza manuale, arrivo a +198:00) e palinsesto a **17 scommesse** (B01–B17). Le aperture/chiusure sono quelle del palinsesto (finestre di 5 minuti; B08–B10: 3 minuti, apertura +194:20, chiusura +197:20, liquidazione +198:00). I due documenti Markdown si convertono nei JSON con `node server/tools/importa-md.mjs`, che esegue gli stessi controlli di `buildRace`.
+45. **Durata normale 198 minuti (migration 024):** il parametro «Durata della corsa» va da 5 a 198 (198 = tempo reale, velocità ×1); un vecchio 180 salvato diventa 198. Velocità = 11880 / (durata × 60).
+46. **Due ritocchi editoriali approvati dall'utente:** B16 diventa «Verranno avvistati di nuovo maiali tra i tifosi entro il km 85?» (SÌ alla notizia delle 122:00, perché la risposta alla domanda originale era già nella notizia delle 106:50); nella notizia delle 196:00 «Una decina di ragazzi» diventa «Cinque ragazzi» (numeri coerenti con «gli altri tre»). **B14** si liquida alla prima notizia oltre il km 90 (131:28, km 91) invece che a +135:00, che non corrispondeva a nessuna notizia.
+47. **Smart Bet:** nel tab Corsa, sopra la cronaca, un carosello con una scommessa del Banco aperta per volta (swipe, frecce, pallini, tagli 50/100/250/ALL-IN, un solo tocco di conferma, nessun autoplay). Home resta con la vista classica; il tab Scommesse non mostra più le schede del Banco aperte, solo lo storico delle puntate. La categoria della scommessa arriva ai telefoni con lo stato (migration 024).
+48. **Km e velocità media continui:** avanzano col tempo di gara anche senza notizie, interpolando una traiettoria provvisoria generata dalle notizie (`web/src/lib/raceTrack.ts`); da sostituire con il file del gruppo (CSV) e il GPX quando disponibili. Una notizia retrospettiva (TV Val Vomano) non fa mai tornare indietro i km.
+49. **Nome squadra:** «PianograndeCC» (prima «Pianograndecc»), in database (migration 025), nelle notizie e nei documenti.
 
 ### H.3 Stato e ancora aperto (30/10/2026)
 

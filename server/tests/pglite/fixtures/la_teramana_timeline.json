@@ -85,7 +85,7 @@
       "km_approximate": false,
       "block": 1,
       "type": "RACE UPDATE",
-      "text": "Pennello Cinghiale, I Cosacchi, Pianograndecc e Team Festina con la droga nel gruppo inseguitore."
+      "text": "Pennello Cinghiale, I Cosacchi, PianograndeCC e Team Festina con la droga nel gruppo inseguitore."
     },
     {
       "id": "PCS008",
@@ -140,7 +140,7 @@
       "km_approximate": false,
       "block": 2,
       "type": "ATTACK",
-      "text": "Pianograndecc e I Cosacchi attaccano. I due passisti guadagnano rapidamente terreno."
+      "text": "PianograndeCC e I Cosacchi attaccano. I due passisti guadagnano rapidamente terreno."
     },
     {
       "id": "PCS013",
@@ -151,7 +151,7 @@
       "km_approximate": false,
       "block": 2,
       "type": "RACE UPDATE",
-      "text": "Pianograndecc e I Cosacchi al comando. Vantaggio di 35″ sul gruppo."
+      "text": "PianograndeCC e I Cosacchi al comando. Vantaggio di 35″ sul gruppo."
     },
     {
       "id": "PCS014",
@@ -184,7 +184,7 @@
       "km_approximate": false,
       "block": 2,
       "type": "RESULT",
-      "text": "TV Civitella del Tronto: 1. I Cosacchi; 2. Pianograndecc. I due battistrada proseguono dopo un breve confronto. Gruppo a 1′05″."
+      "text": "TV Civitella del Tronto: 1. I Cosacchi; 2. PianograndeCC. I due battistrada proseguono dopo un breve confronto. Gruppo a 1′05″."
     },
     {
       "id": "PCS017",
@@ -195,7 +195,7 @@
       "km_approximate": false,
       "block": 3,
       "type": "RACE UPDATE",
-      "text": "Pianograndecc e I Cosacchi portano il vantaggio sul gruppo a 1′25″, massimo distacco registrato finora."
+      "text": "PianograndeCC e I Cosacchi portano il vantaggio sul gruppo a 1′25″, massimo distacco registrato finora."
     },
     {
       "id": "PCS018",
@@ -305,7 +305,7 @@
       "km_approximate": false,
       "block": 3,
       "type": "RACE UPDATE",
-      "text": "Situazione: Pianograndecc e I Cosacchi al comando; VeloClub Mosciano e Mercatone Uno a +24″; gruppo principale (18) a +1′02″. Fave Marchisio raggiunge Annateresa, a circa 38″ dal gruppo principale."
+      "text": "Situazione: PianograndeCC e I Cosacchi al comando; VeloClub Mosciano e Mercatone Uno a +24″; gruppo principale (18) a +1′02″. Fave Marchisio raggiunge Annateresa, a circa 38″ dal gruppo principale."
     },
     {
       "id": "PCS028",
@@ -338,7 +338,7 @@
       "km_approximate": false,
       "block": 4,
       "type": "RACE UPDATE",
-      "text": "VeloClub Mosciano e Mercatone Uno riducono il distacco dai battistrada. Pianograndecc e I Cosacchi conservano un vantaggio minimo."
+      "text": "VeloClub Mosciano e Mercatone Uno riducono il distacco dai battistrada. PianograndeCC e I Cosacchi conservano un vantaggio minimo."
     },
     {
       "id": "PCS031",
@@ -349,7 +349,7 @@
       "km_approximate": false,
       "block": 4,
       "type": "RACE UPDATE",
-      "text": "Ricongiungimento in testa. VeloClub Mosciano e Mercatone Uno raggiungono Pianograndecc e I Cosacchi. Quattro corridori al comando."
+      "text": "Ricongiungimento in testa. VeloClub Mosciano e Mercatone Uno raggiungono PianograndeCC e I Cosacchi. Quattro corridori al comando."
     },
     {
       "id": "PCS032",
@@ -371,7 +371,7 @@
       "km_approximate": false,
       "block": 4,
       "type": "RESULT",
-      "text": "GPM Castellalto: 1. VeloClub Mosciano; 2. Pianograndecc (+2″); 3. Mercatone Uno (+4″); 4. I Cosacchi (+6″). Gruppo principale a +1′08″."
+      "text": "GPM Castellalto: 1. VeloClub Mosciano; 2. PianograndeCC (+2″); 3. Mercatone Uno (+4″); 4. I Cosacchi (+6″). Gruppo principale a +1′08″."
     },
     {
       "id": "PCS034",
@@ -404,7 +404,7 @@
       "km_approximate": false,
       "block": 4,
       "type": "RACE UPDATE",
-      "text": "Fuga ripresa. Il gruppo raggiunge Pianograndecc, I Cosacchi, VeloClub Mosciano e Mercatone Uno. Restano attardati Fave Marchisio e Annateresa."
+      "text": "Fuga ripresa. Il gruppo raggiunge PianograndeCC, I Cosacchi, VeloClub Mosciano e Mercatone Uno. Restano attardati Fave Marchisio e Annateresa."
     },
     {
       "id": "PCS037",
@@ -569,7 +569,7 @@
       "km_approximate": false,
       "block": 6,
       "type": "RACE UPDATE",
-      "text": "Annateresa e Pianograndecc contribuiscono a mantenere elevata l’andatura del gruppo di testa. Il vantaggio sugli inseguitori sale a 1′48″."
+      "text": "Annateresa e PianograndeCC contribuiscono a mantenere elevata l’andatura del gruppo di testa. Il vantaggio sugli inseguitori sale a 1′48″."
     },
     {
       "id": "PCS052",
@@ -701,7 +701,7 @@
       "km_approximate": false,
       "block": 7,
       "type": "RACE UPDATE",
-      "text": "Sei corridori al comando: Subaru B. Cycling Team, Team Patxi, Pennello Cinghiale, Pianograndecc, Annateresa e Sanfelice 2023."
+      "text": "Sei corridori al comando: Subaru B. Cycling Team, Team Patxi, Pennello Cinghiale, PianograndeCC, Annateresa e Sanfelice 2023."
     },
     {
       "id": "PCS064",
@@ -745,7 +745,7 @@
       "km_approximate": false,
       "block": 7,
       "type": "ATTACK",
-      "text": "Pianograndecc accelera verso Pianogrande. Pennello Cinghiale e Sanfelice 2023 seguono. Gli altri tre perdono qualche metro."
+      "text": "PianograndeCC accelera verso Pianogrande. Pennello Cinghiale e Sanfelice 2023 seguono. Gli altri tre perdono qualche metro."
     },
     {
       "id": "PCS068",
@@ -756,7 +756,7 @@
       "km_approximate": false,
       "block": 7,
       "type": "RACE UPDATE",
-      "text": "Pianograndecc attraversa Pianogrande in testa, seguito da Pennello Cinghiale e Sanfelice 2023. I tre procedono ad alta velocità, con 5–6 metri di vantaggio sugli inseguitori. Tifosi e bandiere lungo la strada."
+      "text": "PianograndeCC attraversa Pianogrande in testa, seguito da Pennello Cinghiale e Sanfelice 2023. I tre procedono ad alta velocità, con 5–6 metri di vantaggio sugli inseguitori. Tifosi e bandiere lungo la strada."
     },
     {
       "id": "PCS069",
@@ -767,7 +767,7 @@
       "km_approximate": false,
       "block": 7,
       "type": "RACE UPDATE",
-      "text": "Pianograndecc guida ancora il terzetto. Pennello Cinghiale e Sanfelice 2023 restano a ruota. Subaru, Patxi e Annateresa inseguono a pochi metri."
+      "text": "PianograndeCC guida ancora il terzetto. Pennello Cinghiale e Sanfelice 2023 restano a ruota. Subaru, Patxi e Annateresa inseguono a pochi metri."
     },
     {
       "id": "PCS070",
@@ -778,7 +778,7 @@
       "km_approximate": true,
       "block": 7,
       "type": "ATTACK",
-      "text": "Pennello Cinghiale attacca sullo strappetto finale di 150 m, supera Pianograndecc e guadagna circa 10 metri. Sanfelice 2023 prova a rispondere."
+      "text": "Pennello Cinghiale attacca sullo strappetto finale di 150 m, supera PianograndeCC e guadagna circa 10 metri. Sanfelice 2023 prova a rispondere."
     },
     {
       "id": "PCS071",

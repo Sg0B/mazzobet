@@ -191,7 +191,7 @@ const pay=(amt,qc)=>Math.floor(amt*qc/100);
 const ago=t=>{const m=Math.max(0,Math.floor((now()-t)/MIN));return m<1?'adesso':m+' min fa'};
 const joinNames=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' e '+a[a.length-1];
 
-const TEAMS=["Parallelo24","Saunier Duval","Team Sbornia Cycling","VeloClub Mosciano","Team Pomanti","S.C. Colleranesco","Rabobank","Vini la vespa e l’uva","I Cosacchi","Nerito Team","Us Postal Service","Team Patxi","Annateresa","Team Sbronzi","Tubateam","Pennello Cinghiale","Della Rovere Pro Cycling","Sanfelice 2023","Gli Scalatori","Fave Marchisio","Mercatone Uno","Team Festina con la droga","Subaru B. Cycling Team","Pianograndecc"];
+const TEAMS=["Parallelo24","Saunier Duval","Team Sbornia Cycling","VeloClub Mosciano","Team Pomanti","S.C. Colleranesco","Rabobank","Vini la vespa e l’uva","I Cosacchi","Nerito Team","Us Postal Service","Team Patxi","Annateresa","Team Sbronzi","Tubateam","Pennello Cinghiale","Della Rovere Pro Cycling","Sanfelice 2023","Gli Scalatori","Fave Marchisio","Mercatone Uno","Team Festina con la droga","Subaru B. Cycling Team","PianograndeCC"];
 const NOT_IN=new Set([2,9,13,18,21,23]);
 const SEED_BAL=[1180,640,1520,310,880,720,1060,455,2140,590,380,970,260,1330,150,810,670,1240,520,990,445,730,1610,205];
 
@@ -204,7 +204,7 @@ const S={
     {id:42,text:'Il Banco colpisce I Cosacchi al prossimo intervento?',by:'Annateresa',yes:450,no:120,kind:'live',exp:t0+14*MIN+20000,py:120,pn:90,status:'open',my:null},
     {id:43,text:'Qualcuno ordina il tiramisù prima delle 22:30?',by:'Gli Scalatori',yes:145,no:260,kind:'due',exp:t0+85*MIN,py:0,pn:0,status:'open',my:null},
     {id:44,text:'Bila si alza per un discorso entro 20 minuti?',by:'Mercatone Uno',yes:310,no:130,kind:'live',exp:t0+9*MIN+40000,py:60,pn:410,status:'open',my:null},
-    {id:40,text:'Il primo piatto arriva freddo al tavolo 3?',by:'Pianograndecc',yes:220,no:165,kind:'live',exp:t0-2*MIN,py:200,pn:260,status:'closed',deadline:t0+13*MIN,my:null}
+    {id:40,text:'Il primo piatto arriva freddo al tavolo 3?',by:'PianograndeCC',yes:220,no:165,kind:'live',exp:t0-2*MIN,py:200,pn:260,status:'closed',deadline:t0+13*MIN,my:null}
   ],
   news:[
     {t:t0-3*MIN,kind:'bonus',title:'RIFORNIMENTO VOLANTE',text:'I Cosacchi trova una borraccia piena di Carletti. Il Banco ne certifica il contenuto: 150.'},

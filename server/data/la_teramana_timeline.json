@@ -448,7 +448,7 @@
       "km_approximate": false,
       "block": 4,
       "type": "RACE UPDATE",
-      "text": "Fuga ripresa. Il gruppo raggiunge Pianograndecc, I Cosacchi, VeloClub Mosciano e Mercatone Uno. Restano attardati Fave Marchisio e Annateresa."
+      "text": "Fuga ripresa. Il gruppo raggiunge PianograndeCC, I Cosacchi, VeloClub Mosciano e Mercatone Uno. Restano attardati Fave Marchisio e Annateresa."
     },
     {
       "id": "PCS041",
@@ -613,7 +613,7 @@
       "km_approximate": false,
       "block": 6,
       "type": "RACE UPDATE",
-      "text": "Annateresa e Pianograndecc contribuiscono a mantenere elevata l’andatura del gruppo di testa. Il vantaggio sugli inseguitori sale a 1′48″."
+      "text": "Annateresa e PianograndeCC contribuiscono a mantenere elevata l’andatura del gruppo di testa. Il vantaggio sugli inseguitori sale a 1′48″."
     },
     {
       "id": "PCS056",
@@ -745,7 +745,7 @@
       "km_approximate": false,
       "block": 7,
       "type": "RACE UPDATE",
-      "text": "Sei corridori al comando: Subaru B. Cycling Team, Team Patxi, Pennello Cinghiale, Pianograndecc, Annateresa e Sanfelice 2023."
+      "text": "Sei corridori al comando: Subaru B. Cycling Team, Team Patxi, Pennello Cinghiale, PianograndeCC, Annateresa e Sanfelice 2023."
     },
     {
       "id": "PCS068",
@@ -800,7 +800,7 @@
       "km_approximate": false,
       "block": 7,
       "type": "ATTACK",
-      "text": "Dopo Villa Tordinia Pianograndecc accelera verso Pianogrande. Pennello Cinghiale e Sanfelice 2023 seguono. Gli altri tre perdono qualche metro."
+      "text": "Dopo Villa Tordinia PianograndeCC accelera verso Pianogrande. Pennello Cinghiale e Sanfelice 2023 seguono. Gli altri tre perdono qualche metro."
     },
     {
       "id": "PCS073",
@@ -822,7 +822,7 @@
       "km_approximate": false,
       "block": 7,
       "type": "RACE UPDATE",
-      "text": "Pianograndecc attraversa Pianogrande in testa, seguito da Pennello Cinghiale e Sanfelice 2023. I tre procedono ad alta velocità, con 5–6 metri di vantaggio sugli inseguitori. Tifosi e bandiere lungo la strada."
+      "text": "PianograndeCC attraversa Pianogrande in testa, seguito da Pennello Cinghiale e Sanfelice 2023. I tre procedono ad alta velocità, con 5–6 metri di vantaggio sugli inseguitori. Tifosi e bandiere lungo la strada."
     },
     {
       "id": "PCS075",
@@ -833,7 +833,7 @@
       "km_approximate": false,
       "block": 7,
       "type": "RACE UPDATE",
-      "text": "Si entra a Torricella Sicura, curva a sinistra e discesa in via Forcella, Pianograndecc guida ancora il terzetto. Pennello Cinghiale e Sanfelice 2023 restano a ruota. Subaru, Patxi e Annateresa inseguono a pochi metri."
+      "text": "Si entra a Torricella Sicura, curva a sinistra e discesa in via Forcella, PianograndeCC guida ancora il terzetto. Pennello Cinghiale e Sanfelice 2023 restano a ruota. Subaru, Patxi e Annateresa inseguono a pochi metri."
     },
     {
       "id": "PCS076",
@@ -844,7 +844,7 @@
       "km_approximate": true,
       "block": 7,
       "type": "ATTACK",
-      "text": "Pennello Cinghiale attacca sullo strappo finale di 150 m, supera Pianograndecc e guadagna circa 10 metri. Sanfelice 2023 prova a rispondere."
+      "text": "Pennello Cinghiale attacca sullo strappo finale di 150 m, supera PianograndeCC e guadagna circa 10 metri. Sanfelice 2023 prova a rispondere."
     },
     {
       "id": "PCS077",
@@ -855,7 +855,7 @@
       "km_approximate": true,
       "block": 7,
       "type": "RACE UPDATE",
-      "text": "Pennello Cinghiale transita davanti al Bar dello Sport con circa 10 metri di vantaggio. Sanfelice 2023 insegue insieme a Pianograndecc."
+      "text": "Pennello Cinghiale transita davanti al Bar dello Sport con circa 10 metri di vantaggio. Sanfelice 2023 insegue insieme a PianograndeCC."
     },
     {
       "id": "PCS078",
@@ -877,7 +877,7 @@
       "km_approximate": false,
       "block": 7,
       "type": "RESULT",
-      "text": "PENNELLO CINGHIALE VINCE LA 58° TERAMANA! Arrivo in solitaria davanti al Municipio. Braccia al cielo, circa 10 metri di vantaggio. 2. Sanfelice 2023 (+2\") 3. Pianograndecc (+3\")"
+      "text": "PENNELLO CINGHIALE VINCE LA 58° TERAMANA! Arrivo in solitaria davanti al Municipio. Braccia al cielo, circa 10 metri di vantaggio. 2. Sanfelice 2023 (+2\") 3. PianograndeCC (+3\")"
     }
   ]
 }
