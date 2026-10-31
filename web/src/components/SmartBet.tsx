@@ -105,12 +105,12 @@ export function SmartBet() {
                     <div className="smart-bal">Saldo disponibile <b className="num">{cur(s.balance)}</b></div>
                     <div className="chips">
                       {CUTS.map((v) => (
-                        <button key={v} className={`chip${p.cut === v ? ' on' : ''}`} disabled={lock || v > s.balance || v < min} onClick={() => setPick(m.id, { cut: v })}>₡{v}</button>
+                        <button key={v} className={`chip${p.cut === v ? ' on' : ''}`} disabled={lock || v > s.balance || v < min} onClick={() => setPick(m.id, { cut: v })}>{v}</button>
                       ))}
                       <button className={`chip${p.cut === ALL_IN ? ' on' : ''}`} disabled={lock || s.balance < min} onClick={() => setPick(m.id, { cut: ALL_IN })}>ALL-IN</button>
                     </div>
                     {ready && <p className="smart-sum">{cur(amount)} su {p.side === 'yes' ? 'SÌ' : 'NO'} @ {odds(cents)} · incasso potenziale <b>{cur(payout(amount, cents))}</b></p>}
-                    <p className="err" role="alert">{err[m.id] ?? ''}</p>
+                    {err[m.id] && <p className="err" role="alert">{err[m.id]}</p>}
                     <button className="cta sm" disabled={lock || !ready || busy} onClick={() => p.side && confirm(m, p.side, amount)}>CONFERMA PUNTATA</button>
                     {paused && <p className="note">La corsa è sospesa: le puntate sono ferme.</p>}
                     {bankrupt && <p className="note">Puntate sospese finché sei in bancarotta.</p>}

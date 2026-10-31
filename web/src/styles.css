@@ -374,3 +374,17 @@ textarea{resize:none;min-height:76px}
 .smart-dots{display:flex;justify-content:center;gap:12px;margin-top:10px}
 .smart-dots button{width:12px;height:12px;padding:0;border-radius:50%;border:1px solid var(--muted);background:transparent}
 .smart-dots button.on{background:var(--pcs);border-color:var(--pcs)}
+
+/* Smart Bet compatta: quote basse, importi su una riga sola, conferma bassa */
+.smart-card{padding:12px}
+.smart-card .odds{margin-top:8px;gap:6px}
+.smart-card .odd{min-height:40px;padding:0 12px}
+.smart-card .odd .lbl{font-size:15px}
+.smart-card .odd .q{font-size:23px}
+.smart-bal{margin-top:8px;font-size:13px}
+.smart-card .chips{flex-wrap:nowrap;gap:6px;margin-top:6px}
+.smart-card .chip{flex:1 1 0;min-width:0;min-height:36px;padding:0 4px;justify-content:center;font-size:14px}
+.smart-sum{margin:6px 0 0;font-size:13px}
+.smart-card .err{min-height:0;margin:4px 0 0}
+.smart-card .cta{min-height:40px;height:40px;margin-top:8px;padding:0;font-size:16px}
+.smart-card .note{margin:6px 0 0}
