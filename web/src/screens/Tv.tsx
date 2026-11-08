@@ -387,7 +387,7 @@ function Banco({ data }: { data: Tv }) {
   return (
     <section className="tv-scene">
       <h1>Il Banco</h1>
-      {!b.open && <p className="tv-note big">Il Banco non è ancora aperto: bonus, malus e sponsor arriveranno a breve.</p>}
+      {!b.open && !b.events?.length && <p className="tv-note big">Il Banco non è ancora aperto: bonus, malus e sponsor arriveranno a breve.</p>}
       <div className="tv-bank">
         <div><span>Cassa del Banco</span><b className="num">{fmt(b.cash)}</b><small>indicativo</small></div>
         <div><span>In gioco ora</span><b className="num">{fmt(b.inPlay)}</b><small>Carletti puntati</small></div>

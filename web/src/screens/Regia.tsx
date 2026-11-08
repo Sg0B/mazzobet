@@ -252,14 +252,14 @@ function Banco({ st, act, busy }: P) {
   return (
     <>
       <div className="tbl" style={{ padding: 14 }}>
-        <div className="rrow"><span>Banco</span><b>{!st.bankOpen ? 'non ancora aperto' : paused ? 'in pausa' : 'in servizio'}</b></div>
-        <div className="rrow"><span>Apre alle</span><b>{new Date(st.bankStart).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}</b></div>
+        <div className="rrow"><span>Banco</span><b>{paused ? 'in pausa' : st.session?.bankNextAt ? 'in servizio' : st.bankOpen ? 'in attesa di 5 squadre' : 'non ancora aperto'}</b></div>
+        <div className="rrow"><span>Sponsor e serata dalle</span><b>{new Date(st.bankStart).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}</b></div>
         <div className="rrow"><span>Prossimo intervento</span><b>{when(st.session?.bankNextAt ?? null)}</b></div>
         <div className="rrow"><span>Prossimo sponsor</span><b>{when(st.session?.sponsorNextAt ?? null)}</b></div>
       </div>
-      <p className="note">Prima dell'apertura non partono Banco, bonus, malus, sponsor e piogge. La colletta per bancarotta e la riammissione funzionano sempre.</p>
-      <button className="cta sm" disabled={busy || !st.session} onClick={() => void act('bank-now', {}, 'Banco avviato.', 'Avviare il Banco adesso?')}>AVVIA BANCO ADESSO</button>
-      <label htmlFor="rat">Orario di apertura (ora del tuo telefono)</label>
+      <p className="note">Il Banco segue le sue fasi (tranquillo dal 10/11, imbizzarrito dal 13/11 alle 15, serata dalle 20): nelle fasi prima della serata interviene più di rado, con importi più bassi, e di notte (01–09) dorme. Sponsor e piogge partono solo dall'orario qui sotto. La colletta per bancarotta e la riammissione funzionano sempre.</p>
+      <button className="cta sm" disabled={busy || !st.session} onClick={() => void act('bank-now', {}, 'Serata avviata.', 'Avviare adesso sponsor e piogge?')}>AVVIA SERATA ADESSO</button>
+      <label htmlFor="rat">Orario di sponsor e serata (ora del tuo telefono)</label>
       <input id="rat" type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} />
       <button className="ghost" disabled={busy || !at} onClick={() => void act('bank-start', { at: new Date(at).toISOString() }, 'Orario aggiornato.')}>Imposta orario</button>
       <div className="btns" style={{ marginTop: 12 }}>
