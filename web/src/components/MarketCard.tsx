@@ -1,6 +1,6 @@
-import { cur, hhmm, odds, mmss, MIN } from '../lib/format'
+import { closesAt, cur, odds, mmss, MIN } from '../lib/format'
 import { payout } from '../lib/rules'
-import { isMine, raceElapsed, useGame, type Market, type Side } from '../store/game'
+import { isMine, raceElapsed, serverNow, useGame, type Market, type Side } from '../store/game'
 import { Countdown } from './Countdown'
 import { PcsLogo } from './PcsLogo'
 
@@ -45,7 +45,7 @@ export function MarketCard({ m, onBet }: { m: Market; onBet: (id: number, side: 
       {race ? (
         <div className="by">Corsa simulata · scommessa {race.id}</div>
       ) : (
-        <div className="by">Scommessa n. {m.num} · di {m.by}<br />Chiude alle {hhmm(m.expiresAt)}</div>
+        <div className="by">Scommessa n. {m.num} · di {m.by}<br />Chiude {closesAt(m.expiresAt, serverNow())}</div>
       )}
       <div className="odds">
         {odd('yes', 'SÌ', m.yes)}

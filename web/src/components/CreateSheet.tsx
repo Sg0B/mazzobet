@@ -1,16 +1,29 @@
 import { useRef, useState } from 'react'
 import { maxOtherOdds, oddsMarginOk, parseOdds } from '../lib/rules'
-import { MIN, cur } from '../lib/format'
+import { MIN, closesAt, cur } from '../lib/format'
 import { actions, serverNow, useGame } from '../store/game'
 import { Sheet } from './Sheet'
 
 type Close = '20' | '30' | '60' | '120' | 'time'
+const pad = (n: number) => String(n).padStart(2, '0')
+/** Valore per <input type="datetime-local"> nell'ora locale: «2026-11-13T18:00». */
+const localInput = (t: number) => {
+  const d = new Date(t)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+/** Proposta iniziale: fra un'ora, all'ora piena. */
+const defaultWhen = () => {
+  const d = new Date(serverNow() + 60 * MIN)
+  d.setMinutes(0, 0, 0)
+  return localInput(d.getTime() + 60 * MIN)
+}
+
 const CHOICES: { id: Close; label: string }[] = [
   { id: '20', label: 'LIVE 20 MIN' },
   { id: '30', label: '+30 min' },
   { id: '60', label: '+1 h' },
   { id: '120', label: '+2 h' },
-  { id: 'time', label: 'Orario' },
+  { id: 'time', label: 'Data e ora' },
 ]
 
 export function CreateSheet({ onClose }: { onClose: () => void }) {
@@ -20,7 +33,7 @@ export function CreateSheet({ onClose }: { onClose: () => void }) {
   const [yes, setYes] = useState('1,90')
   const [no, setNo] = useState('1,90')
   const [close, setClose] = useState<Close>('20')
-  const [time, setTime] = useState('')
+  const [time, setTime] = useState(defaultWhen)
   const [error, setError] = useState('')
   const attempt = useRef(crypto.randomUUID()) // stessa chiave a ogni retry: mai due scommesse
   const [busy, setBusy] = useState(false)
@@ -48,15 +61,11 @@ export function CreateSheet({ onClose }: { onClose: () => void }) {
     const now = serverNow()
     let expiresAt: number
     if (close === 'time') {
-      if (!time) return setError('Scegli un orario di chiusura.')
-      const [h, mi] = time.split(':').map(Number)
-      const d = new Date()
-      d.setHours(h, mi, 0, 0)
-      if (d.getTime() <= now) d.setDate(d.getDate() + 1)
-      expiresAt = d.getTime()
+      const t = time ? new Date(time).getTime() : NaN // «AAAA-MM-GGTHH:MM» senza fuso = ora locale
+      if (isNaN(t)) return setError('Scegli giorno e ora di chiusura.')
+      expiresAt = t
     } else expiresAt = now + Number(close) * MIN
     if (expiresAt - now < MIN) return setError('Scegli un orario più avanti.')
-    if (s.endsAt && expiresAt > s.endsAt) return setError('Oltre le 03:00 non si può.')
     setBusy(true)
     const r = await actions.createMarket({ text: q, yes: y, no: n, expiresAt, key: attempt.current })
     setBusy(false)
@@ -101,8 +110,9 @@ export function CreateSheet({ onClose }: { onClose: () => void }) {
       </div>
       {close === 'time' && (
         <>
-          <label htmlFor="ctime">Orario di chiusura (entro le 03:00)</label>
-          <input id="ctime" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+          <label htmlFor="ctime">Giorno e ora di chiusura</label>
+          <input id="ctime" type="datetime-local" min={localInput(serverNow())} value={time} onChange={(e) => { setTime(e.target.value); setError('') }} />
+          {!isNaN(new Date(time).getTime()) && <p className="note">Si punta fino a {closesAt(new Date(time).getTime(), serverNow()).replace(/^alle /, 'oggi alle ')}, poi si esita.</p>}
         </>
       )}
       <p className="note">

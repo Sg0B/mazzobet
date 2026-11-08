@@ -181,7 +181,7 @@ export function Regia() {
     <div id="app" className="regia">
       <div className="top"><div className="logo">BANCO DI REGIA</div></div>
       <p className="note">
-        {s ? <>Serata <b>{s.name}</b> · {s.status === 'active' ? 'attiva' : s.status === 'paused' ? 'in pausa' : s.status} · fine alle {when(s.endsAt)}</> : <b>Nessuna serata attiva.</b>}
+        {s ? <>Serata <b>{s.name}</b> · {s.status === 'active' ? 'attiva' : s.status === 'paused' ? 'in pausa' : s.status}</> : <b>Nessuna serata attiva.</b>}
         {' '}<button className="sm" style={{ textDecoration: 'underline' }} onClick={() => { setCode(null); setCodeState(''); setSt(null) }}>Esci</button>
       </p>
       <div className="rkchips" role="tablist">

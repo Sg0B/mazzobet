@@ -17,12 +17,26 @@ export const mmss = (ms: number) => {
   const h = Math.floor(s / 3600)
   const m = Math.floor((s % 3600) / 60)
   const sec = s % 60
+  if (h >= 24) return `${Math.floor(h / 24)}g ${h % 24}h ${pad(m)}m` // scommesse di più giorni
   return h ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`
 }
 
 export const hhmm = (t: number) => {
   const d = new Date(t)
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+const GIORNI = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato']
+
+/** Scadenza leggibile: «alle 18:00» se è oggi, «domani alle 18:00», altrimenti «venerdì 13 alle 18:00». */
+export const closesAt = (t: number, now: number) => {
+  const d = new Date(t)
+  const day = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
+  const diff = Math.round((day(d) - day(new Date(now))) / 86_400_000)
+  const ora = `alle ${hhmm(t)}`
+  if (diff === 0) return ora
+  if (diff === 1) return `domani ${ora}`
+  return `${GIORNI[d.getDay()]} ${d.getDate()}${diff > 6 ? '/' + (d.getMonth() + 1) : ''} ${ora}`
 }
 
 export const ago = (t: number, now: number) => {
