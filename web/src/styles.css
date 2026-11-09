@@ -13,7 +13,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
 button[disabled]{cursor:not-allowed}
 h1,h2,h3,p{margin:0}
-#app{max-width:480px;margin:0 auto;padding-block:12px 120px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{max-width:480px;margin:0 auto;padding-block:max(12px,env(safe-area-inset-top,0px)) 120px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .num{font-variant-numeric:tabular-nums}
 
 /* header */
@@ -157,7 +157,7 @@ textarea{resize:none;min-height:76px}
 .maxhint{display:block;background:none;border:0;padding:6px 2px;min-height:32px;font-size:12px;letter-spacing:.04em;color:var(--muted);opacity:.8;cursor:pointer}
 .maxhint.bad{color:var(--bad);opacity:1}
 .err{color:var(--bad);font-size:13px;min-height:18px;margin-top:8px}
-#must{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;justify-content:center;gap:14px;padding:24px max(20px,env(safe-area-inset-right,0px)) 24px max(20px,env(safe-area-inset-left,0px))}
+#must{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;justify-content:center;gap:14px;padding:max(24px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) 24px max(20px,env(safe-area-inset-left,0px))}
 #must .box{max-width:480px;width:100%;margin:0 auto}
 #must h2{font:800 40px/1 var(--f-disp);color:var(--lime);letter-spacing:.04em}
 #must p.q{font:600 22px/1.25 var(--f-body);margin-top:14px;text-wrap:balance}
