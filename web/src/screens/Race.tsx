@@ -6,7 +6,6 @@ import { kmAt } from '../lib/raceKm'
 import { SmartBet } from '../components/SmartBet'
 
 const TOTAL_LABEL: Record<string, string> = {
-  not_started: 'Non ancora partita',
   running: 'In diretta',
   paused: 'Corsa sospesa',
   finished: 'Corsa conclusa',
@@ -69,6 +68,21 @@ function Marked({ text, names, me }: { text: string; names: string[]; me: string
   )
 }
 
+/** Prima del via: niente contatori a zero, solo l'attesa. */
+function ComingSoon({ name, edition, km }: { name?: string; edition?: number; km?: number }) {
+  return (
+    <div className="racepage">
+      <div className="top"><PcsLogo /></div>
+      <div className="soon">
+        <span className="soon-k"><i aria-hidden="true" />Prossimamente</span>
+        <h1>COMING<br />SOON</h1>
+        {name && <p className="soon-race">{name}{edition ? ` · ${edition}ª edizione` : ''}{km ? ` · ${kmFmt(km)} km` : ''}</p>}
+        <p className="soon-note">Venerdì 13 novembre la corsa in diretta: cronaca, distacchi e scommesse del Banco, notizia dopo notizia.</p>
+      </div>
+    </div>
+  )
+}
+
 export function Race() {
   const s = useGame()
   const [teams, setTeams] = useState<string[]>([])
@@ -84,18 +98,11 @@ export function Race() {
   }, [])
 
   const r = s.race
-  if (!r) {
-    return (
-      <>
-        <div className="top"><PcsLogo /></div>
-        <p className="empty">La corsa di questa serata non è ancora stata preparata.</p>
-      </>
-    )
-  }
+  if (!r || r.status === 'not_started') return <ComingSoon name={r?.name} edition={r?.edition} km={r?.distanceKm} />
 
   const elapsed = raceElapsed(r, s.now)
   // i km avanzano col tempo di gara del server, anche senza notizie nuove; all'arrivo 0 km mancanti
-  const done = r.status === 'not_started' ? 0 : r.status === 'finished' ? r.distanceKm : Math.min(r.distanceKm, kmAt(elapsed))
+  const done = r.status === 'finished' ? r.distanceKm : Math.min(r.distanceKm, kmAt(elapsed))
   const left = Math.max(0, r.distanceKm - done)
   const avg = avgSpeed(done, elapsed)
   const mine = s.markets.filter((m) => m.race && m.my && (m.status === 'open' || m.status === 'closed'))
@@ -110,7 +117,7 @@ export function Race() {
 
       <div className="rhead" aria-label="Situazione di gara">
         <div><span className="v num">{kmFmt(left)}</span><span className="l">km mancanti</span></div>
-        <div><span className="v num">{r.status === 'not_started' ? '0:00:00' : raceTime(elapsed)}</span><span className="l">tempo di gara</span></div>
+        <div><span className="v num">{raceTime(elapsed)}</span><span className="l">tempo di gara</span></div>
         <div><span className="v num">{avg ? avg.toFixed(1).replace('.', ',') : '—'}</span><span className="l">km/h media</span></div>
       </div>
       {r.speed > 1 && <p className="rnote">Prova accelerata ×{Math.round(r.speed * 10) / 10}: la corsa dura meno di 3 ore.</p>}
@@ -122,7 +129,7 @@ export function Race() {
 
       <h2 className="sec rsec">Cronaca live</h2>
       {s.raceFeed.length === 0 ? (
-        <p className="empty">{r.status === 'not_started' ? 'La corsa non è ancora partita. Le notizie compariranno qui.' : 'In attesa della prima notizia.'}</p>
+        <p className="empty">In attesa della prima notizia.</p>
       ) : (
         <ol className="rfeed">
           {s.raceFeed.map((e) => (

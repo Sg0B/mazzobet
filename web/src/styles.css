@@ -305,6 +305,14 @@ textarea{resize:none;min-height:76px}
 .rhead div+div{border-left:1px solid var(--line)}
 .rhead .v{display:block;font:800 28px/1 var(--f-disp)}
 .rhead .l{display:block;font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:.04em}
+.soon{text-align:center;padding:56px 8px 24px}
+.soon-k{display:inline-flex;align-items:center;gap:8px;font:700 12px/1 var(--f-disp);letter-spacing:.16em;text-transform:uppercase;color:var(--pcs);border:1px solid var(--pcs);border-radius:99px;padding:7px 12px}
+.soon-k i{width:8px;height:8px;border-radius:50%;background:var(--pcs);animation:soonPulse 1.6s ease-in-out infinite}
+.soon h1{font:800 64px/.92 var(--f-disp);letter-spacing:.02em;margin:22px 0 14px}
+.soon-race{font-weight:600}
+.soon-note{color:var(--muted);font-size:14px;max-width:30ch;margin:10px auto 0;line-height:1.45}
+@keyframes soonPulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.soon-k i{animation:none}}
 .rnote{margin-top:10px;font-size:13px;color:var(--warn)}
 .rnote.ok{color:var(--muted)}
 .rsec .dot{background:var(--pcs)!important}
