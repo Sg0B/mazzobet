@@ -310,7 +310,6 @@ textarea{resize:none;min-height:76px}
 .soon-k i{width:8px;height:8px;border-radius:50%;background:var(--pcs);animation:soonPulse 1.6s ease-in-out infinite}
 .soon h1{font:800 64px/.92 var(--f-disp);letter-spacing:.02em;margin:22px 0 14px}
 .soon-race{font-weight:600}
-.soon-note{color:var(--muted);font-size:14px;max-width:30ch;margin:10px auto 0;line-height:1.45}
 @keyframes soonPulse{50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){.soon-k i{animation:none}}
 .rnote{margin-top:10px;font-size:13px;color:var(--warn)}

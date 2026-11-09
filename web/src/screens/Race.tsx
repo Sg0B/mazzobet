@@ -77,7 +77,6 @@ function ComingSoon({ name, edition, km }: { name?: string; edition?: number; km
         <span className="soon-k"><i aria-hidden="true" />Prossimamente</span>
         <h1>COMING<br />SOON</h1>
         {name && <p className="soon-race">{name}{edition ? ` · ${edition}ª edizione` : ''}{km ? ` · ${kmFmt(km)} km` : ''}</p>}
-        <p className="soon-note">Venerdì 13 novembre la corsa in diretta: cronaca, distacchi e scommesse del Banco, notizia dopo notizia.</p>
       </div>
     </div>
   )
